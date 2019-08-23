@@ -16,6 +16,7 @@ from    .           import  scanners
 from    .           import  simulation
 from    .           import  diagnostics
 from    .           import  tracking
+from    .           import  visualisation
 
 
 __all__ = [
@@ -25,7 +26,8 @@ __all__ = [
     'scanners',
     'simulation',
     'diagnostics',
-    'tracking'
+    'tracking',
+    'visualisation'
 ]
 
 
