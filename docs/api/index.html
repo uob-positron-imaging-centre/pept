@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>pept API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pept</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File   : __init__.py
+# License: License: GNU v3.0
+# Author : Andrei Leonard Nicusan &lt;a.l.nicusan@bham.ac.uk&gt;
+# Date   : 19.08.2019
+
+
+# Import base data structures
+from    .inputs.data.base   import  LineData
+from    .inputs.data.base   import  LineDataReader
+from    .inputs.data.base   import  PointData
+
+# Import subpackages
+from    .inputs             import  data
+from    .inputs             import  geometry
+from    .inputs             import  simulation
+from    .outputs            import  diagnostics
+from    .outputs            import  tracking
+
+
+__all__ = [
+    &#39;LineData&#39;,
+    &#39;LineDataReader&#39;,
+    &#39;PointData&#39;,
+    &#39;data&#39;,
+    &#39;geometry&#39;,
+    &#39;simulation&#39;,
+    &#39;diagnostics&#39;,
+    &#39;tracking&#39;
+]
+
+
+__author__ =        &#34;Andrei Leonard Nicusan&#34;
+__credits__ =       [&#34;Andrei Leonard Nicusan&#34;, &#34;Kit Windows-Yule&#34;, &#34;Sam Manger&#34;]
+__license__ =       &#34;GNU v3.0&#34;
+__version__ =       &#34;0.1&#34;
+__maintainer__ =    &#34;Andrei Leonard Nicusan&#34;
+__email__ =         &#34;a.l.nicusan@bham.ac.uk&#34;
+__status__ =        &#34;Development&#34;</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="pept.inputs" href="inputs/index.html">pept.inputs</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pept.LineData"><code class="flex name class">
+<span>class <span class="ident">LineData</span></span>
+<span>(</span><span>line_data, sample_size=200, overlap=0, verbose=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A class for PEPT LoR data iteration and manipulation.</p>
+<p>Can yield samples of the PEPT data of an adaptive <code>sample_size</code> and
+<code>overlap</code>, without requiring additional storage.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>line_data</code></strong> :&ensp;(<code>N</code>, <code>7</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, 7) numpy array that stores the PEPT LoRs as time and
+cartesian (3D) coordinates of two points defining a line, <strong>in mm</strong>.
+A row is then [time, x1, y1, z1, x2, y2, z2].</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int`` that defines the number of lines that should be
+returned when iterating over</code>line_data<code>. A</code>sample_size` of 0
+yields all the data as one single sample. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>line_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. An
+error is raised if <code>overlap</code> is larger than or equal to
+<code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>An option that enables printing the time taken for the
+initialisation of an instance of the class. Useful when
+reading large files (10gb files for PEPT data is not unheard
+of). (Default is True)</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>line_data</code></strong> :&ensp;(<code>N</code>, <code>7</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, 7) numpy array that stores the PEPT LoRs as time and
+cartesian (3D) coordinates of two points defining a line, <strong>in mm</strong>.
+Each row is then <code>[time, x1, y1, z1, x2, y2, z2]</code>.</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the number of lines that should be
+returned when iterating over <code>line_data</code>. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>line_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. It
+has to be smaller than <code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>number_of_lines</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to len(<code>line_data</code>), or the number of
+LoRs stored by <code>line_data</code>.</dd>
+<dt><strong><code>number_of_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to the number of samples that can be
+accessed from the class. It takes <code>overlap</code> into consideration.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>overlap</code> &gt;= <code>sample_size</code>. Overlap has to be smaller than
+<code>sample_size</code>. Note that it can also be negative.</dd>
+<dt><code>ValueError</code></dt>
+<dd>If <code>line_data</code> does not have (N, 7) shape.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>The class saves <code>line_data</code> as a <strong>contiguous</strong> numpy array for
+efficient access in C functions. It should not be changed after
+instantiating the class.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class LineData:
+    &#39;&#39;&#39;A class for PEPT LoR data iteration and manipulation.
+
+    Can yield samples of the PEPT data of an adaptive `sample_size` and
+    `overlap`, without requiring additional storage.
+
+    Parameters
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs as time and
+        cartesian (3D) coordinates of two points defining a line, **in mm**.
+        A row is then [time, x1, y1, z1, x2, y2, z2].
+    sample_size : int, optional
+        An `int`` that defines the number of lines that should be
+        returned when iterating over `line_data`. A `sample_size` of 0
+        yields all the data as one single sample. (Default is 200)
+    overlap : int, optional
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. An
+        error is raised if `overlap` is larger than or equal to
+        `sample_size`. (Default is 0)
+    verbose : bool, optional
+        An option that enables printing the time taken for the
+        initialisation of an instance of the class. Useful when
+        reading large files (10gb files for PEPT data is not unheard
+        of). (Default is True)
+
+    Attributes
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs as time and
+        cartesian (3D) coordinates of two points defining a line, **in mm**.
+        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
+    sample_size : int
+        An `int` that defines the number of lines that should be
+        returned when iterating over `line_data`. (Default is 200)
+    overlap : int
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. It
+        has to be smaller than `sample_size`. (Default is 0)
+    number_of_lines : int
+        An `int` that corresponds to len(`line_data`), or the number of
+        LoRs stored by `line_data`.
+    number_of_samples : int
+        An `int` that corresponds to the number of samples that can be
+        accessed from the class. It takes `overlap` into consideration.
+
+    Raises
+    ------
+    ValueError
+        If `overlap` &gt;= `sample_size`. Overlap has to be smaller than
+        `sample_size`. Note that it can also be negative.
+    ValueError
+        If `line_data` does not have (N, 7) shape.
+
+    Notes
+    -----
+    The class saves `line_data` as a **contiguous** numpy array for
+    efficient access in C functions. It should not be changed after
+    instantiating the class.
+
+    &#39;&#39;&#39;
+
+    def __init__(self,
+                 line_data,
+                 sample_size = 200,
+                 overlap = 0,
+                 verbose = True):
+
+        if verbose:
+            start = time.time()
+
+        if overlap &gt;= sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n&#39;.format(overlap, sample_size))
+
+        self._index = 0
+        self._sample_size = sample_size
+        self._overlap = overlap
+
+        self._line_data = np.asarray(line_data, order = &#39;C&#39;)
+
+        if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
+            raise ValueError(&#39;\n[ERROR]: line_data should have dimensions [N, 7]. Received {}\n&#39;.format(self._line_data.shape))
+
+        self._number_of_lines = len(self._line_data)
+
+        if verbose:
+            end = time.time()
+            print(&#34;Initialising the PEPT data took {} seconds\n&#34;.format(end - start))
+
+
+    @property
+    def line_data(self):
+        return self._line_data
+
+
+    @property
+    def sample_size(self):
+        return self._sample_size
+
+
+    @sample_size.setter
+    def sample_size(self, new_sample_size):
+        &#39;&#39;&#39;Change `sample_size` without instantiating a new object
+
+        It also resets the inner index of the class.
+
+        Parameters
+        ----------
+        new_sample_size : int
+            The new sample size. It has to be larger than `overlap`.
+
+        Raises
+        ------
+        ValueError
+            If `overlap` &gt;= `new_sample_size`. Overlap has to be
+            smaller than `sample_size`. Note that it can also be negative.
+
+        &#39;&#39;&#39;
+
+        if self._overlap &gt;= new_sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n&#39;.format(self._overlap, new_sample_size))
+
+        self._index = 0
+        self._sample_size = new_sample_size
+
+
+    @property
+    def overlap(self):
+        return self._overlap
+
+
+    @overlap.setter
+    def overlap(self, new_overlap):
+        &#39;&#39;&#39;Change `overlap` without instantiating a new object
+
+        It is recommended that `overlap` should only be changed
+        using this function.
+
+        Parameters
+        ----------
+        new_overlap : int
+            The new overlap. It has to be smaller than `sample_size`.
+
+        Raises
+        ------
+        ValueError
+            If `new_overlap` &gt;= `sample_size`. `new_overlap` has to be
+            smaller than `sample_size`. Note that it can also be
+            negative.
+
+        &#39;&#39;&#39;
+
+        if new_overlap &gt;= self._sample_size:
+            raise ValueError(&#39;\n[ERROR]: new_overlap = {} must be smaller than sample_size = {}\n&#39;.format(new_overlap, self._sample_size))
+
+        self._index = 0
+        self._overlap = new_overlap
+
+
+    @property
+    def number_of_samples(self):
+        &#39;&#39;&#39;Get number of samples, considering overlap.
+
+        If `sample_size == 0`, all data is returned as a single sample.
+        Otherwise, it checks how many samples there are, taking
+        `overlap` into consideration.
+
+        Returns
+        -------
+        int
+            The number of samples, taking `overlap` into consideration,
+
+        &#39;&#39;&#39;
+        # If self.sample_size == 0, all data is returned as a single sample
+        if self._sample_size == 0:
+            return 1
+
+        # If self.sample_size != 0, check there is at least one sample
+        if self._number_of_lines &gt;= self._sample_size:
+            return (self._number_of_lines - self._sample_size) // (self.sample_size - self.overlap) + 1
+        else:
+            return 0
+
+
+    @property
+    def number_of_lines(self):
+        &#39;&#39;&#39;Get the number of LoRs stored in the class.
+
+        Returns
+        -------
+        int
+            The number of lines stored in `line_data`.
+
+        &#39;&#39;&#39;
+        return self._number_of_lines
+
+
+    def sample_n(self, n):
+        &#39;&#39;&#39;Get sample number n (`n &gt; 0`)
+
+        Samples are numbered starting from 1.
+
+        Parameters
+        ----------
+        n : int
+            The number of the sample required. Note that `1 &lt;= n &lt;=
+            number_of_samples`.
+
+        Returns
+        -------
+        (, 7) numpy.ndarray
+            A shallow copy of the lines from `line_data` included in
+            sample number n.
+
+        Raises
+        ------
+        IndexError
+            If `sample_size == 0`, all data is returned as one single
+            sample. Raised if `n` is not 1.
+        IndexError
+            If `n &gt; number_of_samples` or `n &lt;= 0`.
+
+        &#39;&#39;&#39;
+        if self._sample_size == 0:
+            if n == 1:
+                return self._line_data
+            else:
+                raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there is only 1 sample (sample_size == 0)\n&#34;.format(n))
+        elif (n &gt; self.number_of_samples) or n &lt;= 0:
+            raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there are {} samples\n&#34;.format(n, self.number_of_samples))
+
+        start_index = (n - 1) * (self._sample_size - self._overlap)
+        return self._line_data[start_index:(start_index + self._sample_size)]
+
+
+    def plot_all_lines(self, ax):
+        &#39;&#39;&#39;Plot all lines using matplotlib
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `plot_lines_sample_n` is recommended.
+
+        &#39;&#39;&#39;
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        for i in range(0, self._number_of_lines):
+            ax.plot([ p1[i][0], p2[i][0] ],
+                    [ p1[i][1], p2[i][1] ],
+                    [ p1[i][2], p2[i][2] ])
+
+
+    def plot_all_lines_alt_axes(self, ax):
+        &#39;&#39;&#39;Plot all lines using matplotlib on PEPT-style axes
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines on
+        the PEPT-style convention: **x** is *parallel and horizontal* to the
+        screens, **y** is *parallel and vertical* to the screens, **z** is
+        *perpendicular* to the screens. The mapping relative to the
+        Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+
+        &#39;&#39;&#39;
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        for i in range(0, self._number_of_lines):
+            ax.plot([ p1[i][2], p2[i][2] ],
+                    [ p1[i][0], p2[i][0] ],
+                    [ p1[i][1], p2[i][1] ])
+
+
+    def plot_lines_sample_n(self, ax, n):
+        &#39;&#39;&#39;Plot lines from sampleN using matplotlib
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines
+        from sample number `n`.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+        sampleN : int
+            The number of the sample to be plotted.
+
+        &#39;&#39;&#39;
+
+        sample = self.sample_n(n)
+        for i in range(0, len(sample)):
+            ax.plot([ sample[i][1], sample[i][4] ],
+                    [ sample[i][2], sample[i][5] ],
+                    [ sample[i][3], sample[i][6] ])
+
+
+    def plot_lines_sample_n_alt_axes(self, ax, n):
+        &#39;&#39;&#39;Plot lines from sampleN using matplotlib on PEPT-style axes
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines from
+        sample number sampleN on the PEPT-style coordinates convention:
+        **x** is *parallel and horizontal* to the screens, **y** is
+        *parallel and vertical* to the screens, **z** is *perpendicular*
+        to the screens. The mapping relative to the Cartesian coordinates
+        would then be: (x, y, z) -&gt; (z, x, y)
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+        n : int
+            The number of the sample to be plotted.
+
+        &#39;&#39;&#39;
+
+        sample = self.sample_n(n)
+        for i in range(0, len(sample)):
+            ax.plot([ sample[i][3], sample[i][6] ],
+                    [ sample[i][1], sample[i][4] ],
+                    [ sample[i][2], sample[i][5] ])
+
+
+    def all_lines_traces(self):
+        &#39;&#39;&#39;Get a list of Plotly traces for each line.
+
+        Creates a `plotly.graph_objects.Scatter3d` object for each line
+        and returns them as a list. Can then be passed to the
+        `plotly.graph_objects.figure.add_traces` function or a
+        `PlotlyGrapher` instance using the `add_traces` method.
+
+        Returns
+        -------
+        list
+            A list of `plotly.graph_objects.Scatter3d` objects.
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `lines_sample_n_traces` is recommended.
+
+        &#39;&#39;&#39;
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        traces = []
+        for i in range(0, self._number_of_lines):
+            traces.append(go.Scatter3d(
+                x = [ p1[i][0], p2[i][0] ],
+                y = [ p1[i][1], p2[i][1] ],
+                z = [ p1[i][2], p2[i][2] ],
+                mode = &#39;lines&#39;,
+                opacity = 0.8,
+                line = dict(
+                    width = 2,
+                )
+            ))
+
+        return traces
+
+
+    def lines_sample_n_traces(self, n):
+        &#39;&#39;&#39;Get a list of Plotly traces for each line in sample `n`.
+
+        Creates a `plotly.graph_objects.Scatter3d` object for each line
+        include in sample number `sampleN` and returns them as a list.
+        Can then be passed to the `plotly.graph_objects.figure.add_traces`
+        function or a `PlotlyGrapher` instance using the `add_traces` method.
+
+        Parameters
+        ----------
+        n : int
+            The number of the sample to be plotted.
+
+        Returns
+        -------
+        list
+            A list of `plotly.graph_objects.Scatter3d` objects.
+
+        &#39;&#39;&#39;
+
+        sample = self.sample_n(n)
+        traces = []
+        for i in range(0, len(sample)):
+            traces.append(go.Scatter3d(
+                x = [ sample[i][1], sample[i][4] ],
+                y = [ sample[i][2], sample[i][5] ],
+                z = [ sample[i][3], sample[i][6] ],
+                mode = &#39;lines&#39;,
+                opacity = 0.6,
+                line = dict(
+                    width = 2,
+                )
+            ))
+
+        return traces
+
+
+    def __len__(self):
+        return self.number_of_samples
+
+
+    def __iter__(self):
+        return self
+
+
+    def __next__(self):
+        # sample_size = 0 =&gt; return all data
+        if self._sample_size == 0:
+            self._sample_size = -1
+            return self._line_data
+        # Use -1 as a flag
+        if self._sample_size == -1:
+            self._sample_size = 0
+            raise StopIteration
+
+        # sample_size &gt; 0 =&gt; return slices
+        if self._index != 0:
+            self._index = self._index + self._sample_size - self.overlap
+        else:
+            self._index = self._index + self.sample_size
+
+
+        if self._index &gt; self.number_of_lines:
+            self._index = 0
+            raise StopIteration
+
+        return self._line_data[(self._index - self._sample_size):self._index]</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pept.inputs.data.base.LineDataReader" href="inputs/data/base.html#pept.inputs.data.base.LineDataReader">LineDataReader</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pept.LineData.line_data"><code class="name">var <span class="ident">line_data</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def line_data(self):
+    return self._line_data</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.number_of_lines"><code class="name">var <span class="ident">number_of_lines</span></code></dt>
+<dd>
+<section class="desc"><p>Get the number of LoRs stored in the class.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The number of lines stored in <code>line_data</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def number_of_lines(self):
+    &#39;&#39;&#39;Get the number of LoRs stored in the class.
+
+    Returns
+    -------
+    int
+        The number of lines stored in `line_data`.
+
+    &#39;&#39;&#39;
+    return self._number_of_lines</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.number_of_samples"><code class="name">var <span class="ident">number_of_samples</span></code></dt>
+<dd>
+<section class="desc"><p>Get number of samples, considering overlap.</p>
+<p>If <code>sample_size == 0</code>, all data is returned as a single sample.
+Otherwise, it checks how many samples there are, taking
+<code>overlap</code> into consideration.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The number of samples, taking <code>overlap</code> into consideration,</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def number_of_samples(self):
+    &#39;&#39;&#39;Get number of samples, considering overlap.
+
+    If `sample_size == 0`, all data is returned as a single sample.
+    Otherwise, it checks how many samples there are, taking
+    `overlap` into consideration.
+
+    Returns
+    -------
+    int
+        The number of samples, taking `overlap` into consideration,
+
+    &#39;&#39;&#39;
+    # If self.sample_size == 0, all data is returned as a single sample
+    if self._sample_size == 0:
+        return 1
+
+    # If self.sample_size != 0, check there is at least one sample
+    if self._number_of_lines &gt;= self._sample_size:
+        return (self._number_of_lines - self._sample_size) // (self.sample_size - self.overlap) + 1
+    else:
+        return 0</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.overlap"><code class="name">var <span class="ident">overlap</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def overlap(self):
+    return self._overlap</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.sample_size"><code class="name">var <span class="ident">sample_size</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def sample_size(self):
+    return self._sample_size</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pept.LineData.all_lines_traces"><code class="name flex">
+<span>def <span class="ident">all_lines_traces</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get a list of Plotly traces for each line.</p>
+<p>Creates a <code>plotly.graph_objects.Scatter3d</code> object for each line
+and returns them as a list. Can then be passed to the
+<code>plotly.graph_objects.figure.add_traces</code> function or a
+<code>PlotlyGrapher</code> instance using the <code>add_traces</code> method.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>A list of <code>plotly.graph_objects.Scatter3d</code> objects.</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>Plotting all lines in the case of large LoR arrays is <em>very</em>
+computationally intensive. For large arrays (&gt; 10000), plotting
+individual samples using <code>lines_sample_n_traces</code> is recommended.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def all_lines_traces(self):
+    &#39;&#39;&#39;Get a list of Plotly traces for each line.
+
+    Creates a `plotly.graph_objects.Scatter3d` object for each line
+    and returns them as a list. Can then be passed to the
+    `plotly.graph_objects.figure.add_traces` function or a
+    `PlotlyGrapher` instance using the `add_traces` method.
+
+    Returns
+    -------
+    list
+        A list of `plotly.graph_objects.Scatter3d` objects.
+
+    Note
+    ----
+    Plotting all lines in the case of large LoR arrays is *very*
+    computationally intensive. For large arrays (&gt; 10000), plotting
+    individual samples using `lines_sample_n_traces` is recommended.
+
+    &#39;&#39;&#39;
+
+    p1 = self._line_data[:, 1:4]
+    p2 = self._line_data[:, 4:7]
+
+    traces = []
+    for i in range(0, self._number_of_lines):
+        traces.append(go.Scatter3d(
+            x = [ p1[i][0], p2[i][0] ],
+            y = [ p1[i][1], p2[i][1] ],
+            z = [ p1[i][2], p2[i][2] ],
+            mode = &#39;lines&#39;,
+            opacity = 0.8,
+            line = dict(
+                width = 2,
+            )
+        ))
+
+    return traces</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.lines_sample_n_traces"><code class="name flex">
+<span>def <span class="ident">lines_sample_n_traces</span></span>(<span>self, n)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get a list of Plotly traces for each line in sample <code>n</code>.</p>
+<p>Creates a <code>plotly.graph_objects.Scatter3d</code> object for each line
+include in sample number <code>sampleN</code> and returns them as a list.
+Can then be passed to the <code>plotly.graph_objects.figure.add_traces</code>
+function or a <code>PlotlyGrapher</code> instance using the <code>add_traces</code> method.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample to be plotted.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>A list of <code>plotly.graph_objects.Scatter3d</code> objects.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def lines_sample_n_traces(self, n):
+    &#39;&#39;&#39;Get a list of Plotly traces for each line in sample `n`.
+
+    Creates a `plotly.graph_objects.Scatter3d` object for each line
+    include in sample number `sampleN` and returns them as a list.
+    Can then be passed to the `plotly.graph_objects.figure.add_traces`
+    function or a `PlotlyGrapher` instance using the `add_traces` method.
+
+    Parameters
+    ----------
+    n : int
+        The number of the sample to be plotted.
+
+    Returns
+    -------
+    list
+        A list of `plotly.graph_objects.Scatter3d` objects.
+
+    &#39;&#39;&#39;
+
+    sample = self.sample_n(n)
+    traces = []
+    for i in range(0, len(sample)):
+        traces.append(go.Scatter3d(
+            x = [ sample[i][1], sample[i][4] ],
+            y = [ sample[i][2], sample[i][5] ],
+            z = [ sample[i][3], sample[i][6] ],
+            mode = &#39;lines&#39;,
+            opacity = 0.6,
+            line = dict(
+                width = 2,
+            )
+        ))
+
+    return traces</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.plot_all_lines"><code class="name flex">
+<span>def <span class="ident">plot_all_lines</span></span>(<span>self, ax)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot all lines using matplotlib</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis, plots all lines.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>Plotting all lines in the case of large LoR arrays is <em>very</em>
+computationally intensive. For large arrays (&gt; 10000), plotting
+individual samples using <code>plot_lines_sample_n</code> is recommended.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_all_lines(self, ax):
+    &#39;&#39;&#39;Plot all lines using matplotlib
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines.
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+
+    Note
+    ----
+    Plotting all lines in the case of large LoR arrays is *very*
+    computationally intensive. For large arrays (&gt; 10000), plotting
+    individual samples using `plot_lines_sample_n` is recommended.
+
+    &#39;&#39;&#39;
+
+    p1 = self._line_data[:, 1:4]
+    p2 = self._line_data[:, 4:7]
+
+    for i in range(0, self._number_of_lines):
+        ax.plot([ p1[i][0], p2[i][0] ],
+                [ p1[i][1], p2[i][1] ],
+                [ p1[i][2], p2[i][2] ])</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.plot_all_lines_alt_axes"><code class="name flex">
+<span>def <span class="ident">plot_all_lines_alt_axes</span></span>(<span>self, ax)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot all lines using matplotlib on PEPT-style axes</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis, plots all lines on
+the PEPT-style convention: <strong>x</strong> is <em>parallel and horizontal</em> to the
+screens, <strong>y</strong> is <em>parallel and vertical</em> to the screens, <strong>z</strong> is
+<em>perpendicular</em> to the screens. The mapping relative to the
+Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>Plotting all lines in the case of large LoR arrays is <em>very</em>
+computationally intensive. For large arrays (&gt; 10000), plotting
+individual samples using <code>plot_lines_sample_n_alt_axes</code> is recommended.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_all_lines_alt_axes(self, ax):
+    &#39;&#39;&#39;Plot all lines using matplotlib on PEPT-style axes
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines on
+    the PEPT-style convention: **x** is *parallel and horizontal* to the
+    screens, **y** is *parallel and vertical* to the screens, **z** is
+    *perpendicular* to the screens. The mapping relative to the
+    Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+
+    Note
+    ----
+    Plotting all lines in the case of large LoR arrays is *very*
+    computationally intensive. For large arrays (&gt; 10000), plotting
+    individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+
+    &#39;&#39;&#39;
+
+    p1 = self._line_data[:, 1:4]
+    p2 = self._line_data[:, 4:7]
+
+    for i in range(0, self._number_of_lines):
+        ax.plot([ p1[i][2], p2[i][2] ],
+                [ p1[i][0], p2[i][0] ],
+                [ p1[i][1], p2[i][1] ])</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.plot_lines_sample_n"><code class="name flex">
+<span>def <span class="ident">plot_lines_sample_n</span></span>(<span>self, ax, n)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot lines from sampleN using matplotlib</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis, plots all lines
+from sample number <code>n</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+<dt><strong><code>sampleN</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample to be plotted.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_lines_sample_n(self, ax, n):
+    &#39;&#39;&#39;Plot lines from sampleN using matplotlib
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines
+    from sample number `n`.
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+    sampleN : int
+        The number of the sample to be plotted.
+
+    &#39;&#39;&#39;
+
+    sample = self.sample_n(n)
+    for i in range(0, len(sample)):
+        ax.plot([ sample[i][1], sample[i][4] ],
+                [ sample[i][2], sample[i][5] ],
+                [ sample[i][3], sample[i][6] ])</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.plot_lines_sample_n_alt_axes"><code class="name flex">
+<span>def <span class="ident">plot_lines_sample_n_alt_axes</span></span>(<span>self, ax, n)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot lines from sampleN using matplotlib on PEPT-style axes</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis, plots all lines from
+sample number sampleN on the PEPT-style coordinates convention:
+<strong>x</strong> is <em>parallel and horizontal</em> to the screens, <strong>y</strong> is
+<em>parallel and vertical</em> to the screens, <strong>z</strong> is <em>perpendicular</em>
+to the screens. The mapping relative to the Cartesian coordinates
+would then be: (x, y, z) -&gt; (z, x, y)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample to be plotted.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_lines_sample_n_alt_axes(self, ax, n):
+    &#39;&#39;&#39;Plot lines from sampleN using matplotlib on PEPT-style axes
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all lines from
+    sample number sampleN on the PEPT-style coordinates convention:
+    **x** is *parallel and horizontal* to the screens, **y** is
+    *parallel and vertical* to the screens, **z** is *perpendicular*
+    to the screens. The mapping relative to the Cartesian coordinates
+    would then be: (x, y, z) -&gt; (z, x, y)
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+    n : int
+        The number of the sample to be plotted.
+
+    &#39;&#39;&#39;
+
+    sample = self.sample_n(n)
+    for i in range(0, len(sample)):
+        ax.plot([ sample[i][3], sample[i][6] ],
+                [ sample[i][1], sample[i][4] ],
+                [ sample[i][2], sample[i][5] ])</code></pre>
+</details>
+</dd>
+<dt id="pept.LineData.sample_n"><code class="name flex">
+<span>def <span class="ident">sample_n</span></span>(<span>self, n)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get sample number n (<code>n &gt; 0</code>)</p>
+<p>Samples are numbered starting from 1.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample required. Note that <code>1 &lt;= n &lt;=
+number_of_samples</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>(, 7) numpy.ndarray
+A shallow copy of the lines from <code>line_data</code> included in
+sample number n.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>IndexError</code></dt>
+<dd>If <code>sample_size == 0</code>, all data is returned as one single
+sample. Raised if <code>n</code> is not 1.</dd>
+<dt><code>IndexError</code></dt>
+<dd>If <code>n &gt; number_of_samples</code> or <code>n &lt;= 0</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def sample_n(self, n):
+    &#39;&#39;&#39;Get sample number n (`n &gt; 0`)
+
+    Samples are numbered starting from 1.
+
+    Parameters
+    ----------
+    n : int
+        The number of the sample required. Note that `1 &lt;= n &lt;=
+        number_of_samples`.
+
+    Returns
+    -------
+    (, 7) numpy.ndarray
+        A shallow copy of the lines from `line_data` included in
+        sample number n.
+
+    Raises
+    ------
+    IndexError
+        If `sample_size == 0`, all data is returned as one single
+        sample. Raised if `n` is not 1.
+    IndexError
+        If `n &gt; number_of_samples` or `n &lt;= 0`.
+
+    &#39;&#39;&#39;
+    if self._sample_size == 0:
+        if n == 1:
+            return self._line_data
+        else:
+            raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there is only 1 sample (sample_size == 0)\n&#34;.format(n))
+    elif (n &gt; self.number_of_samples) or n &lt;= 0:
+        raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there are {} samples\n&#34;.format(n, self.number_of_samples))
+
+    start_index = (n - 1) * (self._sample_size - self._overlap)
+    return self._line_data[start_index:(start_index + self._sample_size)]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pept.LineDataReader"><code class="flex name class">
+<span>class <span class="ident">LineDataReader</span></span>
+<span>(</span><span>data_file, sample_size=200, overlap=0, separation=712, skiprows=0, max_rows=None, verbose=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A subclass of <a title="pept.LineData" href="#pept.LineData"><code>LineData</code></a> that also reads PEPT data from a file.</p>
+<p>Provides the same functionality as the <code>LineDdata</code> class while
+initialising <code>line_data</code> from a given file. This is a helper class
+for <strong>PEPT with two parallel screens</strong>.</p>
+<p>Can read data from a <code>.csv</code> or <code>.a0n</code> file or equivalent. <strong>The data
+row in the file should be <code>[time, x1, y1, x2, y2]</code></strong>. This will then
+be automatically transformed into the standard <code>line_data</code> format
+with every row being <code>[time, x1, y1, z1, x2, y2, z2]</code>, where <code>z1 = 0</code>
+and <code>z2 = separation</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>A string with the (absolute or relative) path to the data file
+from which the PEPT data will be read. It should include the
+full file name, along with the extension (.csv, .a01, etc.)</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int`` that defines the number of lines that should be
+returned when iterating over</code>line_data<code>. A</code>sample_size` of 0
+yields all the data as one single sample. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>line_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. An
+error is raised if <code>overlap</code> is larger than or equal to
+<code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>separation</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>The separation (in <em>mm</em>) between the two PEPT screens corresponding
+to the <code>z</code> coordinate of the second point defining each line.
+The attribute <code>line_data</code>, with each row being
+<code>[time, x1, y1, z1, x2, y2, z2]</code>, will have <code>z1 = 0</code> and
+<code>z2 = separation</code>. (Default is 712)</dd>
+<dt><strong><code>skiprows</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The number of rows to skip from the beginning of the data file.
+Useful when the data file includes a header of text that should
+be skipped. (Default is 0)</dd>
+<dt><strong><code>max_rows</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The maximum number of rows that will be read from the data file.
+(Default is <code>None</code>)</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>An option that enables printing the time taken for the
+initialisation of an instance of the class. Useful when
+reading large files (10gb files for PEPT data is not unheard
+of). (Default is True)</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>line_data</code></strong> :&ensp;(<code>N</code>, <code>7</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, 7) numpy array that stores the PEPT LoRs as time and
+cartesian (3D) coordinates of two points defining a line, <strong>in mm</strong>.
+Each row is then <code>[time, x1, y1, z1, x2, y2, z2]</code>.</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the number of lines that should be
+returned when iterating over <code>lineData</code>. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>lineData</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sampleSize</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. It
+has to be smaller than <code>sampleSize</code>. (Default is 0)</dd>
+<dt><strong><code>number_of_lines</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to len(<code>lineData</code>), or the number of
+LoRs stored by <code>line_data</code>.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>overlap</code> &gt;= <code>sample_size</code>. Overlap has to be smaller than
+<code>sample_size</code>. Note that it can also be negative.</dd>
+<dt><code>ValueError</code></dt>
+<dd>If the data file does not have (N, 5) shape.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>The class saves <code>line_data</code> as a <strong>contiguous</strong> numpy array for
+efficient access in C functions. It should not be changed after
+instantiating the class.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class LineDataReader(LineData):
+    &#39;&#39;&#39;A subclass of `LineData` that also reads PEPT data from a file.
+
+    Provides the same functionality as the `LineDdata` class while
+    initialising `line_data` from a given file. This is a helper class
+    for **PEPT with two parallel screens**.
+
+    Can read data from a `.csv` or `.a0n` file or equivalent. **The data
+    row in the file should be `[time, x1, y1, x2, y2]`**. This will then
+    be automatically transformed into the standard `line_data` format
+    with every row being `[time, x1, y1, z1, x2, y2, z2]`, where `z1 = 0`
+    and `z2 = separation`.
+
+    Parameters
+    ----------
+    data_file : str
+        A string with the (absolute or relative) path to the data file
+        from which the PEPT data will be read. It should include the
+        full file name, along with the extension (.csv, .a01, etc.)
+    sample_size : int, optional
+        An `int`` that defines the number of lines that should be
+        returned when iterating over `line_data`. A `sample_size` of 0
+        yields all the data as one single sample. (Default is 200)
+    overlap : int, optional
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. An
+        error is raised if `overlap` is larger than or equal to
+        `sample_size`. (Default is 0)
+    separation : float, optional
+        The separation (in *mm*) between the two PEPT screens corresponding
+        to the `z` coordinate of the second point defining each line.
+        The attribute `line_data`, with each row being
+        `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
+        `z2 = separation`. (Default is 712)
+    skiprows : int, optional
+        The number of rows to skip from the beginning of the data file.
+        Useful when the data file includes a header of text that should
+        be skipped. (Default is 0)
+    max_rows : int, optional
+        The maximum number of rows that will be read from the data file.
+        (Default is `None`)
+    verbose : bool, optional
+        An option that enables printing the time taken for the
+        initialisation of an instance of the class. Useful when
+        reading large files (10gb files for PEPT data is not unheard
+        of). (Default is True)
+
+    Attributes
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs as time and
+        cartesian (3D) coordinates of two points defining a line, **in mm**.
+        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
+    sample_size : int
+        An `int` that defines the number of lines that should be
+        returned when iterating over `lineData`. (Default is 200)
+    overlap : int
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `lineData`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sampleSize` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. It
+        has to be smaller than `sampleSize`. (Default is 0)
+    number_of_lines : int
+        An `int` that corresponds to len(`lineData`), or the number of
+        LoRs stored by `line_data`.
+
+    Raises
+    ------
+    ValueError
+        If `overlap` &gt;= `sample_size`. Overlap has to be smaller than
+        `sample_size`. Note that it can also be negative.
+    ValueError
+        If the data file does not have (N, 5) shape.
+
+    Notes
+    -----
+    The class saves `line_data` as a **contiguous** numpy array for
+    efficient access in C functions. It should not be changed after
+    instantiating the class.
+
+    &#39;&#39;&#39;
+
+    def __init__(self,
+                 data_file,
+                 sample_size = 200,
+                 overlap = 0,
+                 separation = 712,
+                 skiprows = 0,
+                 max_rows = None,
+                 verbose = True):
+
+        if verbose:
+            start = time.time()
+
+        if overlap &gt;= sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n&#39;.format(overlap, sample_size))
+
+        self._index = 0
+        self._sample_size = sample_size
+        self._overlap = overlap
+
+        # Row: [time, X1, Y1, X2, Y2]
+        self._line_data = np.loadtxt(data_file, skiprows = skiprows, max_rows = max_rows)
+
+        if self._line_data.ndim != 2 or self._line_data.shape[1] != 5:
+            raise ValueError(&#39;\n[ERROR]: the data file should have dimensions [N, 5]. Received {}\n&#39;.format(self._line_data.shape))
+
+        self._number_of_lines = len(self.lineData)
+
+        # Add Z1 and Z2 columns =&gt; [time, X1, Y1, Z1, X2, Y2, Z2]
+        self._line_data = np.insert(self._line_data, 3, np.zeros(self._number_of_lines), axis = 1)
+        self._line_data = np.append(self._line_data, separation * np.ones((self._number_of_lines, 1)), axis = 1)
+
+        if verbose:
+            end = time.time()
+            print(&#34;Initialising the PEPT data took {} seconds\n&#34;.format(end - start))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pept.inputs.data.base.LineData" href="inputs/data/base.html#pept.inputs.data.base.LineData">LineData</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pept.inputs.data.base.LineData" href="inputs/data/base.html#pept.inputs.data.base.LineData">LineData</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pept.inputs.data.base.LineData.all_lines_traces" href="inputs/data/base.html#pept.inputs.data.base.LineData.all_lines_traces">all_lines_traces</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.lines_sample_n_traces" href="inputs/data/base.html#pept.inputs.data.base.LineData.lines_sample_n_traces">lines_sample_n_traces</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.number_of_lines" href="inputs/data/base.html#pept.inputs.data.base.LineData.number_of_lines">number_of_lines</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.number_of_samples" href="inputs/data/base.html#pept.inputs.data.base.LineData.number_of_samples">number_of_samples</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.plot_all_lines" href="inputs/data/base.html#pept.inputs.data.base.LineData.plot_all_lines">plot_all_lines</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.plot_all_lines_alt_axes" href="inputs/data/base.html#pept.inputs.data.base.LineData.plot_all_lines_alt_axes">plot_all_lines_alt_axes</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.plot_lines_sample_n" href="inputs/data/base.html#pept.inputs.data.base.LineData.plot_lines_sample_n">plot_lines_sample_n</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.plot_lines_sample_n_alt_axes" href="inputs/data/base.html#pept.inputs.data.base.LineData.plot_lines_sample_n_alt_axes">plot_lines_sample_n_alt_axes</a></code></li>
+<li><code><a title="pept.inputs.data.base.LineData.sample_n" href="inputs/data/base.html#pept.inputs.data.base.LineData.sample_n">sample_n</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pept.PointData"><code class="flex name class">
+<span>class <span class="ident">PointData</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class PointData:
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="pept.inputs" href="inputs/index.html">pept.inputs</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pept.LineData" href="#pept.LineData">LineData</a></code></h4>
+<ul class="">
+<li><code><a title="pept.LineData.all_lines_traces" href="#pept.LineData.all_lines_traces">all_lines_traces</a></code></li>
+<li><code><a title="pept.LineData.line_data" href="#pept.LineData.line_data">line_data</a></code></li>
+<li><code><a title="pept.LineData.lines_sample_n_traces" href="#pept.LineData.lines_sample_n_traces">lines_sample_n_traces</a></code></li>
+<li><code><a title="pept.LineData.number_of_lines" href="#pept.LineData.number_of_lines">number_of_lines</a></code></li>
+<li><code><a title="pept.LineData.number_of_samples" href="#pept.LineData.number_of_samples">number_of_samples</a></code></li>
+<li><code><a title="pept.LineData.overlap" href="#pept.LineData.overlap">overlap</a></code></li>
+<li><code><a title="pept.LineData.plot_all_lines" href="#pept.LineData.plot_all_lines">plot_all_lines</a></code></li>
+<li><code><a title="pept.LineData.plot_all_lines_alt_axes" href="#pept.LineData.plot_all_lines_alt_axes">plot_all_lines_alt_axes</a></code></li>
+<li><code><a title="pept.LineData.plot_lines_sample_n" href="#pept.LineData.plot_lines_sample_n">plot_lines_sample_n</a></code></li>
+<li><code><a title="pept.LineData.plot_lines_sample_n_alt_axes" href="#pept.LineData.plot_lines_sample_n_alt_axes">plot_lines_sample_n_alt_axes</a></code></li>
+<li><code><a title="pept.LineData.sample_n" href="#pept.LineData.sample_n">sample_n</a></code></li>
+<li><code><a title="pept.LineData.sample_size" href="#pept.LineData.sample_size">sample_size</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pept.LineDataReader" href="#pept.LineDataReader">LineDataReader</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pept.PointData" href="#pept.PointData">PointData</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
