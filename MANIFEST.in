@@ -1,0 +1,6 @@
+include README.md LICENSE
+include requirements.txt
+global-include *.pyx
+global-include *.pxd
+global-exclude *.c*
+global-exclude .DS_Store
