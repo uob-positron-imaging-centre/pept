@@ -43,8 +43,15 @@ from    tqdm                                    import      tqdm
 from    plotly.subplots                         import      make_subplots
 import  plotly.graph_objects                    as          go
 
-import  hdbscan
 import  time
+import  sys
+
+try:
+    sys.modules['sklearn.externals.six'] = __import__('six')
+    sys.modules['sklearn.externals.joblib'] = __import__('joblib')
+    import hdbscan
+except ImportError:
+    import hdbscan
 
 import  pept
 from    .extensions.find_cutpoints_api          import      find_cutpoints_api
