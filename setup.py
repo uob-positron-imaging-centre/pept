@@ -149,7 +149,7 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
-    keywords='pept',
+    keywords='pept positron emission particle tracking',
     license='GNU',
     classifiers=[
         # Trove classifiers
