@@ -438,6 +438,7 @@ class HDBSCANClusterer:
                                      verbose = False)
 
         if store_labels:
+            clustered_cutpoints = np.array([row[1] for row in data_list if len(row[1]) != 0])
             clustered_cutpoints = pept.PointData(np.vstack(np.array(clustered_cutpoints)),
                                                  sample_size = 0,
                                                  overlap = 0,

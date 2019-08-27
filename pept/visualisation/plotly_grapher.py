@@ -103,7 +103,7 @@ class PlotlyGrapher:
         return self.fig
 
 
-    def add_data_as_trace(self, data, row, col, size = 2, color = None):
+    def add_data_as_trace(self, data, row = 1, col = 1, size = 2, color = None):
         # Expected data row: [time, x, y, z, ...]
         if len(data) != 0:
             trace = go.Scatter3d(
@@ -121,7 +121,7 @@ class PlotlyGrapher:
             self.fig.add_trace(trace, row = row, col = col)
 
 
-    def add_data_as_trace_colorbar(self, data, row, col, title_colorbar = None, size = 3):
+    def add_data_as_trace_colorbar(self, data, row = 1, col = 1, title_colorbar = None, size = 3):
         # Expected data row: [time, x, y, z, ...]
         if len(data) != 0:
             if title_colorbar != None:
@@ -146,7 +146,7 @@ class PlotlyGrapher:
             self.fig.add_trace(trace, row = row, col = col)
 
 
-    def add_data_as_trace_line(self, data, row, col):
+    def add_data_as_trace_line(self, data, row = 1, col = 1):
         # Expected data row: [time, x, y, z, ...]
         if len(data) != 0:
             trace = go.Scatter3d(
@@ -162,13 +162,13 @@ class PlotlyGrapher:
             self.fig.add_trace(trace, row = row, col = col)
 
 
-    def add_trace(self, trace, row, col):
+    def add_trace(self, trace, row = 1, col = 1):
         # Add precomputed trace
         # Can accept HDBSCANclusterer.getCentresTrace() output
         self.fig.add_trace(trace, row = row, col = col)
 
 
-    def add_traces(self, traces, row, col):
+    def add_traces(self, traces, row = 1, col = 1):
         # Add precomputed traces
         # Can accept HDBSCANclusterer.getSampleLabelsTraces() output
         if len(traces) != 0:
