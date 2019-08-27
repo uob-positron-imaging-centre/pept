@@ -100,7 +100,7 @@ class PlotlyGrapher:
                                                           'title': {'text': "<i>z</i> (mm)"}}
                                                  )
 
-        return self
+        return self.fig
 
 
     def add_data_as_trace(self, data, row, col, size = 2, color = None):
