@@ -315,12 +315,32 @@ class LineData:
 			if n == 1:
 				return self._line_data
 			else:
-				raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there is only 1 sample (sample_size == 0)\n".format(n))
+				raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there is only 1 sample (sample_size == 0)\n".format(n))
 		elif (n > self.number_of_samples) or n <= 0:
-			raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there are {} samples\n".format(n, self.number_of_samples))
+			raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there are {} samples\n".format(n, self.number_of_samples))
 
 		start_index = (n - 1) * (self._sample_size - self._overlap)
 		return self._line_data[start_index:(start_index + self._sample_size)]
+
+
+    def to_csv(filepath, delimiter = '  ', newline = '\n'):
+        '''Write `line_data` to a CSV file
+
+        Write all LoRs stored in the class to a CSV file.
+
+        Parameters
+        ----------
+            filepath : filename or file handle
+                If filepath is a path (rather than file handle), it is relative
+                to where python is called.
+            delimiter : str, optional
+                The delimiter between values. The default is two spaces '  ',
+                such that numbers in the format '123,456.78' are well-understood.
+            newline : str, optional
+                The sequence of characters at the end of every line. The default
+                is a new line '\n'
+        '''
+        np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
 
 
 	def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
@@ -906,12 +926,32 @@ class PointData:
 			if n == 1:
 				return self._point_data
 			else:
-				raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there is only 1 sample (sample_size == 0)\n".format(n))
+				raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample (samples indexed from 1): asked for sample number {}, when there is only 1 sample (sample_size == 0)\n".format(n))
 		elif (n > self.number_of_samples) or n <= 0:
-			raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there are {} samples\n".format(n, self.number_of_samples))
+			raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there are {} samples\n".format(n, self.number_of_samples))
 
 		start_index = (n - 1) * (self._sample_size - self._overlap)
 		return self._point_data[start_index:(start_index + self._sample_size)]
+
+
+    def to_csv(filepath, delimiter = '  ', newline = '\n'):
+        '''Write `point_data` to a CSV file
+
+        Write all points (and any extra data) stored in the class to a CSV file.
+
+        Parameters
+        ----------
+            filepath : filename or file handle
+                If filepath is a path (rather than file handle), it is relative
+                to where python is called.
+            delimiter : str, optional
+                The delimiter between values. The default is two spaces '  ',
+                such that numbers in the format '123,456.78' are well-understood.
+            newline : str, optional
+                The sequence of characters at the end of every line. The default
+                is a new line '\n'
+        '''
+        np.savetxt(filepath, self._point_data, delimiter = delimiter, newline = newline)
 
 
 	def plot_all_points(self, ax = None):
