@@ -184,6 +184,12 @@ class PlotlyGrapher:
             self.fig.add_trace(trace, row = row, col = col)
 
 
+    def add_data_as_trace_lines(self, data, row = 1, col = 1):
+        # data is a list of lines
+        for line in data:
+            self.add_data_as_trace_line(line, row, col)
+
+
     def add_trace(self, trace, row = 1, col = 1):
         # Add precomputed trace
         # Can accept HDBSCANclusterer.getCentresTrace() output
