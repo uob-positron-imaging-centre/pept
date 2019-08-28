@@ -185,9 +185,23 @@ class PlotlyGrapher:
 
 
     def add_data_as_trace_lines(self, data, row = 1, col = 1):
-        # data is a list of lines
+        # data is a list of lines, each defined by two points
+        # data row [time, x1, y1, z1, x2, y2, z2]
         for line in data:
-            self.add_data_as_trace_line(line, row, col)
+            self.fig.add_trace(
+                go.Scatter3d(
+                    x = [ line[1], line[4] ],
+                    y = [ line[2], line[5] ],
+                    z = [ line[3], line[6] ],
+                    mode = 'lines',
+                    opacity = 0.6,
+                    line = dict(
+                        width = 2,
+                    )
+                ),
+                row = row,
+                col = col
+			)
 
 
     def add_trace(self, trace, row = 1, col = 1):
