@@ -1,4 +1,4 @@
-include README.md LICENSE
+include README.md LICENSE CODE_OF_CONDUCT.md
 include requirements.txt
 global-include *.pyx
 global-include *.pxd

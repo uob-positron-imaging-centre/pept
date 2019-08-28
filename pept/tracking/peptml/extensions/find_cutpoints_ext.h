@@ -29,6 +29,6 @@
 #ifndef FIND_CUTPOINTS_EXT_H
 #define FIND_CUTPOINTS_EXT_H
 
-void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const unsigned int max_line, const double max_distance);
+void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const unsigned int max_line, const double max_distance, const double *cutoffs);
 
 #endif

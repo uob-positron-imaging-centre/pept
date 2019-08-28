@@ -93,22 +93,81 @@ class Cutpoints(pept.PointData):
 
 
     @staticmethod
-    def find_cutpoints_sample(sample, max_distance):
-        sample_cutpoints = find_cutpoints_api(sample, max_distance)
+    def get_cutoffs(sample):
+
+        # Check sample has shape (N, 7)
+        if sample.ndim != 2 or sample.shape[1] != 7:
+            raise ValueError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
+
+        # Compute cutoffs for cutpoints as the (min, max) values of the lines
+        # Minimum value of the two points that define a line
+        min_x = min(sample[:, 1].min(),
+                    sample[:, 4].min())
+        # Maximum value of the two points that define a line
+        max_x = max(sample[:, 1].max(),
+                    sample[:, 4].max())
+
+        # Minimum value of the two points that define a line
+        min_y = min(sample[:, 2].min(),
+                    sample[:, 5].min())
+        # Maximum value of the two points that define a line
+        max_y = max(sample[:, 2].max(),
+                    sample[:, 5].max())
+
+        # Minimum value of the two points that define a line
+        min_z = min(sample[:, 3].min(),
+                    sample[:, 6].min())
+        # Maximum value of the two points that define a line
+        max_z = max(sample[:, 3].max(),
+                    sample[:, 6].max())
+
+        cutoffs = np.array([min_x, max_x, min_y, max_y, min_z, max_z])
+        return cutoffs
+
+
+    @staticmethod
+    def find_cutpoints_sample(sample, max_distance, cutoffs = None):
+
+        # Check sample has shape (N, 7)
+        if sample.ndim != 2 or sample.shape[1] != 7:
+            raise ValueError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
+
+        if cutoffs is None:
+            cutoffs = Cutpoints.get_cutoffs(sample)
+        else:
+            cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
+            if cutoffs.ndim != 1 or len(cutoffs) != 6:
+                raise ValueError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+
+        sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
         return sample_cutpoints
 
 
-    def find_cutpoints(self, line_data, max_distance, verbose = True):
+    def find_cutpoints(self,
+                       line_data,
+                       max_distance,
+                       cutoffs = None,
+                       verbose = True):
 
         if verbose:
             start = time.time()
 
+        # Check line_data is an instance (or a subclass!) of pept.LineData
         if not isinstance(line_data, pept.LineData):
             raise Exception('[ERROR]: line_data should be an instance of pept.LineData')
 
+        # If cutoffs were not supplied, compute them
+        if cutoffs is None:
+            cutoffs = self.get_cutoffs(line_data.line_data)
+        # Otherwise make sure they are a C-contiguous numpy array
+        else:
+            cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
+            if cutoffs.ndim != 1 or len(cutoffs) != 6:
+                raise ValueError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+
         # Using joblib, collect the cutpoints from every sample in a list
         # of arrays
-        cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance) for sample in tqdm(line_data))
+        cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
 
         # cutpoints shape: (n, m, 4), where n is the number of samples, and
         # m is the number of cutpoints in the sample

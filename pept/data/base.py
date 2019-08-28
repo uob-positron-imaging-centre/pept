@@ -130,7 +130,7 @@ class LineData:
 		self._overlap = overlap
 
         # If `line_data` is not C-contiguous, create a C-contiguous copy
-		self._line_data = np.asarray(line_data, order = 'C')
+		self._line_data = np.asarray(line_data, order = 'C', dtype = float)
 
         # Check that line_data has shape (N, 7)
 		if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
@@ -722,7 +722,7 @@ class PointData:
 		self._sample_size = sample_size
 		self._overlap = overlap
 
-		self._point_data = np.asarray(point_data, order = 'C')
+		self._point_data = np.asarray(point_data, order = 'C', dtype = float)
 
 		if self._point_data.ndim != 2 or self._point_data.shape[1] < 4:
 			raise ValueError('\n[ERROR]: point_data should have two dimensions (M, N), where N >= 4. Received {}\n'.format(self._point_data.shape))

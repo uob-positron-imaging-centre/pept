@@ -43,7 +43,7 @@
 #include "find_cutpoints_ext.h"
 
 
-void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const unsigned int max_line, const double max_distance)
+void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const unsigned int max_line, const double max_distance, const double *cutoffs)
 {
     unsigned int    i, j;                               // iterators
     int             m;                                  // cutpoint index
@@ -52,9 +52,11 @@ void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const un
     double          a, b, c, d, e;                      // collected terms
     double          denom, s0, t0;                      // parameters for lines
     double          A0[3], B0[3], AB0[3];               // perpendicular points 
+    double          mx, my, mz;                         // cutpoint coordinates
 
     m = 0;
     for (i = 0; i < max_line - 1; ++i)
+    {
         for(j = i + 1; j < max_line; ++j)
         {
             /*
@@ -123,15 +125,26 @@ void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const un
                 // Check the distance is smaller than the tolerance
                 if (AB0[0] * AB0[0] + AB0[1] * AB0[1] + AB0[2] * AB0[2] < max_distance * max_distance)
                 {
+                    // Calculate the coordinates of the cutpoint
+                    mx = (A0[0] + B0[0]) / 2;
+                    my = (A0[1] + B0[1]) / 2;
+                    mz = (A0[2] + B0[2]) / 2;
+
+                    // Check the cutpoints falls within the cutoffs
                     // Simulate 2D array behaviour on cutpoints
-                    cutpoints[m * 4]        = (line1[-1] + line2[-1]) / 2; // Average of the times of the two lines
-                    cutpoints[m * 4 + 1]    = (A0[0] + B0[0]) / 2;
-                    cutpoints[m * 4 + 2]    = (A0[1] + B0[1]) / 2;
-                    cutpoints[m * 4 + 3]    = (A0[2] + B0[2]) / 2;
-                    ++m;
+                    if (mx > cutoffs[0] && mx < cutoffs[1] &&
+                        my > cutoffs[2] && my < cutoffs[3] &&
+                        mz > cutoffs[4] && mz < cutoffs[5])
+                    {
+                        // Average of the times of the two lines
+                        cutpoints[m * 4]        = (line1[-1] + line2[-1]) / 2; 
+                        cutpoints[m * 4 + 1]    = mx;
+                        cutpoints[m * 4 + 2]    = my;
+                        cutpoints[m * 4 + 3]    = mz;
+                        ++m;
+                    }
                 }
             }
-
-
         }
+    }
 }
