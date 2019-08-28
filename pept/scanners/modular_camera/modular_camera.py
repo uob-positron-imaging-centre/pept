@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools
+#
+#    Copyright (C) 2019 Andrei Leonard Nicusan
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 # File   : modular_camera.py
 # License: License: GNU v3.0
 # Author : Sam Manger <s.manger@bham.ac.uk>
@@ -13,8 +35,7 @@ from 	.extensions.get_pept_event import get_pept_LOR
 
 
 class ModularCamera(LineData):
-	'''A subclass of `LineData` that reads PEPT data from the modular
-	camera DAQ.
+	'''A subclass of `LineData` that reads PEPT data from the modular camera DAQ.
 
 	Provides the same functionality as the `LineData` class while
 	initialising `line_data` from a given file. This is a helper class
@@ -107,12 +128,12 @@ class ModularCamera(LineData):
 		self._index = 0
 		self._sample_size = sample_size
 		self._overlap = overlap
-		
+
 		self.dataFile = dataFile
 		self.filtered = []
 
 		x = 10
-				
+
 		header_buffer_size = 1000
 
 		self.n_events = 0
@@ -130,9 +151,9 @@ class ModularCamera(LineData):
 		with open(self.dataFile,"rb") as f:
 
 			# Skip over the header and handshake word
-			
+
 			f.seek(header_buffer_size)
-			
+
 			word = f.read(4)
 
 			if word.hex() == 'cefacefa':
@@ -171,12 +192,12 @@ class ModularCamera(LineData):
 
 		# Remove 'zero' lines
 		self._line_data = self._line_data[np.all(self._line_data,axis=1)]
-		
+
 		# Drop itag column
 		self._line_data = np.delete(self._line_data, 0, axis=1)
-		
+
 		self._number_of_lines = len(self._line_data)
-		
+
 		if verbose:
 			end = time.time()
 			print("Initialising the PEPT data took {} seconds\n".format(end - start))

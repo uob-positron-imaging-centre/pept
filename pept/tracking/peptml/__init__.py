@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+
 # File   : __init__.py
 # License: License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
@@ -8,12 +10,11 @@
 
 from    .peptml     import  Cutpoints
 from    .peptml     import  HDBSCANClusterer
-from    ..trajectory_separation.trajectory_separation   import  TrajectorySeparation
+
 
 __all__ = [
     "Cutpoints",
-    "HDBSCANClusterer",
-    "TrajectorySeparation"
+    "HDBSCANClusterer"
 ]
 
 

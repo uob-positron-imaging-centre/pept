@@ -2,6 +2,32 @@
 # -*- coding: utf-8 -*-
 
 
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools
+#
+#    Copyright (C) 2019 Andrei Leonard Nicusan
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+# File   : peptml.py
+# License: License: GNU v3.0
+# Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
+# Date   : 28.08.2019
+
+
 '''The *peptml* module implements a hierarchical density-based clustering
 algorithm for general Positron Emission Particle Tracking (PEPT)
 
@@ -15,8 +41,6 @@ and can create matplotlib- or plotly-based figures.
 PEPTanalysis requires the following packages:
 
 * **numpy**
-* **math**
-* **matplotlib.pyplot** and **mpl_toolkits.mplot3d** for 3D matplotlib-based plotting
 * **joblib** for multithreaded operations (such as midpoints-finding)
 * **tqdm** for showing progress bars
 * **plotly.subplots** and **plotly.graph_objects** for plotly-based plotting
@@ -32,10 +56,10 @@ the following paper: [TODO: paper signature].
 '''
 
 
-import  math
+import  time
+import  sys
+
 import  numpy                                   as          np
-import  matplotlib.pyplot                       as          plt
-from    mpl_toolkits.mplot3d                    import      Axes3D
 from    scipy.spatial                           import      cKDTree
 
 from    joblib                                  import      Parallel,       delayed
@@ -43,9 +67,7 @@ from    tqdm                                    import      tqdm
 from    plotly.subplots                         import      make_subplots
 import  plotly.graph_objects                    as          go
 
-import  time
-import  sys
-
+# Fix a deprecation warning inside the sklearn library
 try:
     sys.modules['sklearn.externals.six'] = __import__('six')
     sys.modules['sklearn.externals.joblib'] = __import__('joblib')

@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools
+#
+#    Copyright (C) 2019 Andrei Leonard Nicusan
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 # File   : base.py
 # License: License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
@@ -14,6 +36,7 @@ import  plotly.graph_objects    as  go
 import  matplotlib.pyplot       as  plt
 from    matplotlib.colors       import Normalize
 from 	mpl_toolkits.mplot3d 	import Axes3D
+
 
 class LineData:
 	'''A class for PEPT LoR data iteration, manipulation and visualisation.
@@ -96,17 +119,22 @@ class LineData:
 		if verbose:
 			start = time.time()
 
+        # If sample_size != 0 (in which case the class returns all data in one
+        # sample), check the `overlap` is not larger or equal to `sample_size`.
 		if sample_size != 0 and overlap >= sample_size:
 			raise ValueError('\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n'.format(overlap, sample_size))
 
+        # Initialise the inner parameters of the class
 		self._index = 0
 		self._sample_size = sample_size
 		self._overlap = overlap
 
+        # If `line_data` is not C-contiguous, create a C-contiguous copy
 		self._line_data = np.asarray(line_data, order = 'C')
 
+        # Check that line_data has shape (N, 7)
 		if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
-			raise ValueError('\n[ERROR]: line_data should have dimensions [N, 7]. Received {}\n'.format(self._line_data.shape))
+			raise ValueError('\n[ERROR]: line_data should have dimensions (N, 7). Received {}\n'.format(self._line_data.shape))
 
 		self._number_of_lines = len(self._line_data)
 
