@@ -1,7 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools
+#
+#    Copyright (C) 2019 Andrei Leonard Nicusan
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 # File   : setup.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 23.08.2019
 
@@ -37,13 +57,16 @@ AUTHOR = 'Andrei Leonard Nicusan'
 REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '0.1.0'
 
+
 def requirements():
     # The dependencies are the same as the contents of requirements.txt
     with open('requirements.txt') as f:
         return [line.strip() for line in f if line.strip()]
 
+
 # What packages are required for this module to be executed?
 REQUIRED = requirements()
+
 
 # What packages are optional?
 EXTRAS = {
@@ -56,11 +79,15 @@ cy_extension_kw = dict()
 
 extra_compile_args = ['-O3']
 cy_extension_kw['extra_compile_args'] = extra_compile_args
-
 cy_extension_kw['include_dirs'] = [np.get_include()]
+
 cy_extensions = [
-    Extension('pept.tracking.peptml.extensions.find_cutpoints_api', ['pept/tracking/peptml/extensions/find_cutpoints_api.pyx'], **cy_extension_kw),
-    Extension('pept.scanners.modular_camera.extensions.get_pept_event', ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'], **cy_extension_kw),
+    Extension('pept.tracking.peptml.extensions.find_cutpoints_api',
+              ['pept/tracking/peptml/extensions/find_cutpoints_api.pyx'],
+              **cy_extension_kw),
+    Extension('pept.scanners.modular_camera.extensions.get_pept_event',
+              ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
+              **cy_extension_kw),
 ]
 
 extensions = cythonize(cy_extensions, **cythonize_kw)
@@ -73,6 +100,7 @@ extensions = cythonize(cy_extensions, **cythonize_kw)
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+
 # Import the README and use it as the long-description.
 # Note: this will only work if 'README.md' is present in your MANIFEST.in file!
 try:
@@ -80,6 +108,7 @@ try:
         long_description = '\n' + f.read()
 except FileNotFoundError:
     long_description = DESCRIPTION
+
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
@@ -130,42 +159,49 @@ class UploadCommand(Command):
 
 # Where the magic happens:
 setup(
-    name=NAME,
-    version=about['__version__'],
-    description=DESCRIPTION,
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    author=AUTHOR,
-    author_email=EMAIL,
-    python_requires=REQUIRES_PYTHON,
-    url=URL,
-    packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    # If your package is a single module, use this instead of 'packages':
-    # py_modules=['mypackage'],
-
-    # entry_points={
-    #     'console_scripts': ['mycli=mymodule:cli'],
+    name = NAME,
+    version = about['__version__'],
+    description = DESCRIPTION,
+    long_description = long_description,
+    long_description_content_type = 'text/markdown',
+    author = AUTHOR,
+    author_email = EMAIL,
+    python_requires = REQUIRES_PYTHON,
+    url = URL,
+    packages = find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+    # entry_points = {
+    #     'console_scripts': ['mycli = mymodule:cli'],
     # },
-    install_requires=REQUIRED,
-    extras_require=EXTRAS,
-    include_package_data=True,
-    keywords='pept positron emission particle tracking',
-    license='GNU',
-    classifiers=[
+    install_requires = REQUIRED,
+    extras_require = EXTRAS,
+    include_package_data = True,
+    keywords = 'pept positron emission particle tracking',
+    license = 'GNU',
+    classifiers = [
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
+        'Natural Language :: English',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Cython',
-        'Programming Language :: C'
+        'Programming Language :: C',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Visualization',
+        'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     # $ setup.py publish support.
-    cmdclass={
+    cmdclass = {
         'upload': UploadCommand,
         'build_ext': build_ext
     },
-    ext_modules=extensions
+    ext_modules = extensions
 )

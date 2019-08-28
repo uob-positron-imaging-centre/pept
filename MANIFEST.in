@@ -4,5 +4,5 @@ global-include *.pyx
 global-include *.pxd
 global-exclude *.c*
 global-exclude .DS_Store
-recursive-exclude __pycache__
-recursive-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.pyc
