@@ -28,23 +28,28 @@
 # Date   : 28.08.2019
 
 
-'''The *peptml* module implements a hierarchical density-based clustering
-algorithm for general Positron Emission Particle Tracking (PEPT)
+'''The *peptml* package implements a hierarchical density-based clustering
+algorithm for general Positron Emission Particle Tracking (PEPT).
+
+The package includes tools for PEPT data analysis and visualisation. It  exports
+two main classes that are meant to work together: `Cutpoints`
+and `HDBSCANClusterer`. `Cutpoints` transforms the LoR data into *cutpoints* that
+can then be clustered using `HDBSCANClusterer`. `Cutpoints` accepts any instance
+of a class that inherits from `LineData` - this is a requirement due to the
+low-level C-API that it calls. `HDBSCANClusterer` can work with both `PointData`,
+as well as typical `numpy.ndarray`s.
 
 The module aims to provide general classes which can
 then be used in a script file as the user sees fit. For example scripts,
 look at the base of the pept library.
 
-The peptml subpackage accepts any instace of the LineData base class
-and can create matplotlib- or plotly-based figures.
-
-PEPTanalysis requires the following packages:
+`peptml` requires the following packages:
 
 * **numpy**
-* **joblib** for multithreaded operations (such as midpoints-finding)
+* **joblib** for multithreaded operations (such as cutpoints-finding)
 * **tqdm** for showing progress bars
-* **plotly.subplots** and **plotly.graph_objects** for plotly-based plotting
-* **hdbscan** for clustering midpoints and centres
+* **plotly >= 4.1.0** for plotly-based plotting
+* **hdbscan** for clustering cutpoints and centres
 * **time** for verbose timing of operations
 
 It was successfuly used at the University of Birmingham to analyse real
@@ -82,22 +87,221 @@ from    .extensions.find_cutpoints_api          import      find_cutpoints_api
 
 
 class Cutpoints(pept.PointData):
+    '''A class that transforms LoRs into *cutpoints* for clustering.
 
-    def __init__(self):
+    The `Cutpoints` class transforms LoRs (individual numpy arrays or full `LineData`)
+    into cutpoints (individual numpy arrays or full `PointData`) that can then be passed
+    to `HDBSCANClusterer`.
 
-        # Call pept.PointData constructor with dummy data
-        super().__init__([[0., 0., 0., 0.]],
-                         sample_size = 0,
-                         overlap = 0,
-                         verbose = False)
+    Under typical usage, the class is instantiated with the LoR data (required to be
+    an instance of `LineData`) and transforms it into an instance of `PointData` that
+    stores the found cutpoints.
+
+    For more control over the operations, the class also provides a static method (i.e.
+    it can be used without instantiating the class) `find_cutpoints_sample` that
+    receives a generic numpy array of LoRs (one 'sample') and returns a numpy array
+    of cutpoints.
+
+    Parameters
+    ----------
+    line_data : instance of pept.LineData
+        The LoRs for which the cutpoints will be computed. It is required to be an
+        instance of `pept.LineData`.
+    max_distance : float
+        The maximum distance between any two lines so that their cutpoint will be
+        considered.
+    cutoffs : list-like of length 6, optional
+        A list (or equivalent) of the cutoff distances for every axis, formatted as
+        [x_min, x_max, y_min, y_max, z_min, z_max]. Only consider the cutpoints which
+        fall within these cutoff distances. The default is None, in which case they
+        are automatically computed using `get_cutoffs`.
+    verbose : bool, optional
+        Provide extra information when computing the cutpoints: time the operation
+        and show a progress bar. The default is `True`.
+
+    Attributes
+    ----------
+    line_data : instance of pept.LineData
+        The LoRs for which the cutpoints will be computed. It is required to be an
+        instance of `pept.LineData`.
+    max_distance : float
+        The maximum distance between any two lines so that their cutpoint will be
+        considered.
+    cutoffs : list-like of length 6
+        A list (or equivalent) of the cutoff distances for every axis, formatted as
+        [x_min, x_max, y_min, y_max, z_min, z_max]. Only consider the cutpoints which
+        fall within these cutoff distances.
+    sample_size, overlap, number_of_lines, etc. : inherited from pept.PointData
+        Extra attributes and methods are inherited from the base class `PointData`.
+
+    Raises
+    ------
+    Exception
+        If `line_data` is not an instance of `pept.LineData`.
+    TypeError
+        If `cutoffs` is not a one-dimensional array with values formatted as
+        `[min_x, max_x, min_y, max_y, min_z, max_z]`.
+
+    Example usage
+    -------------
+    Compute the cutpoints for a `LineData` instance:
+        >>> line_data = pept.LineData(example_data)
+        >>> cutpts = peptml.Cutpoints(line_data, 0.1)
+
+    Compute the cutpoints for a single sample:
+        >>> sample = line_data[0]
+        >>> cutpts_sample = peptml.Cutpoints.find_cutpoints_sample(sample) # no class instantiation
+
+    '''
+
+    def __init__(self,
+                 line_data,
+                 max_distance,
+                 cutoffs = None,
+                 verbose = True):
+
+        # Find the cutpoints when instantiated. The method
+        # also initialises the instance as a `PointData` subclass.
+        self.find_cutpoints(
+            line_data,
+            max_distance,
+            cutoffs = cutoffs,
+            verbose = verbose
+        )
+
+
+    @property
+    def line_data(self):
+        '''The LoRs for which the cutpoints are computed.
+
+        line_data : instance of pept.LineData
+
+        '''
+
+        return self._line_data
+
+
+    @line_data.setter
+    def line_data(self, new_line_data):
+        ''' The LoRs for which the cutpoints are computed.
+
+        Parameters
+        ----------
+        line_data : instance of pept.LineData
+            The LoRs for which the cutpoints will be computed. It is required to be an
+            instance of `pept.LineData`.
+
+        Raises
+        ------
+        Exception
+            If `line_data` is not an instance of `pept.LineData`.
+
+        '''
+
+        # Check line_data is an instance (or a subclass!) of pept.LineData
+        if not isinstance(line_data, pept.LineData):
+            raise Exception('[ERROR]: line_data should be an instance of pept.LineData')
+
+        self._line_data = line_data
+
+
+    @property
+    def max_distance(self):
+        '''The maximum distance between any pair of lines for which the cutpoint is considered.
+
+        max_distance : float
+
+        '''
+        return self._max_distance
+
+
+    @max_distance.setter
+    def max_distance(self, new_max_distance):
+        '''The maximum distance between any pair of lines for which the cutpoint is considered.
+
+        max_distance : float
+            The maximum distance between any two lines so that their cutpoint will be
+            considered.
+
+        '''
+        self._max_distance = new_max_distance
+
+
+    @property
+    def cutoffs(self):
+        '''Only consider the cutpoints which fall within these cutoff distances.
+
+        A list (or equivalent) of the cutoff distances for every axis, formatted as
+        [x_min, x_max, y_min, y_max, z_min, z_max].
+
+        cutoffs : (6) list or equivalent
+
+        '''
+
+        return self._cutoffs
+
+
+    @cutoffs.setter
+    def cutoffs(self, new_cutoffs):
+        '''Only consider the cutpoints which fall within these cutoff distances.
+
+        A list (or equivalent) of the cutoff distances for every axis, formatted as
+        [x_min, x_max, y_min, y_max, z_min, z_max].
+
+        Parameters
+        ----------
+        new_cutoffs : list-like of length 6, optional
+            A list (or equivalent) of the cutoff distances for every axis, formatted as
+            [x_min, x_max, y_min, y_max, z_min, z_max]. Only consider the cutpoints which
+            fall within these cutoff distances. The default is None, in which case they
+            are automatically computed using `get_cutoffs`.
+
+        Raises
+        ------
+        TypeError
+            If `cutoffs` is not a one-dimensional array with values formatted as
+            `[min_x, max_x, min_y, max_y, min_z, max_z]`.
+
+        '''
+
+        cutoffs = np.asarray(new_cutoffs, order = 'C', dtype = float)
+        if cutoffs.ndim != 1 or len(cutoffs) != 6:
+            raise TypeError('\n[ERROR]: new_cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+
+        self._cutoffs = cutoffs
 
 
     @staticmethod
     def get_cutoffs(sample):
+        '''Compute the cutoffs from a sample of LoR data.
+
+        This is a static method, meaning it can be called without
+        instantiating the `Cutpoints` class. It computes the cutoffs
+        from the minimum and maximum values of the LoRs in `sample`
+        in each dimension.
+
+        Parameters
+        ----------
+        sample : (N, 7) numpy.ndarray
+            A sample of LoRs, where each row is `[time, x1, y1, z1, x2, y2, z2]`,
+            such that every line is defined by the points `[x1, y1, z1]` and
+            `[x2, y2, z2]`.
+        Returns
+        -------
+        cutoffs : (6) numpy.ndarray
+            The computed cutoffs for each dimension, formatted as `[x_min, x_max,
+            y_min, y_max, z_min, z_max]`.
+
+        Raises
+        ------
+        TypeError
+            If `sample` is not a numpy array with shape (N, 7).
+
+        '''
 
         # Check sample has shape (N, 7)
         if sample.ndim != 2 or sample.shape[1] != 7:
-            raise ValueError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
+            raise TypeError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
 
         # Compute cutoffs for cutpoints as the (min, max) values of the lines
         # Minimum value of the two points that define a line
@@ -127,17 +331,53 @@ class Cutpoints(pept.PointData):
 
     @staticmethod
     def find_cutpoints_sample(sample, max_distance, cutoffs = None):
+        '''Find the cutpoints in a sample of LoRs.
+
+        This is a static method, meaning it can be called without
+        instantiating the `Cutpoints` class. It computes the cutpoints
+        from a given `sample` that are associated with pairs of lines
+        closer than `max_distance`.
+
+        Parameters
+        ----------
+        sample : (N, 7) numpy.ndarray
+            A sample of LoRs, where each row is `[time, x1, y1, z1, x2, y2, z2]`,
+            such that every line is defined by the points `[x1, y1, z1]` and
+            `[x2, y2, z2]`.
+        max_distance : float
+            The maximum distance between any pair of lines so that their cutpoint
+            will be considered.
+        cutoffs : list, optional
+            The cutoffs for each dimension, formatted as `[x_min, x_max,
+            y_min, y_max, z_min, z_max]`. If not defined, they are computed
+            automatically by calling `get_cutoffs`. The default is `None`.
+
+        Returns
+        -------
+        sample_cutpoints : (N, 4) numpy.ndarray
+            The computed cutpoints for the given LoRs, where each row is
+            formatted as `[time, x, y, z]` for every cutpoint.
+
+        Raises
+        ------
+        TypeError
+            If `sample` is not a numpy array with shape (N, 7).
+        TypeError
+            If `cutoffs` is not a `one-dimensional array with values [min_x,
+            max_x, min_y, max_y, min_z, max_z]`
+
+        '''
 
         # Check sample has shape (N, 7)
         if sample.ndim != 2 or sample.shape[1] != 7:
-            raise ValueError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
+            raise TypeError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
 
         if cutoffs is None:
             cutoffs = Cutpoints.get_cutoffs(sample)
         else:
             cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
             if cutoffs.ndim != 1 or len(cutoffs) != 6:
-                raise ValueError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+                raise TypeError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
 
         sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
         return sample_cutpoints
@@ -147,7 +387,41 @@ class Cutpoints(pept.PointData):
                        line_data,
                        max_distance,
                        cutoffs = None,
-                       verbose = True):
+                       verbose = False):
+        '''Find the cutpoints of the samples in a `LineData` instance.
+
+        Parameters
+        ----------
+        line_data : instance of pept.LineData
+            The LoRs for which the cutpoints will be computed. It is required to be an
+            instance of `pept.LineData`.
+        max_distance : float
+            The maximum distance between any two lines so that their cutpoint will be
+            considered.
+        cutoffs : list-like of length 6, optional
+            A list (or equivalent) of the cutoff distances for every axis, formatted as
+            [x_min, x_max, y_min, y_max, z_min, z_max]. Only consider the cutpoints which
+            fall within these cutoff distances. The default is None, in which case they
+            are automatically computed using `get_cutoffs`.
+        verbose : bool, optional
+            Provide extra information when computing the cutpoints: time the operation
+            and show a progress bar. The default is `False`.
+
+        Returns
+        -------
+        self : the PointData instance of cutpoints
+            The computed cutpoints are stored in the `Cutpoints` class, as a
+            subclass of `pept.PointData`.
+
+        Raises
+        ------
+        Exception
+            If `line_data` is not an instance of `pept.LineData`.
+        TypeError
+            If `cutoffs` is not a one-dimensional array with values formatted as
+            `[min_x, max_x, min_y, max_y, min_z, max_z]`.
+
+        '''
 
         if verbose:
             start = time.time()
@@ -156,6 +430,9 @@ class Cutpoints(pept.PointData):
         if not isinstance(line_data, pept.LineData):
             raise Exception('[ERROR]: line_data should be an instance of pept.LineData')
 
+        self._line_data = line_data
+        self._max_distance = max_distance
+
         # If cutoffs were not supplied, compute them
         if cutoffs is None:
             cutoffs = self.get_cutoffs(line_data.line_data)
@@ -163,11 +440,16 @@ class Cutpoints(pept.PointData):
         else:
             cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
             if cutoffs.ndim != 1 or len(cutoffs) != 6:
-                raise ValueError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+                raise TypeError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+
+        self._cutoffs = cutoffs
 
         # Using joblib, collect the cutpoints from every sample in a list
-        # of arrays
-        cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
+        # of arrays. If verbose, show progress bar using tqdm.
+        if verbose:
+            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
+        else:
+            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in line_data)
 
         # cutpoints shape: (n, m, 4), where n is the number of samples, and
         # m is the number of cutpoints in the sample
@@ -224,153 +506,55 @@ def findMeanError(truePositions, foundPositions):
 
 
 
-class ClustererBase:
-    '''
-    Base class that provides common functionality between any clustering algorithms.
-    Any clustering algorithm should have at least the following attributes:
-
-        sample:     the points that will be clustered
-                    sample row: [time, X, Y, Z]
-
-        labels:     a vector of size len(sample) that saves the labels of each
-                    datapoint in the sample
-
-        maxLabel:   the largest value in the labels attribute
-    '''
-
-
-    def getLabels(self):
-        return self.labels
-
-
-    def getSampleLabels(self):
-        # Return all points as arrays of points with same label
-        sampleLabels = []
-
-        # First noise
-        sampleLabels.append(self.sample[self.labels == -1])
-
-        # Then actual labels
-        for i in range(0, self.maxLabel + 1):
-            sampleLabels.append(self.sample[self.labels == i])
-
-        return np.array(sampleLabels)
-
-
-    def getCentres(self):
-        # the centre of a cluster is the average of the time, x, y, z columns
-        # and the number of points of that cluster
-        # centres row: [time, x, y, z, clusterSize]
-        centres = []
-        for i in range(0, self.maxLabel + 1):
-            # Average time, x, y, z of cluster of label i
-            centresRow = np.mean(self.sample[self.labels == i], axis = 0)
-            # Append the number of points of label i
-            centresRow = np.append(centresRow, (self.labels == i).sum())
-            centres.append(centresRow)
-
-        return np.array(centres)
-
-
-    def plotSampleLabels(self, ax):
-
-        for i in range(0, self.maxLabel + 1):
-            dataPointsLabel = self.sample[self.labels == i]
-            ax.scatter(dataPointsLabel[:, 1], dataPointsLabel[:, 2], dataPointsLabel[:, 3], alpha = 0.6, marker = '1', s = 1)
-
-        # Plot noise
-        dataPointsLabel = self.sample[self.labels == -1]
-        ax.scatter(dataPointsLabel[:, 1], dataPointsLabel[:, 2], dataPointsLabel[:, 3], c = 'k', alpha = 0.1, marker = '.', s = 1)
-
-
-    def plotSampleLabelsAltAxes(self, ax):
-
-        for i in range(0, self.maxLabel + 1):
-            dataPointsLabel = self.sample[self.labels == i]
-            ax.scatter(dataPointsLabel[:, 3], dataPointsLabel[:, 1], dataPointsLabel[:, 2], alpha = 0.6, marker = '1', s = 1)
-
-        # Plot noise
-        dataPointsLabel = self.sample[self.labels == -1]
-        ax.scatter(dataPointsLabel[:, 3], dataPointsLabel[:, 1], dataPointsLabel[:, 2], c = 'k', alpha = 0.01, marker = '.', s = 1)
-
-
-    def plotCentres(self, ax):
-
-        centres = self.getCentres()
-        if len(centres) > 0:
-            ax.scatter(centres[:, 1], centres[:, 2], centres[:, 3], c = 'r', marker = 'D', s = 1)
-
-
-    def plotCentresAltAxes(self, ax):
-
-        centres = self.getCentres()
-        if len(centres) > 0:
-            ax.scatter(centres[:, 3], centres[:, 1], centres[:, 2], c = 'r', marker = 'D', s = 5)
-
-
-    def getSampleLabelsTraces(self, noise = True):
-        traces = []
-        for i in range(0, self.maxLabel + 1):
-            dataPointsLabel = self.sample[self.labels == i][0::10]
-            traces.append(go.Scatter3d(
-                x = dataPointsLabel[:, 1],
-                y = dataPointsLabel[:, 2],
-                z = dataPointsLabel[:, 3],
-                mode = 'markers',
-                marker = dict(
-                    size = 2,
-                    opacity = 0.8,
-                    colorscale = 'Cividis'
-                )
-            ))
-
-        if noise == True:
-            # Noise points
-            dataPointsLabel = self.sample[self.labels == -1][0::10]
-            traces.append(go.Scatter3d(
-                x = dataPointsLabel[:, 1],
-                y = dataPointsLabel[:, 2],
-                z = dataPointsLabel[:, 3],
-                mode = 'markers',
-                marker = dict(
-                    size = 1,
-                    opacity = 0.4,
-                    color = 'black'
-                )
-            ))
-
-        return traces
-
-
-    def getCentresTrace(self):
-        centres = self.getCentres()
-        color = centres[:, -1]
-        color = color[[0, len(color) // 2, -1]]
-        trace = go.Scatter3d(
-            x=centres[:, 1],
-            y=centres[:, 2],
-            z=centres[:, 3],
-            mode='markers',
-            marker=dict(
-                size=2,
-                color=color,   # set color to sample size
-                colorscale='Cividis',   # choose a colorscale
-                colorbar=dict(
-                    title="Number of clustered points"
-                ),
-                opacity=0.5
-            )
-        )
-
-        return trace
-
-
-
-
 class HDBSCANClusterer:
+    '''HDBSCAN-based clustering for cutpoints from LoRs.
+
+    This class is a wrapper around the `hdbscan` package, providing tools for
+    parallel clustering of samples of cutpoints. It can return `PointData`
+    classes which can be easily manipulated or visualised.
+
+    Parameters
+    ----------
+        min_cluster_size : int, optional
+            (Taken from hdbscan's documentation): The minimum size of clusters;
+            single linkage splits that contain fewer points than this will be
+            considered points “falling out” of a cluster rather than a cluster
+            splitting into two new clusters. The default is 20.
+        min_samples : int, optional
+            (Taken from hdbscan's documentation): The number of samples in a
+            neighbourhood for a point to be considered a core point. The default
+            is None, being set automatically to the `min_cluster_size`.
+        allow_single_cluster : bool, optional
+            (Taken from hdbscan's documentation): By default HDBSCAN* will not
+            produce a single cluster, setting this to True will override this and
+            allow single cluster results in the case that you feel this is a valid
+            result for your dataset. For PEPT, set this to True if you only have
+            one tracer in the dataset. Otherwise, leave it to False, as it will
+            provide higher accuracy.
+
+    Attributes
+    ----------
+        min_cluster_size : int
+            (Taken from hdbscan's documentation): The minimum size of clusters;
+            single linkage splits that contain fewer points than this will be
+            considered points “falling out” of a cluster rather than a cluster
+            splitting into two new clusters. The default is 20.
+        min_samples : int
+            (Taken from hdbscan's documentation): The number of samples in a
+            neighbourhood for a point to be considered a core point. The default
+            is None, being set automatically to the `min_cluster_size`.
+        allow_single_cluster : bool
+            (Taken from hdbscan's documentation): By default HDBSCAN* will not
+            produce a single cluster, setting this to True will override this and
+            allow single cluster results in the case that you feel this is a valid
+            result for your dataset. For PEPT, set this to True if you only have
+            one tracer in the dataset. Otherwise, leave it to False, as it will
+            provide higher accuracy.
+
+    '''
 
     def __init__(self,
-                 min_cluster_size = 5,
+                 min_cluster_size = 20,
                  min_samples = None,
                  allow_single_cluster = False):
 
@@ -382,14 +566,6 @@ class HDBSCANClusterer:
                                          min_samples = min_samples,
                                          core_dist_n_jobs = -1,
                                          allow_single_cluster = allow_single_cluster)
-
-        '''
-        # Call pept.PointData constructor with dummy data
-        super().__init__([[0., 0., 0., 0.]],
-                         sample_size = 0,
-                         overlap = 0,
-                         verbose = False)
-        '''
 
 
     @property
@@ -426,15 +602,64 @@ class HDBSCANClusterer:
                    sample,
                    store_labels = False,
                    noise = False,
-                   as_array = False,
+                   as_array = True,
                    verbose = False):
+        '''Fit one sample of cutpoints and return the cluster centres and
+        (optionally) the labelled cutpoints.
+
+        Parameters
+        ----------
+        sample : (N, M >= 4) numpy.ndarray
+            The sample of points that will be clustered. Every point corresponds to
+            a row and is formatted as `[time, x, y, z, etc]`. Only columns `[1, 2, 3]`
+            are used for clustering.
+        store_labels : bool, optional
+            If set to True, the clustered cutpoints are returned along with the centres
+            of the clusters. Setting it to False speeds up the clustering. The default
+            is False.
+        noise : bool, optional
+            If set to True, the clustered cutpoints also include the points classified
+            as noise. Only has an effect if `store_labels` is set to True. The default
+            is False.
+        as_array : bool, optional
+            If set to True, the centres of the clusters and the clustered cutpoints are
+            returned as numpy arrays. If set to False, they are returned inside
+            instances of `pept.PointData`.
+        verbose : bool, optional
+            Provide extra information when computing the cutpoints: time the operation
+            and show a progress bar. The default is `False`.
+
+        Returns
+        -------
+        centres : numpy.ndarray or pept.PointData
+            The centroids of every cluster found. They are computed as the average
+            of every column of `[time, x, y, z, etc]` of the clustered points. Another
+            column is added to the initial data in `sample`, signifying the cluster
+            size - the number of points included in the cluster. If `as_array` is
+            set to True, it is a numpy array, otherwise the centres are stored
+            in a pept.PointData instance.
+        clustered_cutpoints : numpy.ndarray or pept.PointData
+            The points in `sample` that fall in every cluster. A new column is added
+            to the points in `sample` that signifies the label of cluster that the
+            point was associated with: all points in cluster number 3 will have the
+            number 3 as the last element in their row. The points classified as noise
+            have the number -1 associated. If `as_array` is set to True, it is a numpy
+            array, otherwise the clustered cutpoints are stored in a pept.PointData
+            instance.
+
+        Raises
+        ------
+        TypeError
+            If `sample` is not a numpy array of shape (N, M), where M >= 4.
+
+        '''
 
         if verbose:
             start = time.time()
 
         # sample row: [time, x, y, z]
         if sample.ndim != 2 or sample.shape[1] < 4:
-            raise ValueError('\n[ERROR]: sample should have two dimensions (M, N), where N >= 4. Received {}\n'.format(sample.shape))
+            raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N >= 4. Received {}\n'.format(sample.shape))
 
         # Only cluster based on [x, y, z]
         labels = self.clusterer.fit_predict(sample[:, 1:4])
@@ -446,7 +671,6 @@ class HDBSCANClusterer:
         # the centre of a cluster is the average of the time, x, y, z columns
         # and the number of points of that cluster
         # centres row: [time, x, y, z, ..etc.., cluster_size]
-        centres = []
         for i in range(0, max_label + 1):
             # Average time, x, y, z of cluster of label i
             centres_row = np.mean(sample[labels == i], axis = 0)
@@ -496,6 +720,47 @@ class HDBSCANClusterer:
                       store_labels = False,
                       noise = False,
                       verbose = True):
+        '''Fit cutpoints (an instance of `PointData`) and return the cluster
+        centres and (optionally) the labelled cutpoints.
+
+        Parameters
+        ----------
+        cutpoints : an instance of `pept.PointData`
+            The samples of points that will be clustered. In every sample, every point
+            corresponds to a row and is formatted as `[time, x, y, z, etc]`. Only
+            columns `[1, 2, 3]` are used for clustering.
+        store_labels : bool, optional
+            If set to True, the clustered cutpoints are returned along with the centres
+            of the clusters. Setting it to False speeds up the clustering. The default
+            is False.
+        noise : bool, optional
+            If set to True, the clustered cutpoints also include the points classified
+            as noise. Only has an effect if `store_labels` is set to True. The default
+            is False.
+        verbose : bool, optional
+            Provide extra information when computing the cutpoints: time the operation
+            and show a progress bar. The default is `False`.
+
+        Returns
+        -------
+        centres : pept.PointData
+            The centroids of every cluster found. They are computed as the average
+            of every column of `[time, x, y, z, etc]` of the clustered points. Another
+            column is added to the initial data in `sample`, signifying the cluster
+            size - the number of points included in the cluster.
+        clustered_cutpoints : numpy.ndarray or pept.PointData
+            The points in `sample` that fall in every cluster. A new column is added
+            to the points in `sample` that signifies the label of cluster that the
+            point was associated with: all points in cluster number 3 will have the
+            number 3 as the last element in their row. The points classified as noise
+            have the number -1 associated.
+
+        Raises
+        ------
+        Exception
+            If `cutpoints` is not an instance (or a subclass) of `pept.PointData`.
+
+        '''
 
         if verbose:
             start = time.time()
@@ -504,11 +769,18 @@ class HDBSCANClusterer:
             raise Exception('[ERROR]: cutpoints should be an instance of pept.PointData (or any class inheriting from it)')
 
         # Fit all samples in `cutpoints` in parallel using joblib
-        # Collect all outputs as a list
-        data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
+        # Collect all outputs as a list. If verbose, show progress bar with
+        # tqdm
+        if verbose:
+            data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
                                                 store_labels = store_labels,
                                                 noise = noise,
                                                 as_array = True) for sample in tqdm(cutpoints))
+        else:
+            data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
+                                                store_labels = store_labels,
+                                                noise = noise,
+                                                as_array = True) for sample in cutpoints)
 
         # Access joblib.Parallel output as list comprehensions
         centres = np.array([row[0] for row in data_list if len(row[0]) != 0])
@@ -533,302 +805,6 @@ class HDBSCANClusterer:
             return [centres, clustered_cutpoints]
         else:
             return [centres, []]
-
-
-
-
-    def fitSampleParallel(self, sample, saveLabels = False, saveNoise = False):
-        # Function that will be parallelised
-        # Needs to return a list of the needed outputs
-        self.fitSample(sample)
-        centres = self.getCentres()
-
-        if saveLabels:
-            sampleLabelsTraces = self.getSampleLabelsTraces(noise = saveNoise)
-        else:
-            sampleLabelsTraces = []
-
-        return [centres, sampleLabelsTraces]
-
-
-    def clusterIterable(self,
-                        samples,
-                        saveLabels = False,
-                        saveNoise = False):
-
-        # Call joblib Parallel subroutine for every sample needed
-        # Collects returned data as a list of outputs
-        dataList = Parallel(n_jobs = -1)(delayed(self.fitSampleParallel)(sample, saveLabels, saveNoise) for sample in tqdm(samples))
-
-        # Access the output from the parallelised function as list comprehensions
-        # centres row: [time, x, y, z, meanMidpointsClusterSize]
-        self.centres = np.array([dataRow[0] for dataRow in dataList if len(dataRow[0]) != 0])
-        if len(self.centres) != 0:
-            self.centres = np.vstack(self.centres)
-
-        # Collect all the lists of clustered midpoints traces and flatten them
-        # Plot the midpoints only if plotMidpoints == True
-        if saveLabels:
-            self.labelsTraces = [dataRow[1] for dataRow in dataList]
-            self.labelsTraces = [elem for sublist in self.labelsTraces for elem in sublist]
-
-            return [self.centres, self.labelsTraces]
-        else:
-            return [self.centres, []]
-
-
-
-
-class HDBSCANclustererAuto(ClustererBase):
-    '''
-    Automatically vary the harshness of an HDBSCAN clusterer until
-    a particle has been found
-    '''
-
-    def __init__(self, sampleSize, k = [0.001, 0.8], nIter = 5):
-        # sampleSize is the average number of points per particle
-
-        # k is a correction factor ranging from 0 to 1, having the
-        # physical meaning of the minimum ratio of points that
-        # need to be part of the cluster.
-        #   eg. k = 1 means all points need to be close together => harsher
-        #       k = 0.2 means 20% of points need to be close => more lenient
-        self.sampleSize = sampleSize
-        self.k = k
-        self.nIter = nIter
-
-        if self.sampleSize <= 0:
-            raise Exception('[ERROR]: sampleSize needs to be a positive integer')
-
-        # Create a list of clusterers with min_cluster_size ranging from min to max, with
-        # nIter maximum iterations to find a centre
-
-        self.autoClusterer = []
-
-        # lenient because smaller minimum cluster size => more points into cluster
-        min_min_cluster_size = k[0] * self.sampleSize #self.sampleSize / 30#10
-
-        # harsh
-        max_min_cluster_size = k[1] * self.sampleSize #self.sampleSize / 20#5
-
-        # from harsh to lenient
-        sizes = np.linspace(max_min_cluster_size, min_min_cluster_size, self.nIter)
-
-        for min_cluster_size in sizes:
-            min_cluster_size = int(min_cluster_size)
-            if min_cluster_size < 2:
-                min_cluster_size = 2
-            self.autoClusterer.append(hdbscan.HDBSCAN(min_cluster_size=min_cluster_size,
-                                                      core_dist_n_jobs = -1))
-
-
-    def changeParameters(self, sampleSize = 0, nIter = 5):
-        if sampleSize != 0:
-            if self.sampleSize <= 0 or type(sampleSize) != int:
-                raise Exception('[ERROR]: sampleSize needs to be a positive integer')
-            else:
-                self.sampleSize = sampleSize
-
-        self.nIter = nIter
-
-        if self.sampleSize != 0:
-            # Create a list of clusterers with min_cluster_size ranging from min to max, with
-            # nIter maximum iterations to find a centre
-
-            self.autoClusterer = []
-
-            # lenient because smaller minimum cluster size => more points into cluster
-            min_min_cluster_size = self.sampleSize / 10
-
-            # harsh
-            max_min_cluster_size = self.sampleSize / 5
-
-            # from harsh to lenient
-            sizes = np.linspace(max_min_cluster_size, min_min_cluster_size, self.nIter)
-
-            for min_cluster_size in sizes:
-                self.autoClusterer.append(hdbscan.HDBSCAN(min_cluster_size=int(min_cluster_size)))
-
-
-    def fitSample(self, sample):
-        #start = time.time()
-
-        # sample row: [time, x, y, z]
-        self.sample = sample
-
-        for clusterer in self.autoClusterer:
-            # Only cluster based on [x, y, z]
-            clusterer.fit(self.sample[:, 1:4])
-            self.labels = clusterer.labels_
-            self.maxLabel = self.labels.max()
-
-            # Stop when a particle was found
-            if self.maxLabel >= 0:
-                break
-
-        #end = time.time()
-        #print("Fitting one sample took {} seconds".format(end - start))
-
-
-
-class ClusterCentres:
-    '''
-    Helper/wrapper class that receives cluster centres and can
-    yield samples of adaptive size for a second pass of clustering
-    '''
-
-    def __init__(self, centres, sampleSize=50, overlap=0):
-        self.centres = centres
-        self.numberOfCentres = len(centres)
-        self.sampleSize = sampleSize
-        self.overlap = overlap
-
-        self._index = 0
-
-
-    def getNumberOfSamples(self):
-        if self.numberOfCentres >= self.sampleSize:
-            return (self.numberOfCentres - self.sampleSize) // (self.sampleSize - self.overlap) + 1
-        else:
-            return 0
-
-
-    def getCentresSampleN(self, sampleN):
-        if (sampleN > self.getNumberOfSamples()) or sampleN <= 0:
-            raise Exception("\n\n[ERROR]: Trying to access a non-existent sample: asked for sample number {}, when there are {} samples\n".format(sampleN, self.getNumberOfSamples()))
-
-        startIndex = (sampleN - 1) * (self.sampleSize - self.overlap)
-        return self.centres[startIndex:(startIndex + self.sampleSize)]
-
-
-    def __len__(self):
-        return self.getNumberOfSamples()
-
-
-    def __iter__(self):
-        return self
-
-
-    def __next__(self):
-        # sampleSize > 0 => return slices
-        if self._index != 0:
-            self._index = self._index + self.sampleSize - self.overlap
-        else:
-            self._index = self._index + self.sampleSize
-
-
-        if self._index > self.numberOfCentres:
-            self._index = 0
-            raise StopIteration
-
-        return self.centres[(self._index - self.sampleSize):self._index]
-
-
-
-
-class HDBSCANtwoPassClusterer:
-    '''
-    Helper class which implements a second pass of clustering
-    over the centres found by 'clusterer'
-
-    Two-pass clustering helps with spatial resolution and
-    determining the trajectory of a moving particle
-
-        clusterer: a clusterer which has the method fitSample(sample) that will
-            fit samples of midpoints (first-pass clustering)
-
-        clusterer2: a clusterer which has the method fitSample(sample) that will
-            fit samples of centres (second-pass clustering)
-
-        samplesMidpoints: an array of samples of midpoints.
-            samplesMidpoints.shape: (numberOfSamples, numberOfMidpointsPerSample, 4)
-            (can alternatively send a Midpoints instance which can be iterated over)
-
-        centresSampleSize: number of centres to send per sample  to the second reclustering
-    '''
-
-    def __init__(self, clusterer, clusterer2, samplesMidpoints, centresSampleSize, centresOverlap=0):
-        # clusterer is an instance which has the method .fitSample(sample)
-        # samplesMidpoints is an array of samples of midpoints
-        # samplesMidpoints.shape: (numberOfSamples, numberOfMidpointsPerSample, 4)
-        # (can alternatively send a Midpoints instance which can be iterated over)
-
-        self.clusterer = clusterer
-        self.clusterer2 = clusterer2
-        self.samplesMidpoints = samplesMidpoints
-        self.centresSampleSize = centresSampleSize
-        self.centresOverlap = centresOverlap
-        self.centres = []
-        self.centres2 = []
-
-
-    def fit(self):
-
-        start = time.time()
-        # First pass of clustering for midpoints
-        for sample in self.samplesMidpoints:
-            self.clusterer.fitSample(sample)
-            newCentres = self.clusterer.getCentres()
-            self.centres.extend(newCentres)
-
-        end = time.time()
-        print('First pass of clustering took {} s'.format(end - start))
-
-        # centres row: [time, x, y, z, clusterSize]
-        self.centres = np.array(self.centres)
-
-        self.samplesCentres = ClusterCentres(self.centres, self.centresSampleSize, self.centresOverlap)
-
-        print('Total number of samples of centres: {}'.format(self.samplesCentres.getNumberOfSamples()))
-
-        start = time.time()
-        # Second pass of clustering for centres
-        for sample in self.samplesCentres:
-            self.clusterer2.fitSample(sample)
-            newCentres = self.clusterer2.getCentres()
-            self.centres2.extend(newCentres)
-
-        end = time.time()
-        print('Second pass of clustering took {} s'.format(end - start))
-
-        # centres2 row: [time, x, y, z, meanCentresClusterSize, clusterSize]
-        self.centres2 = np.array(self.centres2)
-
-
-    def getCentres(self):
-        return self.centres
-
-
-    def getCentres2(self):
-        return self.centres2
-
-
-    def plotCentres(self, ax):
-
-        if len(self.centres) > 0:
-            ax.scatter(self.centres[:, 1], self.centres[:, 2], self.centres[:, 3],
-                    c = 'r', marker = 'D', s = 5)
-
-
-    def plotCentresAltAxes(self, ax):
-
-        if len(self.centres) > 0:
-            ax.scatter(self.centres[:, 3], self.centres[:, 1], self.centres[:, 2],
-                    c = 'r', marker = 'D', s = 5)
-
-
-    def plotCentres2(self, ax):
-
-        if len(self.centres2) > 0:
-            ax.scatter(self.centres2[:, 1], self.centres2[:, 2], self.centres2[:, 3],
-                    c = 'b', marker = 'D', s = 5)
-
-
-    def plotCentres2AltAxes(self, ax):
-
-        if len(self.centres2) > 0:
-            ax.scatter(self.centres2[:, 3], self.centres2[:, 1], self.centres2[:, 2],
-                    c = 'b', marker = 'D', s = 5)
 
 
 
@@ -1035,149 +1011,6 @@ class TrajectorySeparation:
         for traj in trajectories:
             if len(traj) > 0:
                 ax.scatter(traj[:, 3], traj[:, 1], traj[:, 2], marker='D', s=10)
-
-
-
-
-class PlotlyGrapher:
-    # Helper class that automatically generates Plotly graphs
-    # for the PEPT data
-
-    def __init__(self, rows=1, cols=1, xlim = [0, 500],
-                 ylim = [0, 500], zlim = [0, 712], subplot_titles = ['  ']):
-        self.rows = rows
-        self.cols = cols
-
-        self.xlim = xlim
-        self.ylim = ylim
-        self.zlim = zlim
-
-        self.subplot_titles = subplot_titles
-        self.subplot_titles.extend(['  '] * (rows * cols - len(subplot_titles)))
-
-
-    def createFigure(self):
-        # Create subplots and set limits
-
-        specs = [[{"type": "scatter3d"}] * self.cols] * self.rows
-
-        self.fig = make_subplots(rows = self.rows, cols = self.cols,
-                    specs = specs, subplot_titles = self.subplot_titles,
-                    horizontal_spacing = 0.005, vertical_spacing = 0.05)
-
-        self.fig['layout'].update(margin = dict(l=0,r=0,b=30,t=30), showlegend = False)
-
-        # For every subplot (scene), set axes' ratios and limits
-        # Also set the y axis to point upwards
-        # Plotly naming convention of scenes: 'scene', 'scene2', etc.
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i == j == 0:
-                    scene = 'scene'
-                else:
-                    scene = 'scene{}'.format(i * self.cols + j + 1)
-
-                # Justify subplot title on the left
-                self.fig.layout.annotations[i * self.cols + j].update(x = (j + 0.08) / self.cols)
-                self.fig['layout'][scene].update(aspectmode = 'manual',
-                                                 aspectratio = {'x': 1, 'y': 1, 'z': 1},
-                                                 camera = {'up': {'x': 0, 'y': 1, 'z':0},
-                                                           'eye': {'x': 1, 'y': 1, 'z': 1}},
-                                                 xaxis = {'range': self.xlim,
-                                                          'title': {'text': "<i>x</i> (mm)"}},
-                                                 yaxis = {'range': self.ylim,
-                                                          'title': {'text': "<i>y</i> (mm)"}},
-                                                 zaxis = {'range': self.zlim,
-                                                          'title': {'text': "<i>z</i> (mm)"}}
-                                                 )
-
-        return self.fig
-
-
-    def getFigure(self):
-        return self.fig
-
-
-    def addDataAsTrace(self, data, row, col, size = 2, color = None):
-        # Expected data row: [time, x, y, z, ...]
-        if len(data) != 0:
-            trace = go.Scatter3d(
-                x = data[:, 1],
-                y = data[:, 2],
-                z = data[:, 3],
-                mode = 'markers',
-                marker = dict(
-                    size = size,
-                    color = color,
-                    opacity = 0.8
-                )
-            )
-
-            self.fig.add_trace(trace, row = row, col = col)
-
-
-    def addDataAsTraceColorbar(self, data, row, col, titleColorbar = None, size = 3):
-        # Expected data row: [time, x, y, z, ...]
-        if len(data) != 0:
-            if titleColorbar != None:
-                colorbar=dict(title=titleColorbar)
-            else:
-                colorbar = dict()
-
-            trace = go.Scatter3d(
-                x=data[:, 1],
-                y=data[:, 2],
-                z=data[:, 3],
-                mode='markers',
-                marker=dict(
-                    size=size,
-                    color=data[:, -1],   # set color to sample size
-                    colorscale='Magma',     # choose a colorscale
-                    colorbar=colorbar,
-                    opacity=0.8
-                )
-            )
-
-            self.fig.add_trace(trace, row = row, col = col)
-
-
-    def addDataAsTraceLine(self, data, row, col):
-        # Expected data row: [time, x, y, z, ...]
-        if len(data) != 0:
-            trace = go.Scatter3d(
-                x=data[:, 1],
-                y=data[:, 2],
-                z=data[:, 3],
-                mode='lines',
-                line=dict(
-                    width=4,
-                )
-            )
-
-            self.fig.add_trace(trace, row = row, col = col)
-
-
-    def addTrace(self, trace, row, col):
-        # Add precomputed trace
-        # Can accept HDBSCANclusterer.getCentresTrace() output
-        if len(trace) != 0:
-            self.fig.add_traces(trace, rows=row, cols=col)
-
-
-    def addTraces(self, traces, row, col):
-        # Add precomputed traces
-        # Can accept HDBSCANclusterer.getSampleLabelsTraces() output
-        if len(traces) != 0:
-            self.fig.add_traces(traces, rows=[row]*len(traces), cols=[col]*len(traces))
-
-
-    def showFigure(self):
-        self.fig.show()
-
-
-
-
-
 
 
 
