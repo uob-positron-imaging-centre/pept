@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>pept.tracking.peptml API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pept.tracking.peptml</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+# File   : __init__.py
+# License: License: GNU v3.0
+# Author : Andrei Leonard Nicusan &lt;a.l.nicusan@bham.ac.uk&gt;
+# Date   : 22.08.2019
+
+
+from    .peptml     import  Cutpoints
+from    .peptml     import  HDBSCANClusterer
+
+
+__all__ = [
+    &#34;Cutpoints&#34;,
+    &#34;HDBSCANClusterer&#34;
+]
+
+
+__author__ =        &#34;Andrei Leonard Nicusan&#34;
+__credits__ =       [&#34;Andrei Leonard Nicusan&#34;, &#34;Kit Windows-Yule&#34;, &#34;Sam Manger&#34;]
+__license__ =       &#34;GNU v3.0&#34;
+__version__ =       &#34;0.1&#34;
+__maintainer__ =    &#34;Andrei Leonard Nicusan&#34;
+__email__ =         &#34;a.l.nicusan@bham.ac.uk&#34;
+__status__ =        &#34;Development&#34;</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="pept.tracking.peptml.extensions" href="extensions/index.html">pept.tracking.peptml.extensions</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="pept.tracking.peptml.peptml" href="peptml.html">pept.tracking.peptml.peptml</a></code></dt>
+<dd>
+<section class="desc"><p>The <em>peptml</em> module implements a hierarchical density-based clustering
+algorithm for general Positron Emission Particle Tracking (PEPT) …</p></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pept.tracking.peptml.Cutpoints"><code class="flex name class">
+<span>class <span class="ident">Cutpoints</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>A class for generic PEPT data iteration, manipulation and visualisation.</p>
+<p>This class is used to encapsulate points. Unlike <code>LineData</code>, it does not have
+any restriction on the maximum number of columns it can store. It can yield
+samples of the <code>point_data</code> of an adaptive <code>sample_size</code> and <code>overlap</code>,
+without requiring additional storage.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>point_data</code></strong> :&ensp;(<code>N</code>, <code>M</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, M &gt;= 4) numpy array that stores points (or any generic 2D set of
+data). It expects that the first column is time, followed by cartesian
+(3D) coordinates of points <strong>in mm</strong>, followed by any extra information
+the user needs. A row is then [time, x, y, z, etc].</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int`` that defines the number of points that should be
+returned when iterating over</code>point_data<code>. A</code>sample_size` of 0
+yields all the data as one single sample. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>point_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. An
+error is raised if <code>overlap</code> is larger than or equal to
+<code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>An option that enables printing the time taken for the
+initialisation of an instance of the class. Useful when
+reading large files (10gb files for PEPT data is not unheard
+of). (Default is True)</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>point_data</code></strong> :&ensp;(<code>N</code>, <code>M</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, M &gt;= 4) numpy array that stores the points as time, followed by
+cartesian (3D) coordinates of the point <strong>in mm</strong>, followed by any extra
+information. Each row is then <code>[time, x, y, z, etc]</code>.</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the number of lines that should be
+returned when iterating over <code>point_data</code>. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>point_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. It
+is required to be smaller than <code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>number_of_points</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to len(<code>point_data</code>), or the number of
+points stored by <code>point_data</code>.</dd>
+<dt><strong><code>number_of_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to the number of samples that can be
+accessed from the class, taking the <code>overlap</code> into consideration.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>overlap</code> &gt;= <code>sample_size</code>. Overlap is required to be smaller
+than <code>sample_size</code>, unless <code>sample_size</code> is 0. Note that it can
+also be negative.</dd>
+<dt><code>ValueError</code></dt>
+<dd>If <code>line_data</code> does not have (N, M) shape, where M &gt;= 4.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>The class saves <code>point_data</code> as a <strong>contiguous</strong> numpy array for
+efficient access in C extensions.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Cutpoints(pept.PointData):
+
+    def __init__(self):
+
+        # Call pept.PointData constructor with dummy data
+        super().__init__([[0., 0., 0., 0.]],
+                         sample_size = 0,
+                         overlap = 0,
+                         verbose = False)
+
+
+    @staticmethod
+    def get_cutoffs(sample):
+
+        # Check sample has shape (N, 7)
+        if sample.ndim != 2 or sample.shape[1] != 7:
+            raise ValueError(&#39;\n[ERROR]: sample should have dimensions (N, 7). Received {}\n&#39;.format(sample.shape))
+
+        # Compute cutoffs for cutpoints as the (min, max) values of the lines
+        # Minimum value of the two points that define a line
+        min_x = min(sample[:, 1].min(),
+                    sample[:, 4].min())
+        # Maximum value of the two points that define a line
+        max_x = max(sample[:, 1].max(),
+                    sample[:, 4].max())
+
+        # Minimum value of the two points that define a line
+        min_y = min(sample[:, 2].min(),
+                    sample[:, 5].min())
+        # Maximum value of the two points that define a line
+        max_y = max(sample[:, 2].max(),
+                    sample[:, 5].max())
+
+        # Minimum value of the two points that define a line
+        min_z = min(sample[:, 3].min(),
+                    sample[:, 6].min())
+        # Maximum value of the two points that define a line
+        max_z = max(sample[:, 3].max(),
+                    sample[:, 6].max())
+
+        cutoffs = np.array([min_x, max_x, min_y, max_y, min_z, max_z])
+        return cutoffs
+
+
+    @staticmethod
+    def find_cutpoints_sample(sample, max_distance, cutoffs = None):
+
+        # Check sample has shape (N, 7)
+        if sample.ndim != 2 or sample.shape[1] != 7:
+            raise ValueError(&#39;\n[ERROR]: sample should have dimensions (N, 7). Received {}\n&#39;.format(sample.shape))
+
+        if cutoffs is None:
+            cutoffs = Cutpoints.get_cutoffs(sample)
+        else:
+            cutoffs = np.asarray(cutoffs, order = &#39;C&#39;, dtype = float)
+            if cutoffs.ndim != 1 or len(cutoffs) != 6:
+                raise ValueError(&#39;\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n&#39;)
+
+        sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
+        return sample_cutpoints
+
+
+    def find_cutpoints(self,
+                       line_data,
+                       max_distance,
+                       cutoffs = None,
+                       verbose = True):
+
+        if verbose:
+            start = time.time()
+
+        # Check line_data is an instance (or a subclass!) of pept.LineData
+        if not isinstance(line_data, pept.LineData):
+            raise Exception(&#39;[ERROR]: line_data should be an instance of pept.LineData&#39;)
+
+        # If cutoffs were not supplied, compute them
+        if cutoffs is None:
+            cutoffs = self.get_cutoffs(line_data.line_data)
+        # Otherwise make sure they are a C-contiguous numpy array
+        else:
+            cutoffs = np.asarray(cutoffs, order = &#39;C&#39;, dtype = float)
+            if cutoffs.ndim != 1 or len(cutoffs) != 6:
+                raise ValueError(&#39;\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n&#39;)
+
+        # Using joblib, collect the cutpoints from every sample in a list
+        # of arrays
+        cutpoints = Parallel(n_jobs = -1, prefer = &#39;threads&#39;)(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
+
+        # cutpoints shape: (n, m, 4), where n is the number of samples, and
+        # m is the number of cutpoints in the sample
+        cutpoints = np.array(cutpoints)
+
+        number_of_samples = len(cutpoints)
+        cutpoints = np.vstack(np.array(cutpoints))
+        number_of_cutpoints = len(cutpoints)
+
+        # Average number of cutpoints per sample
+        cutpoints_per_sample = int(number_of_cutpoints / number_of_samples)
+
+        super().__init__(cutpoints,
+                         sample_size = cutpoints_per_sample,
+                         overlap = 0,
+                         verbose = False)
+
+        if verbose:
+            end = time.time()
+            print(&#34;\n\n\nFinding the cutpoints took {} seconds&#34;.format(end - start))
+
+        return self</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pept.data.base.PointData" href="../../data/base.html#pept.data.base.PointData">PointData</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="pept.tracking.peptml.Cutpoints.find_cutpoints_sample"><code class="name flex">
+<span>def <span class="ident">find_cutpoints_sample</span></span>(<span>sample, max_distance, cutoffs=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@staticmethod
+def find_cutpoints_sample(sample, max_distance, cutoffs = None):
+
+    # Check sample has shape (N, 7)
+    if sample.ndim != 2 or sample.shape[1] != 7:
+        raise ValueError(&#39;\n[ERROR]: sample should have dimensions (N, 7). Received {}\n&#39;.format(sample.shape))
+
+    if cutoffs is None:
+        cutoffs = Cutpoints.get_cutoffs(sample)
+    else:
+        cutoffs = np.asarray(cutoffs, order = &#39;C&#39;, dtype = float)
+        if cutoffs.ndim != 1 or len(cutoffs) != 6:
+            raise ValueError(&#39;\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n&#39;)
+
+    sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
+    return sample_cutpoints</code></pre>
+</details>
+</dd>
+<dt id="pept.tracking.peptml.Cutpoints.get_cutoffs"><code class="name flex">
+<span>def <span class="ident">get_cutoffs</span></span>(<span>sample)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@staticmethod
+def get_cutoffs(sample):
+
+    # Check sample has shape (N, 7)
+    if sample.ndim != 2 or sample.shape[1] != 7:
+        raise ValueError(&#39;\n[ERROR]: sample should have dimensions (N, 7). Received {}\n&#39;.format(sample.shape))
+
+    # Compute cutoffs for cutpoints as the (min, max) values of the lines
+    # Minimum value of the two points that define a line
+    min_x = min(sample[:, 1].min(),
+                sample[:, 4].min())
+    # Maximum value of the two points that define a line
+    max_x = max(sample[:, 1].max(),
+                sample[:, 4].max())
+
+    # Minimum value of the two points that define a line
+    min_y = min(sample[:, 2].min(),
+                sample[:, 5].min())
+    # Maximum value of the two points that define a line
+    max_y = max(sample[:, 2].max(),
+                sample[:, 5].max())
+
+    # Minimum value of the two points that define a line
+    min_z = min(sample[:, 3].min(),
+                sample[:, 6].min())
+    # Maximum value of the two points that define a line
+    max_z = max(sample[:, 3].max(),
+                sample[:, 6].max())
+
+    cutoffs = np.array([min_x, max_x, min_y, max_y, min_z, max_z])
+    return cutoffs</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pept.tracking.peptml.Cutpoints.find_cutpoints"><code class="name flex">
+<span>def <span class="ident">find_cutpoints</span></span>(<span>self, line_data, max_distance, cutoffs=None, verbose=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def find_cutpoints(self,
+                   line_data,
+                   max_distance,
+                   cutoffs = None,
+                   verbose = True):
+
+    if verbose:
+        start = time.time()
+
+    # Check line_data is an instance (or a subclass!) of pept.LineData
+    if not isinstance(line_data, pept.LineData):
+        raise Exception(&#39;[ERROR]: line_data should be an instance of pept.LineData&#39;)
+
+    # If cutoffs were not supplied, compute them
+    if cutoffs is None:
+        cutoffs = self.get_cutoffs(line_data.line_data)
+    # Otherwise make sure they are a C-contiguous numpy array
+    else:
+        cutoffs = np.asarray(cutoffs, order = &#39;C&#39;, dtype = float)
+        if cutoffs.ndim != 1 or len(cutoffs) != 6:
+            raise ValueError(&#39;\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n&#39;)
+
+    # Using joblib, collect the cutpoints from every sample in a list
+    # of arrays
+    cutpoints = Parallel(n_jobs = -1, prefer = &#39;threads&#39;)(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
+
+    # cutpoints shape: (n, m, 4), where n is the number of samples, and
+    # m is the number of cutpoints in the sample
+    cutpoints = np.array(cutpoints)
+
+    number_of_samples = len(cutpoints)
+    cutpoints = np.vstack(np.array(cutpoints))
+    number_of_cutpoints = len(cutpoints)
+
+    # Average number of cutpoints per sample
+    cutpoints_per_sample = int(number_of_cutpoints / number_of_samples)
+
+    super().__init__(cutpoints,
+                     sample_size = cutpoints_per_sample,
+                     overlap = 0,
+                     verbose = False)
+
+    if verbose:
+        end = time.time()
+        print(&#34;\n\n\nFinding the cutpoints took {} seconds&#34;.format(end - start))
+
+    return self</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pept.data.base.PointData" href="../../data/base.html#pept.data.base.PointData">PointData</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pept.data.base.PointData.all_points_trace" href="../../data/base.html#pept.data.base.PointData.all_points_trace">all_points_trace</a></code></li>
+<li><code><a title="pept.data.base.PointData.all_points_trace_colorbar" href="../../data/base.html#pept.data.base.PointData.all_points_trace_colorbar">all_points_trace_colorbar</a></code></li>
+<li><code><a title="pept.data.base.PointData.number_of_points" href="../../data/base.html#pept.data.base.PointData.number_of_points">number_of_points</a></code></li>
+<li><code><a title="pept.data.base.PointData.number_of_samples" href="../../data/base.html#pept.data.base.PointData.number_of_samples">number_of_samples</a></code></li>
+<li><code><a title="pept.data.base.PointData.overlap" href="../../data/base.html#pept.data.base.PointData.overlap">overlap</a></code></li>
+<li><code><a title="pept.data.base.PointData.plot_all_points" href="../../data/base.html#pept.data.base.PointData.plot_all_points">plot_all_points</a></code></li>
+<li><code><a title="pept.data.base.PointData.plot_all_points_alt_axes" href="../../data/base.html#pept.data.base.PointData.plot_all_points_alt_axes">plot_all_points_alt_axes</a></code></li>
+<li><code><a title="pept.data.base.PointData.plot_points_sample_n" href="../../data/base.html#pept.data.base.PointData.plot_points_sample_n">plot_points_sample_n</a></code></li>
+<li><code><a title="pept.data.base.PointData.plot_points_sample_n_alt_axes" href="../../data/base.html#pept.data.base.PointData.plot_points_sample_n_alt_axes">plot_points_sample_n_alt_axes</a></code></li>
+<li><code><a title="pept.data.base.PointData.point_data" href="../../data/base.html#pept.data.base.PointData.point_data">point_data</a></code></li>
+<li><code><a title="pept.data.base.PointData.points_sample_n_trace" href="../../data/base.html#pept.data.base.PointData.points_sample_n_trace">points_sample_n_trace</a></code></li>
+<li><code><a title="pept.data.base.PointData.points_sample_n_trace_colorbar" href="../../data/base.html#pept.data.base.PointData.points_sample_n_trace_colorbar">points_sample_n_trace_colorbar</a></code></li>
+<li><code><a title="pept.data.base.PointData.sample_n" href="../../data/base.html#pept.data.base.PointData.sample_n">sample_n</a></code></li>
+<li><code><a title="pept.data.base.PointData.sample_size" href="../../data/base.html#pept.data.base.PointData.sample_size">sample_size</a></code></li>
+<li><code><a title="pept.data.base.PointData.to_csv" href="../../data/base.html#pept.data.base.PointData.to_csv">to_csv</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer"><code class="flex name class">
+<span>class <span class="ident">HDBSCANClusterer</span></span>
+<span>(</span><span>min_cluster_size=5, min_samples=None, allow_single_cluster=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class HDBSCANClusterer:
+
+    def __init__(self,
+                 min_cluster_size = 5,
+                 min_samples = None,
+                 allow_single_cluster = False):
+
+        if 0 &lt; min_cluster_size &lt; 2:
+            print(&#34;\n[WARNING]: min_cluster_size was set to 2, as it was {} &lt; 2\n&#34;.format(min_cluster_size))
+            min_cluster_size = 2
+
+        self.clusterer = hdbscan.HDBSCAN(min_cluster_size = min_cluster_size,
+                                         min_samples = min_samples,
+                                         core_dist_n_jobs = -1,
+                                         allow_single_cluster = allow_single_cluster)
+
+        &#39;&#39;&#39;
+        # Call pept.PointData constructor with dummy data
+        super().__init__([[0., 0., 0., 0.]],
+                         sample_size = 0,
+                         overlap = 0,
+                         verbose = False)
+        &#39;&#39;&#39;
+
+
+    @property
+    def min_cluster_size(self):
+        return self.clusterer.min_cluster_size
+
+
+    @min_cluster_size.setter
+    def min_cluster_size(self, new_min_cluster_size):
+        self.clusterer.min_cluster_size = new_min_cluster_size
+
+
+    @property
+    def min_samples(self):
+        return self.clusterer.min_cluster_size
+
+
+    @min_samples.setter
+    def min_samples(self, new_min_samples):
+        self.clusterer.min_samples = new_min_samples
+
+
+    @property
+    def allow_single_cluster(self):
+        return self.clusterer.allow_single_cluster
+
+
+    @allow_single_cluster.setter
+    def allow_single_cluster(self, option):
+        self.clusterer.allow_single_cluster = option
+
+
+    def fit_sample(self,
+                   sample,
+                   store_labels = False,
+                   noise = False,
+                   as_array = False,
+                   verbose = False):
+
+        if verbose:
+            start = time.time()
+
+        # sample row: [time, x, y, z]
+        if sample.ndim != 2 or sample.shape[1] &lt; 4:
+            raise ValueError(&#39;\n[ERROR]: sample should have two dimensions (M, N), where N &gt;= 4. Received {}\n&#39;.format(sample.shape))
+
+        # Only cluster based on [x, y, z]
+        labels = self.clusterer.fit_predict(sample[:, 1:4])
+        max_label = labels.max()
+
+        centres = []
+        clustered_cutpoints = []
+
+        # the centre of a cluster is the average of the time, x, y, z columns
+        # and the number of points of that cluster
+        # centres row: [time, x, y, z, ..etc.., cluster_size]
+        centres = []
+        for i in range(0, max_label + 1):
+            # Average time, x, y, z of cluster of label i
+            centres_row = np.mean(sample[labels == i], axis = 0)
+            # Append the number of points of label i =&gt; cluster_size
+            centres_row = np.append(centres_row, (labels == i).sum())
+            centres.append(centres_row)
+
+        centres = np.array(centres)
+
+        if not as_array:
+            centres = pept.PointData(centres,
+                                     sample_size = 0,
+                                     overlap = 0,
+                                     verbose = False)
+
+        # Return all cutpoints as a list of numpy arrays for every label
+        # where the last column of an array is the label
+        if store_labels:
+            # Create a list of numpy arrays with rows: [t, x, y, z, ..etc.., label]
+            if noise:
+                cutpoints = sample[labels == -1]
+                cutpoints = np.insert(cutpoints, cutpoints.shape[1], -1, axis = 1)
+                clustered_cutpoints.append(cutpoints)
+
+            for i in range(0, max_label + 1):
+                cutpoints = sample[labels == i]
+                cutpoints = np.insert(cutpoints, cutpoints.shape[1], i, axis = 1)
+                clustered_cutpoints.append(cutpoints)
+
+            clustered_cutpoints = np.vstack(np.array(clustered_cutpoints))
+
+            if not as_array:
+                clustered_cutpoints = pept.PointData(clustered_cutpoints,
+                                                     sample_size = 0,
+                                                     overlap = 0,
+                                                     verbose = False)
+
+        if verbose:
+            end = time.time()
+            print(&#34;Fitting one sample took {} seconds&#34;.format(end - start))
+
+        return [centres, clustered_cutpoints]
+
+
+    def fit_cutpoints(self,
+                      cutpoints,
+                      store_labels = False,
+                      noise = False,
+                      verbose = True):
+
+        if verbose:
+            start = time.time()
+
+        if not isinstance(cutpoints, pept.PointData):
+            raise Exception(&#39;[ERROR]: cutpoints should be an instance of pept.PointData (or any class inheriting from it)&#39;)
+
+        # Fit all samples in `cutpoints` in parallel using joblib
+        # Collect all outputs as a list
+        data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
+                                                store_labels = store_labels,
+                                                noise = noise,
+                                                as_array = True) for sample in tqdm(cutpoints))
+
+        # Access joblib.Parallel output as list comprehensions
+        centres = np.array([row[0] for row in data_list if len(row[0]) != 0])
+        if len(centres) != 0:
+            centres = pept.PointData(np.vstack(centres),
+                                     sample_size = 0,
+                                     overlap = 0,
+                                     verbose = False)
+
+        if store_labels:
+            clustered_cutpoints = np.array([row[1] for row in data_list if len(row[1]) != 0])
+            clustered_cutpoints = pept.PointData(np.vstack(np.array(clustered_cutpoints)),
+                                                 sample_size = 0,
+                                                 overlap = 0,
+                                                 verbose = False)
+
+        if verbose:
+            end = time.time()
+            print(&#34;Fitting cutpoints took {} seconds&#34;.format(end - start))
+
+        if store_labels:
+            return [centres, clustered_cutpoints]
+        else:
+            return [centres, []]
+
+
+
+
+    def fitSampleParallel(self, sample, saveLabels = False, saveNoise = False):
+        # Function that will be parallelised
+        # Needs to return a list of the needed outputs
+        self.fitSample(sample)
+        centres = self.getCentres()
+
+        if saveLabels:
+            sampleLabelsTraces = self.getSampleLabelsTraces(noise = saveNoise)
+        else:
+            sampleLabelsTraces = []
+
+        return [centres, sampleLabelsTraces]
+
+
+    def clusterIterable(self,
+                        samples,
+                        saveLabels = False,
+                        saveNoise = False):
+
+        # Call joblib Parallel subroutine for every sample needed
+        # Collects returned data as a list of outputs
+        dataList = Parallel(n_jobs = -1)(delayed(self.fitSampleParallel)(sample, saveLabels, saveNoise) for sample in tqdm(samples))
+
+        # Access the output from the parallelised function as list comprehensions
+        # centres row: [time, x, y, z, meanMidpointsClusterSize]
+        self.centres = np.array([dataRow[0] for dataRow in dataList if len(dataRow[0]) != 0])
+        if len(self.centres) != 0:
+            self.centres = np.vstack(self.centres)
+
+        # Collect all the lists of clustered midpoints traces and flatten them
+        # Plot the midpoints only if plotMidpoints == True
+        if saveLabels:
+            self.labelsTraces = [dataRow[1] for dataRow in dataList]
+            self.labelsTraces = [elem for sublist in self.labelsTraces for elem in sublist]
+
+            return [self.centres, self.labelsTraces]
+        else:
+            return [self.centres, []]</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.allow_single_cluster"><code class="name">var <span class="ident">allow_single_cluster</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def allow_single_cluster(self):
+    return self.clusterer.allow_single_cluster</code></pre>
+</details>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.clusterer"><code class="name">var <span class="ident">clusterer</span></code></dt>
+<dd>
+<section class="desc"><h1 id="call-peptpointdata-constructor-with-dummy-data">Call pept.PointData constructor with dummy data</h1>
+<p>super().<strong>init</strong>([[0., 0., 0., 0.]],
+sample_size = 0,
+overlap = 0,
+verbose = False)</p></section>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.min_cluster_size"><code class="name">var <span class="ident">min_cluster_size</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def min_cluster_size(self):
+    return self.clusterer.min_cluster_size</code></pre>
+</details>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.min_samples"><code class="name">var <span class="ident">min_samples</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def min_samples(self):
+    return self.clusterer.min_cluster_size</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.clusterIterable"><code class="name flex">
+<span>def <span class="ident">clusterIterable</span></span>(<span>self, samples, saveLabels=False, saveNoise=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def clusterIterable(self,
+                    samples,
+                    saveLabels = False,
+                    saveNoise = False):
+
+    # Call joblib Parallel subroutine for every sample needed
+    # Collects returned data as a list of outputs
+    dataList = Parallel(n_jobs = -1)(delayed(self.fitSampleParallel)(sample, saveLabels, saveNoise) for sample in tqdm(samples))
+
+    # Access the output from the parallelised function as list comprehensions
+    # centres row: [time, x, y, z, meanMidpointsClusterSize]
+    self.centres = np.array([dataRow[0] for dataRow in dataList if len(dataRow[0]) != 0])
+    if len(self.centres) != 0:
+        self.centres = np.vstack(self.centres)
+
+    # Collect all the lists of clustered midpoints traces and flatten them
+    # Plot the midpoints only if plotMidpoints == True
+    if saveLabels:
+        self.labelsTraces = [dataRow[1] for dataRow in dataList]
+        self.labelsTraces = [elem for sublist in self.labelsTraces for elem in sublist]
+
+        return [self.centres, self.labelsTraces]
+    else:
+        return [self.centres, []]</code></pre>
+</details>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.fitSampleParallel"><code class="name flex">
+<span>def <span class="ident">fitSampleParallel</span></span>(<span>self, sample, saveLabels=False, saveNoise=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def fitSampleParallel(self, sample, saveLabels = False, saveNoise = False):
+    # Function that will be parallelised
+    # Needs to return a list of the needed outputs
+    self.fitSample(sample)
+    centres = self.getCentres()
+
+    if saveLabels:
+        sampleLabelsTraces = self.getSampleLabelsTraces(noise = saveNoise)
+    else:
+        sampleLabelsTraces = []
+
+    return [centres, sampleLabelsTraces]</code></pre>
+</details>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.fit_cutpoints"><code class="name flex">
+<span>def <span class="ident">fit_cutpoints</span></span>(<span>self, cutpoints, store_labels=False, noise=False, verbose=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def fit_cutpoints(self,
+                  cutpoints,
+                  store_labels = False,
+                  noise = False,
+                  verbose = True):
+
+    if verbose:
+        start = time.time()
+
+    if not isinstance(cutpoints, pept.PointData):
+        raise Exception(&#39;[ERROR]: cutpoints should be an instance of pept.PointData (or any class inheriting from it)&#39;)
+
+    # Fit all samples in `cutpoints` in parallel using joblib
+    # Collect all outputs as a list
+    data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
+                                            store_labels = store_labels,
+                                            noise = noise,
+                                            as_array = True) for sample in tqdm(cutpoints))
+
+    # Access joblib.Parallel output as list comprehensions
+    centres = np.array([row[0] for row in data_list if len(row[0]) != 0])
+    if len(centres) != 0:
+        centres = pept.PointData(np.vstack(centres),
+                                 sample_size = 0,
+                                 overlap = 0,
+                                 verbose = False)
+
+    if store_labels:
+        clustered_cutpoints = np.array([row[1] for row in data_list if len(row[1]) != 0])
+        clustered_cutpoints = pept.PointData(np.vstack(np.array(clustered_cutpoints)),
+                                             sample_size = 0,
+                                             overlap = 0,
+                                             verbose = False)
+
+    if verbose:
+        end = time.time()
+        print(&#34;Fitting cutpoints took {} seconds&#34;.format(end - start))
+
+    if store_labels:
+        return [centres, clustered_cutpoints]
+    else:
+        return [centres, []]</code></pre>
+</details>
+</dd>
+<dt id="pept.tracking.peptml.HDBSCANClusterer.fit_sample"><code class="name flex">
+<span>def <span class="ident">fit_sample</span></span>(<span>self, sample, store_labels=False, noise=False, as_array=False, verbose=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def fit_sample(self,
+               sample,
+               store_labels = False,
+               noise = False,
+               as_array = False,
+               verbose = False):
+
+    if verbose:
+        start = time.time()
+
+    # sample row: [time, x, y, z]
+    if sample.ndim != 2 or sample.shape[1] &lt; 4:
+        raise ValueError(&#39;\n[ERROR]: sample should have two dimensions (M, N), where N &gt;= 4. Received {}\n&#39;.format(sample.shape))
+
+    # Only cluster based on [x, y, z]
+    labels = self.clusterer.fit_predict(sample[:, 1:4])
+    max_label = labels.max()
+
+    centres = []
+    clustered_cutpoints = []
+
+    # the centre of a cluster is the average of the time, x, y, z columns
+    # and the number of points of that cluster
+    # centres row: [time, x, y, z, ..etc.., cluster_size]
+    centres = []
+    for i in range(0, max_label + 1):
+        # Average time, x, y, z of cluster of label i
+        centres_row = np.mean(sample[labels == i], axis = 0)
+        # Append the number of points of label i =&gt; cluster_size
+        centres_row = np.append(centres_row, (labels == i).sum())
+        centres.append(centres_row)
+
+    centres = np.array(centres)
+
+    if not as_array:
+        centres = pept.PointData(centres,
+                                 sample_size = 0,
+                                 overlap = 0,
+                                 verbose = False)
+
+    # Return all cutpoints as a list of numpy arrays for every label
+    # where the last column of an array is the label
+    if store_labels:
+        # Create a list of numpy arrays with rows: [t, x, y, z, ..etc.., label]
+        if noise:
+            cutpoints = sample[labels == -1]
+            cutpoints = np.insert(cutpoints, cutpoints.shape[1], -1, axis = 1)
+            clustered_cutpoints.append(cutpoints)
+
+        for i in range(0, max_label + 1):
+            cutpoints = sample[labels == i]
+            cutpoints = np.insert(cutpoints, cutpoints.shape[1], i, axis = 1)
+            clustered_cutpoints.append(cutpoints)
+
+        clustered_cutpoints = np.vstack(np.array(clustered_cutpoints))
+
+        if not as_array:
+            clustered_cutpoints = pept.PointData(clustered_cutpoints,
+                                                 sample_size = 0,
+                                                 overlap = 0,
+                                                 verbose = False)
+
+    if verbose:
+        end = time.time()
+        print(&#34;Fitting one sample took {} seconds&#34;.format(end - start))
+
+    return [centres, clustered_cutpoints]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pept.tracking" href="../index.html">pept.tracking</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="pept.tracking.peptml.extensions" href="extensions/index.html">pept.tracking.peptml.extensions</a></code></li>
+<li><code><a title="pept.tracking.peptml.peptml" href="peptml.html">pept.tracking.peptml.peptml</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pept.tracking.peptml.Cutpoints" href="#pept.tracking.peptml.Cutpoints">Cutpoints</a></code></h4>
+<ul class="">
+<li><code><a title="pept.tracking.peptml.Cutpoints.find_cutpoints" href="#pept.tracking.peptml.Cutpoints.find_cutpoints">find_cutpoints</a></code></li>
+<li><code><a title="pept.tracking.peptml.Cutpoints.find_cutpoints_sample" href="#pept.tracking.peptml.Cutpoints.find_cutpoints_sample">find_cutpoints_sample</a></code></li>
+<li><code><a title="pept.tracking.peptml.Cutpoints.get_cutoffs" href="#pept.tracking.peptml.Cutpoints.get_cutoffs">get_cutoffs</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pept.tracking.peptml.HDBSCANClusterer" href="#pept.tracking.peptml.HDBSCANClusterer">HDBSCANClusterer</a></code></h4>
+<ul class="">
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.allow_single_cluster" href="#pept.tracking.peptml.HDBSCANClusterer.allow_single_cluster">allow_single_cluster</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.clusterIterable" href="#pept.tracking.peptml.HDBSCANClusterer.clusterIterable">clusterIterable</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.clusterer" href="#pept.tracking.peptml.HDBSCANClusterer.clusterer">clusterer</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.fitSampleParallel" href="#pept.tracking.peptml.HDBSCANClusterer.fitSampleParallel">fitSampleParallel</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.fit_cutpoints" href="#pept.tracking.peptml.HDBSCANClusterer.fit_cutpoints">fit_cutpoints</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.fit_sample" href="#pept.tracking.peptml.HDBSCANClusterer.fit_sample">fit_sample</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.min_cluster_size" href="#pept.tracking.peptml.HDBSCANClusterer.min_cluster_size">min_cluster_size</a></code></li>
+<li><code><a title="pept.tracking.peptml.HDBSCANClusterer.min_samples" href="#pept.tracking.peptml.HDBSCANClusterer.min_samples">min_samples</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
