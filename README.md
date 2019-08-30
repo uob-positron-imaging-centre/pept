@@ -1,5 +1,8 @@
 
+
+![version](https://img.shields.io/badge/version-0.1.2-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
+[![docs](https://img.shields.io/badge/docs-docs-success)](https://uob-positron-imaging-centre.github.io)
 
 # PEPT
 
@@ -76,6 +79,8 @@ fig.show()
 
 A more in-depth tutorial is available on [Google
 Colab](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO).
+
+Full documentation is available [here](https://uob-positron-imaging-centre.github.io).
 
 
 ## Performance
