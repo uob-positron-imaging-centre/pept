@@ -469,7 +469,7 @@ class Cutpoints(pept.PointData):
 
         if verbose:
             end = time.time()
-            print("\n\n\nFinding the cutpoints took {} seconds".format(end - start))
+            print("\nFinding the cutpoints took {} seconds\n".format(end - start))
 
         return self
 
@@ -799,7 +799,7 @@ class HDBSCANClusterer:
 
         if verbose:
             end = time.time()
-            print("Fitting cutpoints took {} seconds".format(end - start))
+            print("\nFitting cutpoints took {} seconds\n".format(end - start))
 
         if store_labels:
             return [centres, clustered_cutpoints]

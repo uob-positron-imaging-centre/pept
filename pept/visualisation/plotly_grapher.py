@@ -190,7 +190,7 @@ class PlotlyGrapher:
                     scene = 'scene{}'.format(i * self._cols + j + 1)
 
                 # Justify subplot title on the left
-                self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.08) / self._cols)
+                self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.15) / self._cols)
                 self._fig['layout'][scene].update(aspectmode = 'manual',
                                                  aspectratio = {'x': 1, 'y': 1, 'z': 1},
                                                  camera = {'up': {'x': 0, 'y': 1, 'z':0},
