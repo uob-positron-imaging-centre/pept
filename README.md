@@ -47,7 +47,7 @@ pip install git+https://github.com/uob-positron-imaging-centre/pept
 ### Example usage
 
 You can download data samples from the [UoB Positron Imaging Centre's
-Repository](https://github.com/uob-positron-imaging-centre/pept):
+Repository](https://github.com/uob-positron-imaging-centre/example_data):
 
 ```
 $> git clone https://github.com/uob-positron-imaging-centre/example_data
