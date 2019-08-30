@@ -520,7 +520,7 @@ Extra attributes and methods are inherited from the base class <code>PointData</
 
         if verbose:
             end = time.time()
-            print(&#34;\n\n\nFinding the cutpoints took {} seconds&#34;.format(end - start))
+            print(&#34;\nFinding the cutpoints took {} seconds\n&#34;.format(end - start))
 
         return self</code></pre>
 </details>
@@ -895,7 +895,7 @@ subclass of <a title="pept.PointData" href="../../index.html#pept.PointData"><co
 
     if verbose:
         end = time.time()
-        print(&#34;\n\n\nFinding the cutpoints took {} seconds&#34;.format(end - start))
+        print(&#34;\nFinding the cutpoints took {} seconds\n&#34;.format(end - start))
 
     return self</code></pre>
 </details>
@@ -1264,7 +1264,7 @@ allow_single_cluster : bool
 
         if verbose:
             end = time.time()
-            print(&#34;Fitting cutpoints took {} seconds&#34;.format(end - start))
+            print(&#34;\nFitting cutpoints took {} seconds\n&#34;.format(end - start))
 
         if store_labels:
             return [centres, clustered_cutpoints]
@@ -1435,7 +1435,7 @@ have the number -1 associated.</dd>
 
     if verbose:
         end = time.time()
-        print(&#34;Fitting cutpoints took {} seconds&#34;.format(end - start))
+        print(&#34;\nFitting cutpoints took {} seconds\n&#34;.format(end - start))
 
     if store_labels:
         return [centres, clustered_cutpoints]

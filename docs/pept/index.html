@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
 <title>pept API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="![version](https://img.shields.io/badge/version-0.1.2-blue)
+[![Open In …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,6 +21,83 @@
 <h1 class="title">Module <code>pept</code></h1>
 </header>
 <section id="section-intro">
+<p><img alt="version" src="https://img.shields.io/badge/version-0.1.2-blue">
+<a href="https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+<a href="https://uob-positron-imaging-centre.github.io"><img alt="docs" src="https://img.shields.io/badge/docs-docs-success"></a></p>
+<h1 id="pept">PEPT</h1>
+<p>A Python library that integrates all the tools necessary to
+perform research using Positron Emission Particle Tracking (PEPT). The library
+includes algorithms for the location, identification and tracking of particles,
+in addition to tools for visualisation and analysis, and utilities allowing the
+realistic simulation of PEPT data.</p>
+<h2 id="positron-emission-particle-tracking">Positron Emission Particle Tracking</h2>
+<p>PEPT is a technique developed at the University of Birmingham which allows the
+non-invasive, three-dimensional tracking of one or more 'tracer' particles through
+particulate, fluid or multiphase systems. The technique allows particle or fluid
+motion to be tracked with sub-millimetre accuracy and sub-millisecond temporal
+resolution and, due to its use of highly-penetrating 511keV gamma rays, can be
+used to probe the internal dynamics of even large, dense, optically opaque
+systems - making it ideal for industrial as well as scientific applications.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>These instructions will help you get started PEPT data analysis.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>This package supports Python 3. You also need to have <code>NumPy</code> and <code>Cython</code>
+on your system in order to install it.</p>
+<h3 id="installation">Installation</h3>
+<p>You can install <a title="pept" href="#pept"><code>pept</code></a> from PyPI:</p>
+<pre><code>pip install pept
+</code></pre>
+<p>Or you can install the latest version from the GitHub repository:</p>
+<pre><code>pip install git+&lt;https://github.com/uob-positron-imaging-centre/pept&gt;
+</code></pre>
+<h3 id="example-usage">Example usage</h3>
+<p>You can download data samples from the <a href="https://github.com/uob-positron-imaging-centre/example_data">UoB Positron Imaging Centre's
+Repository</a>:</p>
+<pre><code>$&gt; git clone &lt;https://github.com/uob-positron-imaging-centre/example_data&gt;
+</code></pre>
+<p>A minimal analysis script using the <code>pept.tracking.peptml</code> subpackage:</p>
+<pre><code>import pept
+from pept.scanners import ParallelScreens
+from pept.tracking import peptml
+from pept.visualisation import PlotlyGrapher
+
+lors = ParallelScreens('example_data/sample_2p_42rpm.csv', skiprows = 16)
+
+max_distance = 0.1
+cutpoints = peptml.Cutpoints(lors, max_distance)
+
+clusterer = peptml.HDBSCANClusterer(min_sample_size = 30)
+centres, clustered_cutpoints = clusterer.fit_cutpoints(cutpoints)
+
+fig = PlotlyGrapher().create_figure()
+fig.add_trace(centres.all_points_trace())
+fig.show()
+</code></pre>
+<p>A more in-depth tutorial is available on <a href="https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO">Google
+Colab</a>.</p>
+<p>Full documentation is available <a href="https://uob-positron-imaging-centre.github.io">here</a>.</p>
+<h2 id="performance">Performance</h2>
+<p>Significant effort has been put into making the algorithms in this package as
+fast as possible. The most compute-intensive parts have been implemented in
+<code>C</code> and parallelised, where possible, using <code>joblib</code>. For example, using the <code>peptml</code>
+subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook Pro)
+takes ~26 s (with another 12 s to read in the data). This efficiency is largely
+due to the availabiliy of a great high-performance <a href="https://github.com/scikit-learn-contrib/hdbscan">implementation of the
+HDBSCAN</a> clustering algorithm.</p>
+<h2 id="help-and-support">Help and Support</h2>
+<p>We recommend you check out <a href="https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO">our tutorials</a>. If your issue is not suitably resolved there, please
+check the <a href="https://github.com/uob-positron-imaging-centre/pept/issues">issues</a>
+page on our GitHub. Finally, if no solution is available there, feel free to
+<a href="https://github.com/uob-positron-imaging-centre/pept/issues/new">open an
+issue</a>; the
+authors will attempt to respond in a reasonably timely fashion.</p>
+<h2 id="contributing">Contributing</h2>
+<p>We welcome contributions in any form! Assistance with documentation, particularly
+expanding tutorials, is always welcome. To contribute please fork the project, make
+your changes and submit a pull request. We will do our best to work through any
+issues with you and get your code merged into the main branch.</p>
+<h2 id="licensing">Licensing</h2>
+<p>The <code>pept</code> package is GNU v3.0 licensed.</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">#!/usr/bin/env python3
@@ -29,6 +107,123 @@
 # License: License: GNU v3.0
 # Author : Andrei Leonard Nicusan &lt;a.l.nicusan@bham.ac.uk&gt;
 # Date   : 19.08.2019
+
+
+&#39;&#39;&#39;
+![version](https://img.shields.io/badge/version-0.1.2-blue)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
+[![docs](https://img.shields.io/badge/docs-docs-success)](https://uob-positron-imaging-centre.github.io)
+
+# PEPT
+
+
+A Python library that integrates all the tools necessary to
+perform research using Positron Emission Particle Tracking (PEPT). The library
+includes algorithms for the location, identification and tracking of particles,
+in addition to tools for visualisation and analysis, and utilities allowing the
+realistic simulation of PEPT data.
+
+
+## Positron Emission Particle Tracking
+PEPT is a technique developed at the University of Birmingham which allows the
+non-invasive, three-dimensional tracking of one or more &#39;tracer&#39; particles through
+particulate, fluid or multiphase systems. The technique allows particle or fluid
+motion to be tracked with sub-millimetre accuracy and sub-millisecond temporal
+resolution and, due to its use of highly-penetrating 511keV gamma rays, can be
+used to probe the internal dynamics of even large, dense, optically opaque
+systems - making it ideal for industrial as well as scientific applications.
+
+
+## Getting Started
+
+These instructions will help you get started PEPT data analysis.
+
+### Prerequisites
+
+This package supports Python 3. You also need to have `NumPy` and `Cython`
+on your system in order to install it.
+
+### Installation
+
+You can install `pept` from PyPI:
+
+```
+pip install pept
+```
+
+Or you can install the latest version from the GitHub repository:
+
+```
+pip install git+https://github.com/uob-positron-imaging-centre/pept
+```
+
+### Example usage
+
+You can download data samples from the [UoB Positron Imaging Centre&#39;s
+Repository](https://github.com/uob-positron-imaging-centre/example_data):
+
+```
+$&gt; git clone https://github.com/uob-positron-imaging-centre/example_data
+```
+
+A minimal analysis script using the `pept.tracking.peptml` subpackage:
+
+```
+import pept
+from pept.scanners import ParallelScreens
+from pept.tracking import peptml
+from pept.visualisation import PlotlyGrapher
+
+lors = ParallelScreens(&#39;example_data/sample_2p_42rpm.csv&#39;, skiprows = 16)
+
+max_distance = 0.1
+cutpoints = peptml.Cutpoints(lors, max_distance)
+
+clusterer = peptml.HDBSCANClusterer(min_sample_size = 30)
+centres, clustered_cutpoints = clusterer.fit_cutpoints(cutpoints)
+
+fig = PlotlyGrapher().create_figure()
+fig.add_trace(centres.all_points_trace())
+fig.show()
+```
+
+A more in-depth tutorial is available on [Google
+Colab](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO).
+
+Full documentation is available [here](https://uob-positron-imaging-centre.github.io).
+
+
+## Performance
+
+Significant effort has been put into making the algorithms in this package as
+fast as possible. The most compute-intensive parts have been implemented in
+`C` and parallelised, where possible, using `joblib`. For example, using the `peptml`
+subpackage, analysing 1,000,000 LoRs on the author&#39;s machine (mid 2012 MacBook Pro)
+takes ~26 s (with another 12 s to read in the data). This efficiency is largely
+due to the availabiliy of a great high-performance [implementation of the
+HDBSCAN](https://github.com/scikit-learn-contrib/hdbscan) clustering algorithm.
+
+
+## Help and Support
+
+We recommend you check out [our tutorials](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO). If your issue is not suitably resolved there, please
+check the [issues](https://github.com/uob-positron-imaging-centre/pept/issues)
+page on our GitHub. Finally, if no solution is available there, feel free to
+[open an
+issue](https://github.com/uob-positron-imaging-centre/pept/issues/new); the
+authors will attempt to respond in a reasonably timely fashion.
+
+## Contributing
+
+We welcome contributions in any form! Assistance with documentation, particularly
+expanding tutorials, is always welcome. To contribute please fork the project, make
+your changes and submit a pull request. We will do our best to work through any
+issues with you and get your code merged into the main branch.
+
+## Licensing
+
+The `pept` package is GNU v3.0 licensed.
+&#39;&#39;&#39;
 
 
 # Import base data structures
@@ -2999,7 +3194,22 @@ sample. Raised if <code>n</code> is not 1.</dd>
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#pept">PEPT</a><ul>
+<li><a href="#positron-emission-particle-tracking">Positron Emission Particle Tracking</a></li>
+<li><a href="#getting-started">Getting Started</a><ul>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#example-usage">Example usage</a></li>
+</ul>
+</li>
+<li><a href="#performance">Performance</a></li>
+<li><a href="#help-and-support">Help and Support</a></li>
+<li><a href="#contributing">Contributing</a></li>
+<li><a href="#licensing">Licensing</a></li>
+</ul>
+</li>
+</ul>
 </div>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>

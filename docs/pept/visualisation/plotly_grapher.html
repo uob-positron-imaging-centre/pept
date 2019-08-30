@@ -224,7 +224,7 @@ class PlotlyGrapher:
                     scene = &#39;scene{}&#39;.format(i * self._cols + j + 1)
 
                 # Justify subplot title on the left
-                self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.08) / self._cols)
+                self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.15) / self._cols)
                 self._fig[&#39;layout&#39;][scene].update(aspectmode = &#39;manual&#39;,
                                                  aspectratio = {&#39;x&#39;: 1, &#39;y&#39;: 1, &#39;z&#39;: 1},
                                                  camera = {&#39;up&#39;: {&#39;x&#39;: 0, &#39;y&#39;: 1, &#39;z&#39;:0},
@@ -900,7 +900,7 @@ Plotly figure it creates. An example call would be:</p>
                     scene = &#39;scene{}&#39;.format(i * self._cols + j + 1)
 
                 # Justify subplot title on the left
-                self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.08) / self._cols)
+                self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.15) / self._cols)
                 self._fig[&#39;layout&#39;][scene].update(aspectmode = &#39;manual&#39;,
                                                  aspectratio = {&#39;x&#39;: 1, &#39;y&#39;: 1, &#39;z&#39;: 1},
                                                  camera = {&#39;up&#39;: {&#39;x&#39;: 0, &#39;y&#39;: 1, &#39;z&#39;:0},
@@ -1918,7 +1918,7 @@ the class) pre-configured for PEPT data.</dd>
                 scene = &#39;scene{}&#39;.format(i * self._cols + j + 1)
 
             # Justify subplot title on the left
-            self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.08) / self._cols)
+            self._fig.layout.annotations[i * self._cols + j].update(x = (j + 0.15) / self._cols)
             self._fig[&#39;layout&#39;][scene].update(aspectmode = &#39;manual&#39;,
                                              aspectratio = {&#39;x&#39;: 1, &#39;y&#39;: 1, &#39;z&#39;: 1},
                                              camera = {&#39;up&#39;: {&#39;x&#39;: 0, &#39;y&#39;: 1, &#39;z&#39;:0},
