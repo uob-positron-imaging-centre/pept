@@ -27,7 +27,7 @@
 # Author : Sam Manger <s.manger@bham.ac.uk>
 # Date   : 20.08.2019
 
-
+import  os
 import  time
 import  numpy   as      np
 from    pept    import  LineData
