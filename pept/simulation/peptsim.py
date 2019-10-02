@@ -123,7 +123,7 @@ class Noise:
 
         self.pept_noise = np.stack((time_noise, x1Noise, y1Noise, x2Noise, y2Noise), axis=1)
         insertion_indices = np.searchsorted(pept_data[:, 0], self.pept_noise[:, 0], side='left')
-        self.pept_data_with_noise = np.insert(pept_data, insertion_ondices, self.pept_noise, axis=0)
+        self.pept_data_with_noise = np.insert(pept_data, insertion_indices, self.pept_noise, axis=0)
 
         return self.pept_data_with_noise
 
