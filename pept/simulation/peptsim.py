@@ -10,6 +10,8 @@ import  numpy                   as          np
 import  matplotlib.pyplot       as          plt
 from    mpl_toolkits.mplot3d    import      Axes3D
 
+from    tqdm                    import      tqdm
+
 
 __all__ = ['Shape',
            'Noise',
@@ -202,7 +204,7 @@ class Simulator:
 
         # For every position on the trajectory corresponding to a samplingTime,
         # generate a PEPTdata row
-        for i in range(0, number_of_samples):
+        for i in tqdm(range(0, number_of_samples)):
 
             # particle index in the trajectory for ray tracing
             particle_index = location_indices[i]
