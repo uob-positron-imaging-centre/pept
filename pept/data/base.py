@@ -607,6 +607,30 @@ class LineData:
         return self.number_of_samples
 
 
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = ""
+
+        docstr += "sample_size = {}\n".format(self._sample_size)
+        docstr += "overlap =     {}\n\n".format(self._overlap)
+        docstr += "line_data = \n"
+        docstr += self._line_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = "Class instance that inherits from `pept.LineData`.\n\n" + self.__str__() + "\n\n"
+        docstr += "Particular cases:\n"
+        docstr += " > If sample_size == 0, all line_data is returned as one single sample.\n"
+        docstr += " > If overlap >= sample_size, an error is raised.\n"
+        docstr += " > If overlap < 0, lines are skipped between samples.\n"
+
+        return docstr
+
+
     def __getitem__(self, key):
         # Defined so that samples can be accessed as class_instance[0]
 
@@ -1299,6 +1323,30 @@ class PointData:
         # Defined so that len(class_instance) returns the number of samples.
 
         return self.number_of_samples
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = ""
+
+        docstr += "sample_size = {}\n".format(self._sample_size)
+        docstr += "overlap =     {}\n\n".format(self._overlap)
+        docstr += "point_data = \n"
+        docstr += self._point_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = "Class instance that inherits from `pept.PointData`.\n\n" + self.__str__() + "\n\n"
+        docstr += "Particular cases:\n"
+        docstr += " > If sample_size == 0, all point_data is returned as one single sample.\n"
+        docstr += " > If overlap >= sample_size, an error is raised.\n"
+        docstr += " > If overlap < 0, points are skipped between samples.\n"
+
+        return docstr
 
 
     def __getitem__(self, key):
