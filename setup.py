@@ -88,6 +88,9 @@ cy_extensions = [
     Extension('pept.scanners.modular_camera.extensions.get_pept_event',
               ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
               **cy_extension_kw),
+    Extension('pept.tracking.birmingham_method.extensions.birmingham_method',
+              ['pept/tracking/birmingham_method/extensions/birmingham_method.pyx'],
+              **cy_extension_kw),
 ]
 
 extensions = cythonize(cy_extensions, **cythonize_kw)
