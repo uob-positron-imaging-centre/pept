@@ -194,7 +194,7 @@ class TrajectorySeparation:
                 current_cluster_size = current_point[4]
                 #print("currentClusterSize = {}".format(currentClusterSize))
                 closest_traj_index = -1
-                cluster_size_diff = self.max_cluster_diff
+                cluster_size_diff = self.max_cluster_size_diff
 
                 for traj_index in closest_traj_indices:
                     #print("trajIndex = {}".format(trajIndex))

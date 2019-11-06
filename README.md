@@ -1,8 +1,8 @@
 
 
-![version](https://img.shields.io/badge/version-0.1.2-blue)
+![version](https://img.shields.io/badge/version-0.1.3-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
-[![docs](https://img.shields.io/badge/docs-docs-success)](https://uob-positron-imaging-centre.github.io)
+[![docs](https://img.shields.io/badge/-docs-success)](https://uob-positron-imaging-centre.github.io)
 
 # PEPT
 
