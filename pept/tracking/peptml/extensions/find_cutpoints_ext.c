@@ -51,7 +51,7 @@ void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const un
     double          P[3], U[3], Q[3], R[3], QP[3];      // position, direction vectors
     double          a, b, c, d, e;                      // collected terms
     double          denom, s0, t0;                      // parameters for lines
-    double          A0[3], B0[3], AB0[3];               // perpendicular points 
+    double          A0[3], BB0[3], AB0[3];               // perpendicular points 
     double          mx, my, mz;                         // cutpoint coordinates
 
     m = 0;
@@ -114,21 +114,21 @@ void  find_cutpoints_ext(const double *sample_lines, double *cutpoints, const un
                 A0[1] = P[1] + s0 * U[1];
                 A0[2] = P[2] + s0 * U[2];
 
-                B0[0] = Q[0] + t0 * R[0];
-                B0[1] = Q[1] + t0 * R[1];
-                B0[2] = Q[2] + t0 * R[2];
+                BB0[0] = Q[0] + t0 * R[0];
+                BB0[1] = Q[1] + t0 * R[1];
+                BB0[2] = Q[2] + t0 * R[2];
 
-                AB0[0] = A0[0] - B0[0];
-                AB0[1] = A0[1] - B0[1];
-                AB0[2] = A0[2] - B0[2];
+                AB0[0] = A0[0] - BB0[0];
+                AB0[1] = A0[1] - BB0[1];
+                AB0[2] = A0[2] - BB0[2];
 
                 // Check the distance is smaller than the tolerance
                 if (AB0[0] * AB0[0] + AB0[1] * AB0[1] + AB0[2] * AB0[2] < max_distance * max_distance)
                 {
                     // Calculate the coordinates of the cutpoint
-                    mx = (A0[0] + B0[0]) / 2;
-                    my = (A0[1] + B0[1]) / 2;
-                    mz = (A0[2] + B0[2]) / 2;
+                    mx = (A0[0] + BB0[0]) / 2;
+                    my = (A0[1] + BB0[1]) / 2;
+                    mz = (A0[2] + BB0[2]) / 2;
 
                     // Check the cutpoints falls within the cutoffs
                     // Simulate 2D array behaviour on cutpoints
