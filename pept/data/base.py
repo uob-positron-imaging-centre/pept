@@ -1083,7 +1083,7 @@ class PointData:
         return fig, ax
 
 
-    def plot_points_sample_n(self, n, ax=None):
+    def plot_points_sample_n(self, n, ax=None, color = 'r', color_index = None):
         '''Plot points from sample `n` using matplotlib
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points
@@ -1117,17 +1117,19 @@ class PointData:
         y = sample[:, 2]
         z = sample[:, 3]
 
-        color = sample[:, -1]
+        if color_index != None:
+            colour_data = self._point_data[:, color_index],
+            cmap = plt.cm.magma
+            color_array = cmap(colour_data)
+        else:
+            color_array = color
 
-        cmap = plt.cm.magma
-        color_array = cmap(color)
-
-        ax.scatter(z,x,y,c=color_array[0])
+        ax.scatter(z,x,y,c=color_array)
 
         return fig, ax
 
 
-    def plot_points_sample_n_alt_axes(self, n, ax=None):
+    def plot_points_sample_n_alt_axes(self, n, ax=None, color = 'r', color_index = None):
         '''Plot points from sample `n` using matplotlib on PEPT-style axes
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points from
@@ -1164,12 +1166,14 @@ class PointData:
         y = sample[:, 2]
         z = sample[:, 3]
 
-        color = sample[:, -1]
+        if color_index != None:
+            colour_data = self._point_data[:, color_index],
+            cmap = plt.cm.magma
+            color_array = cmap(colour_data)
+        else:
+            color_array = color
 
-        cmap = plt.cm.magma
-        color_array = cmap(color)
-
-        ax.scatter(z,x,y,c=color_array[0])
+        ax.scatter(z,x,y,c=color_array)
 
         return fig, ax
 

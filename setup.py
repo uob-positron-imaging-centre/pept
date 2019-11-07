@@ -91,6 +91,9 @@ cy_extensions = [
     Extension('pept.tracking.birmingham_method.extensions.birmingham_method',
               ['pept/tracking/birmingham_method/extensions/birmingham_method.pyx'],
               **cy_extension_kw),
+    Extension('pept.scanners.parallel_screens.extensions.read_adac_binary',
+              ['pept/scanners/parallel_screens/extensions/read_adac_binary.pyx'],
+              **cy_extension_kw),
 ]
 
 extensions = cythonize(cy_extensions, **cythonize_kw)

@@ -173,18 +173,23 @@ class BirminghamMethod():
 		distance. The process is repeated iteratively until a specified fraction (fopt) of the
 		original subset of LORs remains. The method returns a set of locations either as an array
 		or as an instance of pept.PointData and an array of integers corresponding to the lines
-		that were used to locate the particle/
+		that were used to locate the particle.
 
 		Parameters
 		----------
 
 		sample_no:
+			The subset of LORs used to determine a location
 
-		sample_size:
+		sample_size: int
+			The number of LORs used to determine a location
 
-		fopt:
+		fopt : float between 0 and 1
+			The fraction of original LORs used to produce a final location for a given number of LORs
 
-		as_array:
+		as_array: bool, default False
+			If true, return the tracked location as a numpy array. Else, return the location as
+			a point data object.
 
 		Returns
 		-------
@@ -203,7 +208,7 @@ class BirminghamMethod():
 		
 		locations = []
 
-		if sample_no = None:
+		if sample_no == None:
 			for LORs in self._line_data:
 				location, used = birmingham_method(LORs, self.fopt)
 				locations.append(location)

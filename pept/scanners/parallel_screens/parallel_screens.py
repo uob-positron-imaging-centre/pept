@@ -30,6 +30,7 @@ import  time
 import  numpy   as      np
 import 	pandas  as      pd
 from    pept    import  LineData
+from 	.extensions.read_adac_binary import read_adac_binary
 
 
 class ParallelScreens(LineData):
@@ -120,32 +121,40 @@ class ParallelScreens(LineData):
 
 	def __init__(self,
 				 data_file,
-				 separation,
+				 separation=None,
 				 sample_size = 200,
 				 overlap = 0,
 				 skiprows = 0,
 				 max_rows = None,
-				 verbose = True):
+				 verbose = True,
+				 saveas = None):
 
 		if verbose:
 			start = time.time()
 
+		# Check file extension
 
-		# Read the LoR data from `data_file`
-		# Row: [time, X1, Y1, X2, Y2]
-		line_data = np.asarray(pd.read_csv(data_file, delim_whitespace = True, skiprows = skiprows, max_rows = max_rows))
+		if data_file[-5:-2] == '.da':
+			print("Converting binary file...")
+			line_data = read_adac_binary(data_file, saveas, separation)
+			line_data = np.array(line_data)
+		else:
+			print("Assuming old csv file...")
+			# Read the LoR data from `data_file`
+			# Row: [time, X1, Y1, X2, Y2]
+			line_data = np.asarray(pd.read_csv(data_file, delim_whitespace = True, skiprows = skiprows, max_rows = max_rows))
 
-		# Verify that line_data has shape (N, 5)
-		if line_data.ndim != 2 or line_data.shape[1] != 5:
-			raise ValueError('\n[ERROR]: line_data (that was read from data_file) should have dimensions (N, 5). Received {}\n'.format(line_data.shape))
+			# Verify that line_data has shape (N, 5)
+			if line_data.ndim != 2 or line_data.shape[1] != 5:
+				raise ValueError('\n[ERROR]: line_data (that was read from data_file) should have dimensions (N, 5). Received {}\n'.format(line_data.shape))
 
-		number_of_lines = len(line_data)
+			number_of_lines = len(line_data)
 
-		# Add Z1 and Z2 columns => [time, X1, Y1, Z1, X2, Y2, Z2]
-		# Z1 = 0
-		line_data = np.insert(line_data, 3, np.zeros(number_of_lines), axis = 1)
-		# Z2 = `separation`
-		line_data = np.append(line_data, separation * np.ones((number_of_lines, 1)), axis = 1)
+			# Add Z1 and Z2 columns => [time, X1, Y1, Z1, X2, Y2, Z2]
+			# Z1 = 0
+			line_data = np.insert(line_data, 3, np.zeros(number_of_lines), axis = 1)
+			# Z2 = `separation`
+			line_data = np.append(line_data, separation * np.ones((number_of_lines, 1)), axis = 1)
 
 		# Call the constructor of the superclass `LineData` to initialise all
 		# the inner parameters of the class (_index, etc.)
@@ -157,67 +166,3 @@ class ParallelScreens(LineData):
 		if verbose:
 			end = time.time()
 			print("Initialising the PEPT data took {} seconds\n".format(end - start))
-
-
-	def __read_binary__(self, data_file, separation, sample_size = 200, skiprows = 0, verbose = True, save_as = None):
-
-		with open(self.dataFile,"rb") as f:
-
-			# Skip over the header and handshake word
-
-			f.seek(header_buffer_size)
-
-			word = f.read(4)
-
-			if word.hex() == 'cefacefa':
-				# Skip two words
-				word = f.read(4)
-				word = f.read(4)
-
-			itime = 0
-			itag = 0
-
-			BufTime = 0
-			nBuf = 0
-			old_word = ''
-
-			while word != b'' and (self.n_events < sample_size):
-
-				word = f.read(4)
-
-				while (word == old_word):
-					word = f.read(4)
-
-				old_word = word
-
-				if word.hex() == 'cefacefa': # Handshake word
-					# Skip two words
-					word = f.read(4)
-					word = f.read(4)
-
-				if word!=b'':
-					word = int.from_bytes(word, "little")
-
-					self._line_data[self.n_events,:] = get_pept_LOR(word,itag,itime) # C function
-
-					itime_old = itime
-					itag_old  = itag
-					
-					# Check for blank lines that mess up the timing
-
-					itag  = self._line_data[self.n_events,0]
-					itime = self._line_data[self.n_events,1]
-
-					if itag == 0 and itime == 0:
-						# lets undo the last assignment if true
-						itag = itag_old
-						itime = itime_old
-
-					self.n_events = self.n_events + 1
-
-					if (self.n_events % x) == 0:
-						print("Got ", self.n_events,"\n")
-						x = x * 10
-
-		# Remove 'zero' lines
-		self._line_data = self._line_data[np.all(self._line_data,axis=1)]
