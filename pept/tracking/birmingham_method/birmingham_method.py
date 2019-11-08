@@ -31,6 +31,7 @@ import os
 import matplotlib.lines as mlines
 from    joblib                                  import      Parallel,       delayed
 from    tqdm                                    import      tqdm
+import time
 
 from .extensions.birmingham_method import birmingham_method
 
@@ -164,7 +165,7 @@ class BirminghamMethod():
 												fopt = fopt,
 												as_array = True) for sample in tqdm(LORs))
 		else:
-			data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
+			data_list = Parallel(n_jobs = -1)(delayed(self.track_sample)(sample,
 												fopt = fopt,
 												as_array = True) for sample in LORs)
 
