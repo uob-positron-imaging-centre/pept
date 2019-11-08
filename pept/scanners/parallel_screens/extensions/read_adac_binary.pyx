@@ -212,8 +212,8 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 
 				ix2 = ix2 * (Gx2 / 1000)
 				ix1 = ix1 * (Gx1 / 1000)
- 
-  	 	 	 	iy1 = iy1 * (Gy1 / 1000)
+
+				iy1 = iy1 * (Gy1 / 1000)
 				iy2 = iy2 * (Gy2 / 1000)
 
 				f_out.write("%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n" % (itime, ix1, iy1, -10, ix2, iy2, separation+10))
