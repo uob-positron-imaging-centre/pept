@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-	
 
 #    pept is a Python library that unifies Positron Emission Particle
 #    Tracking (PEPT) research, including tracking, simulation, data analysis
 #    and visualisation tools
 #
-#    Copyright (C) 2019 Andrei Leonard Nicusan
+#    Copyright (C) 2019 Sam Manger
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -19,7 +18,7 @@
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#    along with this program.  If not, see <https: // www.gnu.org/licenses/>.
 
 
 # File              : read_adac_binary.pyx
@@ -31,18 +30,7 @@
 #!python
 #cython: language_level=3
 
-
-# cdef extern from "read_adac_binary_ext.c":
-# 	# C is included here so that it doesn't need to be compiled externally
-# 	pass
-
-# cdef extern from "read_adac_binary_ext.h":
-# 	void read_adac_binary_ext(char*, char*)
-
 import time
-
-import time
-
 
 cpdef read_adac_binary(fname, saveas=None, separation=None):
 	
@@ -141,7 +129,7 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 			word0 = (word&0x000000FF) 
 
 			# parse data value from inverted and odd order word
-			value = 16383 - ((word2&16)//16) -((word2&64)//32) - ((word2&2)*2) - ((word1&128)//16) - ((word1&32)//2) - ((word1&8)*4) - ((word2&4)*16) - ((word2&8)*16) - ((word2&32)*8) - ((word2&1)*512) - ((word1&64)*16) - ((word1&16)*128) - ((word1&4)*1024) - ((word1&1)*8192)
+			value = 16383 - ((word2&16) // 16) - ((word2&64) // 32) - ((word2&2)*2) - ((word1&128) // 16) - ((word1&32) // 2) - ((word1&8)*4) - ((word2&4)*16) - ((word2&8)*16) - ((word2&32)*8) - ((word2&1)*512) - ((word1&64)*16) - ((word1&16)*128) - ((word1&4)*1024) - ((word1&1)*8192)
 	
 			# event data
 
@@ -180,30 +168,30 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 					GotB = 1
 				else:
 					pair = 0
-					GotA=1
-					GotB=0
-					GotXA=0
-					GotXB=0
-					GotYA=0
-					GotYB=0
+					GotA = 1
+					GotB = 0
+					GotXA = 0
+					GotXB = 0
+					GotYA = 0
+					GotYB = 0
 
 			if(TrgX):
 				if(TrgH==0):
-					ix1 = ix/16
-					GotXA=1
+					ix1 = ix / 16
+					GotXA = 1
 				else:
-					ix2 = ix/16
-					GotXB=1
+					ix2 = ix / 16
+					GotXB = 1
 
 
 
 			if(TrgY):
 				if(TrgH==0):
-					iy1 = 1024-(1024-(iy/16))
-					GotYA=1
+					iy1 = iy / 16
+					GotYA = 1
 				else:
-					iy2 = 1024 - (iy/16)
-					GotYB=1
+					iy2 = 1024 - (iy / 16)
+					GotYB = 1
 
 
 			# Spit out the word as a single LOR
@@ -222,11 +210,11 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 				GotB  = 0
 				nevent = nevent + 1
 
-				ix1 = ix1*(Gx1/1000)
-				ix2 = ix2*(Gx2/1000)
-
-				iy1 = iy1*(Gy1/1000)
-				iy2 = iy2*(Gy2/1000)
+				ix2 = ix2 * (Gx2 / 1000)
+				ix1 = ix1 * (Gx1 / 1000)
+ 
+  	 	 	 	iy1 = iy1 * (Gy1 / 1000)
+				iy2 = iy2 * (Gy2 / 1000)
 
 				f_out.write("%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n" % (itime, ix1, iy1, -10, ix2, iy2, separation+10))
 				LORs.append([itime, ix1, ix2, -10, ix2, iy2, separation+10])

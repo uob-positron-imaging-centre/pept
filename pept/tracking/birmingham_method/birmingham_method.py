@@ -1,3 +1,29 @@
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools
+#
+#    Copyright (C) 2019 Sam Manger
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+# File   : modular_camera.py
+# License: License: GNU v3.0
+# Author : Sam Manger <s.manger@bham.ac.uk>
+# Date   : 20.08.2019
+
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pept
@@ -13,44 +39,146 @@ class BirminghamMethod():
 
 	'''
 
-	def __init__(self):
+	def __init__(self,
+				 fopt = 0.5):
 		print("Initialised BirminghamMethod")
-		self._line_data = None
+		self.fopt = fopt
 
-		
-	@property
-	def line_data(self):
-		'''The LoRs for which the cutpoints are computed.
+	def track_sample(self,
+		sample,
+		fopt = None,
+		as_array = True,
+		verbose = False):
 
-		line_data : instance of pept.LineData
-
-		'''
-
-		return self._line_data
-
-
-	@line_data.setter
-	def line_data(self, new_line_data):
-		''' The LoRs for which the cutpoints are computed.
+		'''The Birmingham Method for particle tracking. For the given pept.LineData, the method 
+		takes a sample of LORs (defined by sample_size) and minimises the distance between all 
+		of the LORs, rejecting a fraction of lines that lie furthest away from the calculated 
+		distance. The process is repeated iteratively until a specified fraction (fopt) of the
+		original subset of LORs remains.
 
 		Parameters
 		----------
-		line_data : instance of pept.LineData
-			The LoRs to be tracked using the Birmingham Method. It is required to be an
-			instance of `pept.LineData`.
+		sample : (N, M=7) numpy.ndarray
+			The sample of LORs that will be clustered. Each LOR is expressed as a row
+			and is formatted as `[time, x1, y1, z1, x2, y2, z2]`.
+		fopt   : float, optional
+			Fraction of remaining LORs in a sample used to locate the particle
+		as_array : bool, optional
+			If set to True, the tracked locations are
+			returned as numpy arrays. If set to False, they are returned inside
+			instances of `pept.PointData`.
+		verbose : bool, optional
+			Provide extra information when computing the cutpoints: time the operation
+			and show a progress bar. The default is `False`.
+
+		Returns
+		-------
+		locations : numpy.ndarray or pept.PointData
+			The tracked locations found
+		used	  : numpy.ndarray
+			If as_array is true, then an index of the LORs used to 
+			locate the particle is returned
+			[ used for multi-particle tracking, not implemented yet]
+
+		Raises
+		------
+		TypeError
+			If `sample` is not a numpy array of shape (N, M), where M = 7.
+
+		'''
+
+		if verbose:
+			start = time.process_time()
+
+		if fopt == None:
+			fopt = self.fopt
+
+		# sample row: [time, x1, y1, z1, x2, y2, z2]
+		if sample.ndim != 2 or sample.shape[1] != 7:
+			raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N = 7. Received {}\n'.format(sample.shape))
+	
+	
+		location, used = birmingham_method(LORs, self.fopt)
+
+		if verbose:
+			end = time.process_time()
+			print("Tracking one location with %i LORs took %.3f seconds" % (sample.shape[0], end-start))
+	
+		if not as_array:
+			location = pept.PointData(location,
+									 sample_size = 0,
+									 overlap = 0,
+									 verbose = False)
+			return location
+		else:
+			return location
+
+
+	def track(self,
+		LORs,
+		fopt = None,
+		verbose = False):
+
+		'''Fit lines of response (an instance of 'LineData') and return the tracked locations.
+
+		Parameters
+		----------
+		LORs : (N, M=7) numpy.ndarray
+			The sample of LORs that will be clustered. Each LOR is expressed as a row
+			and is formatted as `[time, x1, y1, z1, x2, y2, z2]`.
+		fopt   : float, optional
+			Fraction of remaining LORs in a sample used to locate the particle
+		as_array : bool, optional
+			If set to True, the tracked locations are
+			returned as numpy arrays. If set to False, they are returned inside
+			instances of `pept.PointData`.
+		verbose : bool, optional
+			Provide extra information when computing the cutpoints: time the operation
+			and show a progress bar. The default is `False`.
+
+		Returns
+		-------
+		locations : pept.PointData
+			The tracked locations found
 
 		Raises
 		------
 		Exception
-			If `line_data` is not an instance of `pept.LineData`.
+			If 'LORs' is not an instance of 'pept.LineData'
 
 		'''
 
-		# Check line_data is an instance (or a subclass!) of pept.LineData
-		if not isinstance(new_line_data, pept.LineData):
-			raise Exception('[ERROR]: line_data should be an instance of pept.LineData')
+		if verbose:
+			start = time.process_time()
 
-		self._line_data = new_line_data
+		if not isinstance(LORs, pept.LineData):
+			raise Exception('[ERROR]: LORs should be an instance of pept.LineData (or any class inheriting from it)')
+
+		# Calculate all samples in 'LORs' in parallel using joblib
+		# Collect all outputs as a list. If verbose, show progress bar with
+		# tqdm
+		if verbose:
+			data_list = Parallel(n_jobs = -1)(delayed(self.track_sample)(sample,
+												fopt = fopt,
+												as_array = True) for sample in tqdm(LORs))
+		else:
+			data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
+												fopt = fopt,
+												as_array = True) for sample in LORs)
+
+		# Access joblib.Parallel output as list comprehensions
+		locations = np.array([row[0] for row in data_list if len(row[0]) != 0])
+		if len(locations) != 0:
+			locations = pept.PointData(np.vstack(locations),
+									 sample_size = 0,
+									 overlap = 0,
+									 verbose = False)		
+
+		if verbose:
+			end = time.process_time()
+			print("\nTracking locations took {} seconds\n".format(end - start))
+
+		return locations
 
 	def find_fopt(self, static_line_data, show_graph=True, sample_size=250, fopt=np.arange(0.05,0.90,0.05), verbose = True):
 	
@@ -166,7 +294,7 @@ class BirminghamMethod():
 		self._fopt = new_fopt
 
 
-	def track(self, line_data = None, sample_no=None, sample_size=250, fopt=None, as_array=False):
+	#def track(self, line_data = None, sample_no=None, sample_size=250, fopt=None, as_array=False):
 		'''The main 'tracking' method in the Birmingham method. For the given pept.LineData, the
 		method takes a sample of LORs (defined by sample_size) and minimises the distance between
 		all of the LORs, rejecting a fraction of lines that lie furthest away from the calculated 
@@ -199,7 +327,7 @@ class BirminghamMethod():
 		used:
 
 		'''	
-			
+		'''	
 		if fopt != None:
 			self._fopt = fopt
 
@@ -229,3 +357,4 @@ class BirminghamMethod():
 			# locations = np.(locations)
 
 		return locations
+		'''
