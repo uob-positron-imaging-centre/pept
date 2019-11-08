@@ -142,7 +142,7 @@ class ParallelScreens(LineData):
 			print("Assuming old csv file...")
 			# Read the LoR data from `data_file`
 			# Row: [time, X1, Y1, X2, Y2]
-			line_data = np.asarray(pd.read_csv(data_file, delim_whitespace = True, skiprows = skiprows, max_rows = max_rows))
+			line_data = np.asarray(pd.read_csv(data_file, delim_whitespace = True, header=None, skiprows = skiprows, nrows = max_rows))
 
 			# Verify that line_data has shape (N, 5)
 			if line_data.ndim != 2 or line_data.shape[1] != 5:
