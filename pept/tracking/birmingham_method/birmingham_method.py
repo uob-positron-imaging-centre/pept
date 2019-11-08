@@ -29,6 +29,8 @@ import numpy as np
 import pept
 import os
 import matplotlib.lines as mlines
+from    joblib                                  import      Parallel,       delayed
+from    tqdm                                    import      tqdm
 
 from .extensions.birmingham_method import birmingham_method
 
