@@ -101,7 +101,7 @@ class BirminghamMethod():
 			raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N = 7. Received {}\n'.format(sample.shape))
 	
 	
-		location, used = birmingham_method(sample, self.fopt)
+		location, used = birmingham_method(sample, fopt)
 
 		if verbose:
 			end = time.process_time()
@@ -170,9 +170,10 @@ class BirminghamMethod():
 												as_array = True) for sample in LORs)
 
 		# Access joblib.Parallel output as list comprehensions
-		locations = np.array([row[0] for row in data_list if len(row[0]) != 0])
-		if len(locations) != 0:
-			locations = pept.PointData(np.vstack(locations),
+		# locations = np.array([row[0] for row in data_list if len(row[0]) != 0])
+
+		# if len(locations) != 0:
+		locations = pept.PointData(np.vstack(data_list),
 									 sample_size = 0,
 									 overlap = 0,
 									 verbose = False)		
