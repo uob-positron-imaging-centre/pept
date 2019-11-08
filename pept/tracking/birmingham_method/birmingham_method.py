@@ -101,7 +101,7 @@ class BirminghamMethod():
 			raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N = 7. Received {}\n'.format(sample.shape))
 	
 	
-		location, used = birmingham_method(LORs, self.fopt)
+		location, used = birmingham_method(sample, self.fopt)
 
 		if verbose:
 			end = time.process_time()
