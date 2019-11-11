@@ -42,6 +42,12 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 	cdef int GotYB = 0
 	cdef int GotXB = 0
 
+	cdef int TrgX = 0
+	cdef int TrgY = 0
+	cdef int TrgZ = 0
+	cdef int TrgH = 0
+	cdef int TrgP = 0
+
 	cdef int GotA  = 0
 	cdef int GotB  = 0
 
@@ -68,6 +74,8 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 	cdef double iy
 	cdef double iy1
 	cdef double iy2
+
+	cdef int value = 0
 
 	LORs = []
 
@@ -210,14 +218,14 @@ cpdef read_adac_binary(fname, saveas=None, separation=None):
 				GotB  = 0
 				nevent = nevent + 1
 
-				ix2 = ix2 * (Gx2 / 1000)
 				ix1 = ix1 * (Gx1 / 1000)
+				ix2 = ix2 * (Gx2 / 1000)
 
 				iy1 = iy1 * (Gy1 / 1000)
 				iy2 = iy2 * (Gy2 / 1000)
 
 				f_out.write("%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n" % (itime, ix1, iy1, -10, ix2, iy2, separation+10))
-				LORs.append([itime, ix1, ix2, -10, ix2, iy2, separation+10])
+				LORs.append([itime, ix1, ix2, -10, iy1, iy2, separation+10])
 				# print("%i\t%5.3f\t%3.2f\t%3.2f\t%3.2f\t%3.2f\t%3.2f\n" % (itime, ix1, iy1, -10, ix2, iy2, separation+10))
 				# input('')
 
