@@ -35,7 +35,7 @@ import time
 
 from .extensions.birmingham_method import birmingham_method
 
-class BirminghamMethod():
+class BirminghamMethod:
 	'''
 
 	The Birmingham Method is an analytical technique for tracking particles using PEPT data from LORs.
@@ -50,7 +50,6 @@ class BirminghamMethod():
 	def track_sample(self,
 		sample,
 		fopt = None,
-		err_max = 10,
 		as_array = True,
 		verbose = False):
 
@@ -133,6 +132,8 @@ class BirminghamMethod():
 			and is formatted as `[time, x1, y1, z1, x2, y2, z2]`.
 		fopt   : float, optional
 			Fraction of remaining LORs in a sample used to locate the particle
+		err_max : float, default = 10
+			The maximum error allowed to return a 'valid' tracked location
 		as_array : bool, optional
 			If set to True, the tracked locations are
 			returned as numpy arrays. If set to False, they are returned inside

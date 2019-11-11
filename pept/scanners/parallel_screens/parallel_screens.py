@@ -26,11 +26,11 @@
 # Date   : 20.08.2019
 
 
-import  time
-import  numpy   as      np
-import 	pandas  as      pd
-from    pept    import  LineData
-from 	.extensions.read_adac_binary import read_adac_binary
+import	time
+import	numpy	as	np
+import	pandas	as	pd
+from 	pept	import	LineData
+from 	.extensions.read_adac_binary	import	read_adac_binary
 
 
 class ParallelScreens(LineData):
@@ -135,11 +135,14 @@ class ParallelScreens(LineData):
 		# Check file extension
 
 		if data_file[-5:-2] == '.da':
-			print("Converting binary file...")
+			if verbose:
+				print("Converting binary file...")
 			line_data = read_adac_binary(data_file, saveas, separation)
 			line_data = np.array(line_data)
 		else:
-			print("Assuming old csv file...")
+			if verbose:
+				print("Assuming old csv file...")
+
 			# Read the LoR data from `data_file`
 			# Row: [time, X1, Y1, X2, Y2]
 			line_data = np.asarray(pd.read_csv(data_file, delim_whitespace = True, header=None, skiprows = skiprows, nrows = max_rows))
