@@ -17,7 +17,7 @@ cdef extern from "birmingham_method_ext.h":
     
 import numpy as np
 
-def birmingham_method(lines,fopt):
+def birmingham_method(lines, fopt, errmax):
 
     cdef unsigned int n = len(lines)
     lines = np.ravel(lines, order='C')
@@ -41,4 +41,7 @@ def birmingham_method(lines,fopt):
 
     # print("Ended C function")
 
+    # if location[4] < errmax:
     return location, used
+    # else:
+        # return np.zeros(6), np.ones(n)

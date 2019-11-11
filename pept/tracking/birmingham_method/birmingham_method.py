@@ -50,6 +50,7 @@ class BirminghamMethod():
 	def track_sample(self,
 		sample,
 		fopt = None,
+		err_max = 10,
 		as_array = True,
 		verbose = False):
 
@@ -101,7 +102,7 @@ class BirminghamMethod():
 			raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N = 7. Received {}\n'.format(sample.shape))
 	
 	
-		location, used = birmingham_method(sample, fopt)
+		location, used = birmingham_method(sample, fopt, err_max)
 
 		if verbose:
 			end = time.process_time()
@@ -120,6 +121,7 @@ class BirminghamMethod():
 	def track(self,
 		LORs,
 		fopt = None,
+		err_max = 10,
 		verbose = False):
 
 		'''Fit lines of response (an instance of 'LineData') and return the tracked locations.
@@ -170,13 +172,20 @@ class BirminghamMethod():
 												as_array = True) for sample in LORs)
 
 		# Access joblib.Parallel output as list comprehensions
-		# locations = np.array([row[0] for row in data_list if len(row[0]) != 0])
 
-		# if len(locations) != 0:
-		locations = pept.PointData(np.vstack(data_list),
+		# return data_list
+
+		# # Remove LORs with error above max
+		data_list = np.vstack(data_list)
+		cond = np.where(data_list[:,4] > err_max)
+		data_list = np.delete(data_list, cond, axis=0) 
+
+		locations = pept.PointData(data_list,
 									 sample_size = 0,
 									 overlap = 0,
-									 verbose = False)		
+									 verbose = False)
+
+
 
 		if verbose:
 			end = time.process_time()
