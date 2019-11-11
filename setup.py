@@ -55,7 +55,7 @@ URL = 'https://github.com/uob-positron-imaging-centre/pept'
 EMAIL = 'a.l.nicusan@bham.ac.uk'
 AUTHOR = 'Andrei Leonard Nicusan'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.2'
+VERSION = '0.1.4'
 
 
 def requirements():

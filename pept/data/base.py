@@ -344,7 +344,7 @@ class LineData:
         np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
 
 
-    def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
+    def plot_all_lines(self, ax = None, color='r', alpha=1.0):
         '''Plot all lines using matplotlib
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on it.
@@ -389,7 +389,7 @@ class LineData:
         return fig, ax
 
 
-    def plot_all_lines_alt_axes(self, ax, color='r', alpha=1.0):
+    def plot_all_lines_alt_axes(self, ax = None, color='r', alpha=1.0):
         '''Plot all lines using matplotlib on PEPT-style axes
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on

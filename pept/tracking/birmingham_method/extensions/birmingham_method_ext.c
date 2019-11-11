@@ -69,30 +69,32 @@ void birmingham_method_ext(const double *lines, double *location, double *used, 
 
               // printf("%.2f\n", xx1[it] );
               // use[it]=1;
-              x12[it]=xx1[it]-xx2[it];
-              y12[it]=yy1[it]-yy2[it];
-              z12[it]=zz1[it]-zz2[it];
-              r2[it]=x12[it]*x12[it]+y12[it]*y12[it]+z12[it]*z12[it];
+              x12[it] = xx1[it] - xx2[it];
+              y12[it] = yy1[it] - yy2[it];
+              z12[it] = zz1[it] - zz2[it];
+              r2[it]  = (x12[it] * x12[it]) + (y12[it] * y12[it]) + (z12[it] * z12[it]);
+
+              // printf("x12: %.2f y12: %.2f z12: %.2f\n\n", x12[it], y12[it], z12[it]);
+              // getchar();
 
               // if(r2[it]==0)r2[it]=1e-6;
 
-              r12[it]=y12[it]*z12[it]/r2[it];
-              q12[it]=x12[it]*z12[it]/r2[it];
-              p12[it]=x12[it]*y12[it]/r2[it];
+              r12[it] = (y12[it] * z12[it]) / r2[it];
+              q12[it] = (x12[it] * z12[it]) / r2[it];
+              p12[it] = (x12[it] * y12[it]) / r2[it];
 
-              a12[it]=(y12[it]*y12[it]+z12[it]*z12[it])/r2[it];
-              b12[it]=(x12[it]*x12[it]+z12[it]*z12[it])/r2[it];
-              c12[it]=(y12[it]*y12[it]+x12[it]*x12[it])/r2[it];
-              d12[it]=((yy2[it]*xx1[it]-yy1[it]*xx2[it])*y12[it]+(zz2[it]*xx1[it]-zz1[it]*xx2[it])*z12[it])/r2[it];
-              e12[it]=((zz2[it]*yy1[it]-zz1[it]*yy2[it])*z12[it]+(xx2[it]*yy1[it]-xx1[it]*yy2[it])*x12[it])/r2[it];
-              f12[it]=-((zz2[it]*yy1[it]-zz1[it]*yy2[it])*y12[it]+(zz2[it]*xx1[it]-zz1[it]*xx2[it])*x12[it])/r2[it];  
+              a12[it] = ((y12[it] * y12[it]) + (z12[it] * z12[it])) / r2[it];
+              b12[it] = ((x12[it] * x12[it]) + (z12[it] * z12[it])) / r2[it];
+              c12[it] = ((y12[it] * y12[it]) + (x12[it] * x12[it])) / r2[it];
+              
+              d12[it] =  ((yy2[it] * xx1[it] - yy1[it] * xx2[it]) * y12[it] + (zz2[it] * xx1[it] - zz1[it] * xx2[it]) * z12[it]) / r2[it];
+              e12[it] =  ((zz2[it] * yy1[it] - zz1[it] * yy2[it]) * z12[it] + (xx2[it] * yy1[it] - xx1[it] * yy2[it]) * x12[it]) / r2[it];
+              f12[it] = -((zz2[it] * yy1[it] - zz1[it] * yy2[it]) * y12[it] + (zz2[it] * xx1[it] - zz1[it] * xx2[it]) * x12[it]) / r2[it];  
+
             }
     }
 
    
-
-    // }
-
     void calculate(){
       
         suma=sumb=sumc=sumd=sume=sumf=sump=sumq=sumr=0;

@@ -44,8 +44,8 @@ class BirminghamMethod:
 
 	def __init__(self,
 				 fopt = 0.5):
-		print("Initialised BirminghamMethod")
 		self.fopt = fopt
+		print("Initialised BirminghamMethod")
 
 	def track_sample(self,
 		sample,
@@ -101,7 +101,7 @@ class BirminghamMethod:
 			raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N = 7. Received {}\n'.format(sample.shape))
 	
 	
-		location, used = birmingham_method(sample, fopt, err_max)
+		location, used = birmingham_method(sample, fopt)
 
 		if verbose:
 			end = time.process_time()
