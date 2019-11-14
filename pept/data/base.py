@@ -1407,26 +1407,4 @@ class PointData:
             raise StopIteration
 
         return self._point_data[(self._index - self._sample_size):self._index]
-
-    def calculate_mean(self):
-        '''Calculate the mean standard deviation of the position over all points
-
-
-        Returns
-        --------
-        std : list of floats
-            The mean standard deviation in position in the x, y and z planes
-            Formatted as [x.mean, x.std, y.mean, y.std, z.mean, z.std]
-
-        '''
-
-        x = self.point_data[:,1] 
-        y = self.point_data[:,2]
-        z = self.point_data[:,3]
-
-        return [x.mean(), x.std(), y.mean(), y.std(), z.mean(), z.std()]
-
-
-
-
-
+        
