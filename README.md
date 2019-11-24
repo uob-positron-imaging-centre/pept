@@ -26,7 +26,7 @@ systems - making it ideal for industrial as well as scientific applications.
 
 ## Getting Started
 
-These instructions will help you get started PEPT data analysis.
+These instructions will help you get started with PEPT data analysis.
 
 ### Prerequisites
 
