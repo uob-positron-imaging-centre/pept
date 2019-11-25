@@ -29,7 +29,6 @@
 
 
 import  time
-import	os
 import  numpy   as      np
 from    pept    import  LineData
 from 	.extensions.get_pept_event import get_pept_LOR
@@ -115,7 +114,7 @@ class ModularCamera(LineData):
 
 	def __init__(self,
 				 dataFile,
-				 sample_size = 0,
+				 sample_size = 200,
 				 overlap = 0,
 				 filtered =[],
 				 verbose = True):
@@ -167,16 +166,10 @@ class ModularCamera(LineData):
 
 			BufTime = 0
 			nBuf = 0
-			old_word = ''
 
 			while word != b'' and (self.n_events < sample_size):
 
 				word = f.read(4)
-
-				while (word == old_word):
-					word = f.read(4)
-
-				old_word = word
 
 				if word.hex() == 'cefacefa': # Handshake word
 					# Skip two words
@@ -188,18 +181,8 @@ class ModularCamera(LineData):
 
 					self._line_data[self.n_events,:] = get_pept_LOR(word,itag,itime) # C function
 
-					itime_old = itime
-					itag_old  = itag
-					
-					# Check for blank lines that mess up the timing
-
-					itag  = self._line_data[self.n_events,0]
+					itag  = self._line_data[self.n_events,1]
 					itime = self._line_data[self.n_events,1]
-
-					if itag == 0 and itime == 0:
-						# lets undo the last assignment if true
-						itag = itag_old
-						itime = itime_old
 
 					self.n_events = self.n_events + 1
 
