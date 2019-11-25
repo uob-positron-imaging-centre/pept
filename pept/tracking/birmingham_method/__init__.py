@@ -6,12 +6,12 @@
 # Date   : 20.08.2019
 
 
-#from    .birmingham_method    import BirminghamMethod
+from    .birmingham_method    import BirminghamMethod
 
 
-#__all__ = [
-#    'BirminghamMethod'
-#]
+__all__ = [
+   'BirminghamMethod'
+]
 
 
 

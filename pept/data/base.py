@@ -344,7 +344,7 @@ class LineData:
         np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
 
 
-    def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
+    def plot_all_lines(self, ax = None, color='r', alpha=1.0):
         '''Plot all lines using matplotlib
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on it.
@@ -389,7 +389,7 @@ class LineData:
         return fig, ax
 
 
-    def plot_all_lines_alt_axes(self, ax, color='r', alpha=1.0):
+    def plot_all_lines_alt_axes(self, ax = None, color='r', alpha=1.0):
         '''Plot all lines using matplotlib on PEPT-style axes
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
@@ -980,15 +980,18 @@ class PointData:
         np.savetxt(filepath, self._point_data, delimiter = delimiter, newline = newline)
 
 
-    def plot_all_points(self, ax = None):
+    def plot_all_points(self, ax = None, color = 'r', color_index = None):
         '''Plot all points using matplotlib
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points on it.
 
         Parameters
         ----------
-        ax : mpl_toolkits.mplot3D.Axes3D object
+        ax : mpl_toolkits.mplot3D.Axes3D object, optional
             The 3D matplotlib-based axis for plotting.
+
+        colour_index : int, optional
+            Index of the column in line_data to use for colormapping. Default is None.
 
         Returns
         -------
@@ -1014,17 +1017,20 @@ class PointData:
         y = self._point_data[:, 2],
         z = self._point_data[:, 3],
 
-        color = self._point_data[:, -1],
+        if color_index != None:
+            colour_data = self._point_data[:, color_index],
+            cmap = plt.cm.magma
+            color_array = cmap(colour_data)
+        else:
+            color_array = color
 
-        cmap = plt.cm.magma
-        color_array = cmap(colour_data)
 
-        ax.scatter(x,y,z,c=color_array[0])
+        ax.scatter(x,y,z,c=color_array)
 
         return fig, ax
 
 
-    def plot_all_points_alt_axes(self, ax = None ):
+    def plot_all_points_alt_axes(self, ax = None, color = 'r', color_index = None):
         '''Plot all points using matplotlib on PEPT-style axes
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points on
@@ -1035,9 +1041,11 @@ class PointData:
 
         Parameters
         ----------
-        ax : mpl_toolkits.mplot3D.Axes3D object
+        ax : mpl_toolkits.mplot3D.Axes3D object, optional
             The 3D matplotlib-based axis for plotting.
 
+        colour_index : int, optional
+            Index of the column in line_data to use for colormapping. Default is None.
         Returns
         -------
         fig, ax : matplotlib figure and axes objects
@@ -1062,17 +1070,20 @@ class PointData:
         y = self._point_data[:, 2]
         z = self._point_data[:, 3]
 
-        color = self._point_data[:, -1]
+        if color_index != None:
+            colour_data = self._point_data[:, color_index],
+            cmap = plt.cm.magma
+            color_array = cmap(colour_data)
+        else:
+            color_array = color
 
-        cmap = plt.cm.magma
-        color_array = cmap(color)
 
-        ax.scatter(z,x,y,c=color_array[0])
+        ax.scatter(z,x,y,c=color_array)
 
         return fig, ax
 
 
-    def plot_points_sample_n(self, n, ax=None):
+    def plot_points_sample_n(self, n, ax=None, color = 'r', color_index = None):
         '''Plot points from sample `n` using matplotlib
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points
@@ -1106,17 +1117,19 @@ class PointData:
         y = sample[:, 2]
         z = sample[:, 3]
 
-        color = sample[:, -1]
+        if color_index != None:
+            colour_data = self._point_data[:, color_index],
+            cmap = plt.cm.magma
+            color_array = cmap(colour_data)
+        else:
+            color_array = color
 
-        cmap = plt.cm.magma
-        color_array = cmap(color)
-
-        ax.scatter(z,x,y,c=color_array[0])
+        ax.scatter(z,x,y,c=color_array)
 
         return fig, ax
 
 
-    def plot_points_sample_n_alt_axes(self, n, ax=None):
+    def plot_points_sample_n_alt_axes(self, n, ax=None, color = 'r', color_index = None):
         '''Plot points from sample `n` using matplotlib on PEPT-style axes
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points from
@@ -1153,12 +1166,14 @@ class PointData:
         y = sample[:, 2]
         z = sample[:, 3]
 
-        color = sample[:, -1]
+        if color_index != None:
+            colour_data = self._point_data[:, color_index],
+            cmap = plt.cm.magma
+            color_array = cmap(colour_data)
+        else:
+            color_array = color
 
-        cmap = plt.cm.magma
-        color_array = cmap(color)
-
-        ax.scatter(z,x,y,c=color_array[0])
+        ax.scatter(z,x,y,c=color_array)
 
         return fig, ax
 
@@ -1392,7 +1407,4 @@ class PointData:
             raise StopIteration
 
         return self._point_data[(self._index - self._sample_size):self._index]
-
-
-
-
+        
