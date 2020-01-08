@@ -524,81 +524,56 @@ class LineData:
         return fig, ax
 
 
-    def all_lines_traces(self):
-        '''Get a list of Plotly traces for each line.
+    def lines_trace(self, sample_indices = 0):
+        '''Get a Plotly trace for all the lines in selected samples.
 
-        Creates a `plotly.graph_objects.Scatter3d` object for each line
-        and returns them as a list. Can then be passed to the
-        `plotly.graph_objects.figure.add_traces` function or a
-        `PlotlyGrapher` instance using the `add_traces` method.
-
-        Returns
-        -------
-        list
-            A list of `plotly.graph_objects.Scatter3d` objects.
-
-        Note
-        ----
-        Plotting all lines in the case of large LoR arrays is *very*
-        computationally intensive. For large arrays (> 10000), plotting
-        individual samples using `lines_sample_n_traces` is recommended.
-
-        '''
-
-        p1 = self._line_data[:, 1:4]
-        p2 = self._line_data[:, 4:7]
-
-        traces = []
-        for i in range(0, self._number_of_lines):
-            traces.append(go.Scatter3d(
-                x = [ p1[i][0], p2[i][0] ],
-                y = [ p1[i][1], p2[i][1] ],
-                z = [ p1[i][2], p2[i][2] ],
-                mode = 'lines',
-                opacity = 0.8,
-                line = dict(
-                    width = 2,
-                )
-            ))
-
-        return traces
-
-
-    def lines_sample_n_traces(self, n):
-        '''Get a list of Plotly traces for each line in sample `n`.
-
-        Creates a `plotly.graph_objects.Scatter3d` object for each line
-        include in sample number `sampleN` and returns them as a list.
-        Can then be passed to the `plotly.graph_objects.figure.add_traces`
-        function or a `PlotlyGrapher` instance using the `add_traces` method.
+        Creates a `plotly.graph_objects.Scatter3d` object for all the lines
+        included in the samples selected by `sample_indices`. `sample_indices`
+        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+        [1,5,6]).
+        Can then be passed to the `plotly.graph_objects.figure.add_trace`
+        function or a `PlotlyGrapher` instance using the `add_trace` method.
 
         Parameters
         ----------
-        n : int
-            The number of the sample to be plotted.
+        sample_indices : int or iterable
+            The index or indices of the samples of LoRs.
 
         Returns
         -------
-        list
-            A list of `plotly.graph_objects.Scatter3d` objects.
+        plotly.graph_objs.Scatter3d
+            A Plotly trace of the LoRs.
 
         '''
 
-        sample = self.sample_n(n)
-        traces = []
-        for i in range(0, len(sample)):
-            traces.append(go.Scatter3d(
-                x = [ sample[i][1], sample[i][4] ],
-                y = [ sample[i][2], sample[i][5] ],
-                z = [ sample[i][3], sample[i][6] ],
-                mode = 'lines',
-                opacity = 0.6,
-                line = dict(
-                    width = 2,
-                )
-            ))
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just "iterate" over the single number
+        if not hasattr(sample_indices, "__iter__"):
+            sample_indices = [sample_indices]
 
-        return traces
+        coords_x = []
+        coords_y = []
+        coords_z = []
+        # For each selected sample include all the lines' coordinates
+        for n in sample_indices:
+            sample = self[n]
+            for line in sample:
+                coords_x.extend([line[1], line[4], None])
+                coords_y.extend([line[2], line[5], None])
+                coords_z.extend([line[3], line[6], None])
+
+        trace = go.Scatter3d(
+            x = coords_x,
+            y = coords_y,
+            z = coords_z,
+            mode = 'lines',
+            opacity = 0.6,
+            line = dict(
+                width = 2,
+            )
+        )
+
+        return trace
 
 
     def __len__(self):
@@ -611,8 +586,10 @@ class LineData:
         # Shown when calling print(class)
         docstr = ""
 
-        docstr += "sample_size = {}\n".format(self._sample_size)
-        docstr += "overlap =     {}\n\n".format(self._overlap)
+        docstr += "number_of_lines =   {}\n\n".format(self.number_of_lines)
+        docstr += "sample_size =       {}\n".format(self._sample_size)
+        docstr += "overlap =           {}\n".format(self._overlap)
+        docstr += "number_of_samples = {}\n\n".format(self.number_of_samples)
         docstr += "line_data = \n"
         docstr += self._line_data.__str__()
 
@@ -1329,8 +1306,10 @@ class PointData:
         # Shown when calling print(class)
         docstr = ""
 
-        docstr += "sample_size = {}\n".format(self._sample_size)
-        docstr += "overlap =     {}\n\n".format(self._overlap)
+        docstr += "number_of_points =  {}\n\n".format(self.number_of_points)
+        docstr += "sample_size =       {}\n".format(self._sample_size)
+        docstr += "overlap =           {}\n".format(self._overlap)
+        docstr += "number_of_samples = {}\n\n".format(self.number_of_samples)
         docstr += "point_data = \n"
         docstr += self._point_data.__str__()
 
