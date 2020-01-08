@@ -125,11 +125,10 @@ The `pept` package is GNU v3.0 licensed.
 
 
 # Import base data structures
-from    .data.base  import  LineData
-from    .data.base  import  PointData
+from    .base       import  LineData
+from    .base       import  PointData
 
 # Import subpackages
-from    .           import  data
 from    .           import  scanners
 from    .           import  simulation
 from    .           import  diagnostics
@@ -140,7 +139,6 @@ from    .           import  visualisation
 __all__ = [
     'LineData',
     'PointData',
-    'data',
     'scanners',
     'simulation',
     'diagnostics',
