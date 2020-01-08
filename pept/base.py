@@ -196,8 +196,8 @@ class LineData:
 
         '''
 
-        if sample_size < 0:
-            raise ValueError('\n[ERROR]: sample_size = {} must be positive (>= 0)'.format(sample_size))
+        if new_sample_size < 0:
+            raise ValueError('\n[ERROR]: sample_size = {} must be positive (>= 0)'.format(new_sample_size))
         if new_sample_size != 0 and self._overlap >= new_sample_size:
             raise ValueError('\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n'.format(self._overlap, new_sample_size))
 
@@ -813,8 +813,8 @@ class PointData:
 
         '''
 
-        if sample_size < 0:
-            raise ValueError('\n[ERROR]: sample_size = {} must be positive (>= 0)'.format(sample_size))
+        if new_sample_size < 0:
+            raise ValueError('\n[ERROR]: sample_size = {} must be positive (>= 0)'.format(new_sample_size))
         if new_sample_size != 0 and self._overlap >= new_sample_size:
             raise ValueError('\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n'.format(self._overlap, new_sample_size))
 
