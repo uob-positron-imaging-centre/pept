@@ -1313,6 +1313,40 @@ class PointData:
         colorbar_col = -1,
         colorbar_title = None
     ):
+        '''Get a Plotly trace for all points in selected samples, with possible color-coding.
+
+        Returns a `plotly.graph_objects.Scatter3d` trace containing all points
+        included in in the samples selected by `sample_indices`. `sample_indices`
+        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+        [1,5,6]).
+        Can then be passed to the `plotly.graph_objects.figure.add_trace`
+        function or a `PlotlyGrapher` instance using the `add_trace` method.
+
+        Parameters
+        ----------
+        sample_indices : int or iterable
+            The index or indices of the samples of LoRs. The default is 0 (the first sample).
+        size : float
+            The marker size of the points. The default is 2.
+        color : str or list-like
+            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a colorbar list.
+            Is ignored if `colorbar` is set to True. For more information, check the Plotly
+            documentation. The default is None.
+        colorbar : bool
+            If set to True, will color-code the data in the sample column `colorbar_col`.
+            Overrides `color` if set to True. The default is False.
+        colorbar_col : int
+            The column in the data samples that will be used to color the points. Only has
+            an effect if `colorbar` is set to True. The default is -1 (the last column).
+        colorbar_title : str
+            If set, the colorbar will have this title above. The default is None.
+
+        Returns
+        -------
+        plotly.graph_objs.Scatter3d
+            A Plotly trace of the points.
+
+        '''
 
         # Check if sample_indices is an iterable collection (list-like)
         # otherwise just "iterate" over the single number
