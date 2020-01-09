@@ -1304,6 +1304,63 @@ class PointData:
         return trace
 
 
+    def points_trace(
+        self,
+        sample_indices = 0,
+        size = 2,
+        color = None,
+        colorbar = False,
+        colorbar_col = -1,
+        colorbar_title = None
+    ):
+
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just "iterate" over the single number
+        if not hasattr(sample_indices, "__iter__"):
+            sample_indices = [sample_indices]
+
+        coords_x = []
+        coords_y = []
+        coords_z = []
+
+        colorscale = None
+        colorbar_attributes = dict()
+
+        if colorbar == True:
+            color = []
+            colorscale = "Magma"
+
+            if colorbar_title is not None:
+                colorbar_attributes = dict(title = colorbar_title)
+
+        # For each selected sample include all the needed coordinates
+        for n in sample_indices:
+            sample = self[n]
+
+            coords_x.extend(sample[:, 1])
+            coords_y.extend(sample[:, 2])
+            coords_z.extend(sample[:, 3])
+
+            if colorbar == True:
+                color.extend(sample[:, colorbar_col])
+
+        trace = go.Scatter3d(
+            x = coords_x,
+            y = coords_y,
+            z = coords_z,
+            mode = "markers",
+            marker = dict(
+                size = size,
+                color = color,
+                colorscale = colorscale,
+                colorbar = colorbar_attributes,
+                opacity = 0.8
+            )
+        )
+
+        return trace
+
+
     def __len__(self):
         # Defined so that len(class_instance) returns the number of samples.
 
