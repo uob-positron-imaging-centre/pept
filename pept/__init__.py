@@ -9,7 +9,7 @@
 
 '''
 
-![version](https://img.shields.io/badge/version-0.1.4-blue)
+![version](https://img.shields.io/badge/version-0.1.5-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
 [![](https://img.shields.io/badge/-docs-success)](https://uob-positron-imaging-centre.github.io)
 
