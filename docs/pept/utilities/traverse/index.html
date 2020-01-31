@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>pept.utilities.traverse API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pept.utilities.traverse</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File   : __init__.py
+# License: GNU v3.0
+# Author : Andrei Leonard Nicusan &lt;a.l.nicusan@bham.ac.uk&gt;
+# Date   : 14.01.2020
+
+
+from    .traverse2d     import  traverse2d
+from    .traverse3d     import  traverse3d
+
+__all__ = [
+    &#34;traverse2d&#34;,
+    &#34;traverse3d&#34;,
+]
+
+
+__author__ =        &#34;Andrei Leonard Nicusan&#34;
+__credits__ =       [&#34;Andrei Leonard Nicusan&#34;, &#34;Kit Windows-Yule&#34;, &#34;Sam Manger&#34;]
+__license__ =       &#34;GNU v3.0&#34;
+__maintainer__ =    &#34;Andrei Leonard Nicusan&#34;
+__email__ =         &#34;a.l.nicusan@bham.ac.uk&#34;
+__status__ =        &#34;Development&#34;</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pept.utilities.traverse.traverse2d"><code class="name flex">
+<span>def <span class="ident">traverse2d</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Fast voxel traversal for 2D lines (or LoRs).</p>
+<p>Function Signature:
+traverse3d(
+long[:, :] pixels,
+# Initialised to zero!
+double[:, :] lines,
+# Has exactly 7 columns!
+double[:] grid_x,
+# Has pixels.shape[0] + 1 elements!
+double[:] grid_y,
+# Has pixels.shape[1] + 1 elements!
+)</p>
+<p>This function computes the number of lines that passes through each pixel,
+saving the result in <code>pixels</code>. It does so in an efficient manner, in which
+for every line, only the pixels that it passes through are traversed.</p>
+<p>As it is highly optimised, this function does not perform any checks on the
+validity of the input data. Please check the parameters before calling
+<a title="pept.utilities.traverse.traverse2d" href="#pept.utilities.traverse.traverse2d"><code>traverse2d()</code></a>, as it WILL segfault on wrong input data. Details are given
+below, along with an example call.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>pixels : numpy.ndarray(dtype = numpy.int64, ndim = 2)
+    The `pixels` parameter is a numpy.ndarray of shape (X, Y) that
+    has been initialised to zeros before the function call. The values
+    will be modified in-place in the function to reflect the number of
+    lines that pass through each pixel.
+lines : numpy.ndarray(dtype = numpy.float64, ndim = 2)
+    The `lines` parameter is a numpy.ndarray of shape(N, 5), where each
+    row is formatted as [time, x1, y1, x2, y2]. Only indices 1:5
+    will be used as the two points P1 = [x1, y1] and P2 = [x2, y2]
+    defining the line (or LoR).
+grid_x : numpy.ndarray(dtype = numpy.float64, ndim = 1)
+    The grid_x parameter is a one-dimensional grid that delimits the
+    pixels in the x-dimension. It must be *sorted* in ascending order
+    with *equally-spaced* numbers and length X + 1 (pixels.shape[0] + 1).
+grid_y : numpy.ndarray(dtype = numpy.float64, ndim = 1)
+    The grid_y parameter is a one-dimensional grid that delimits the
+    pixels in the y-dimension. It must be *sorted* in ascending order
+    with *equally-spaced* numbers and length Y + 1 (pixels.shape[1] + 1).
+</code></pre>
+<h2 id="example-usage">Example usage</h2>
+<p>The input parameters can be easily generated using numpy before calling the
+function. For example, if a plane of 300 x 400 is split into
+30 x 40 pixels, a possible code would be:</p>
+<pre><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from pept.utilities.traverse import traverse2d
+&gt;&gt;&gt;
+&gt;&gt;&gt; plane = [300, 400]
+&gt;&gt;&gt; number_of_pixels = [30, 40]
+&gt;&gt;&gt; pixels = np.zeros(number_of_pixels)
+</code></pre>
+<p>The grid has one extra element than the number of pixels. For example, 5
+pixels between 0 and 5 would be delimited by the grid [0, 1, 2, 3, 4, 5]
+which has 6 elements (see off-by-one errors - story of my life).</p>
+<pre><code>&gt;&gt;&gt; grid_x = np.linspace(0, plane[0], number_of_pixels[0] + 1)
+&gt;&gt;&gt; grid_y = np.linspace(0, plane[1], number_of_pixels[1] + 1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; random_lines = np.random.random((100, 5)) * 100
+</code></pre>
+<p>Calling <a title="pept.utilities.traverse.traverse2d" href="#pept.utilities.traverse.traverse2d"><code>traverse2d()</code></a> will modify <code>pixels</code> in-place.</p>
+<pre><code>&gt;&gt;&gt; traverse2d(pixels, random_lines, grid_x, grid_y)
+</code></pre>
+<h2 id="note">Note</h2>
+<p>This function is an adaptation of a widely-used algorithm [1], optimised
+for PEPT LoRs traversal.</p>
+<p>.. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
+InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10)..</p></section>
+</dd>
+<dt id="pept.utilities.traverse.traverse3d"><code class="name flex">
+<span>def <span class="ident">traverse3d</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Fast voxel traversal for 3D lines (or LoRs).</p>
+<p>Function Signature:
+traverse3d(
+long[:, :, :] voxels,
+# Initialised to zero!
+double[:, :] lines,
+# Has exactly 7 columns!
+double[:] grid_x,
+# Has voxels.shape[0] + 1 elements!
+double[:] grid_y,
+# Has voxels.shape[1] + 1 elements!
+double[:] grid_z
+# Has voxels.shape[2] + 1 elements!
+)</p>
+<p>This function computes the number of lines that passes through each voxel,
+saving the result in <code>voxels</code>. It does so in an efficient manner, in which
+for every line, only the voxels that is passes through are traversed.</p>
+<p>As it is highly optimised, this function does not perform any checks on the
+validity of the input data. Please check the parameters before calling
+<a title="pept.utilities.traverse.traverse3d" href="#pept.utilities.traverse.traverse3d"><code>traverse3d()</code></a>, as it WILL segfault on wrong input data. Details are given
+below, along with an example call.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>voxels : numpy.ndarray(dtype = numpy.int64, ndim = 3)
+    The `voxels` parameter is a numpy.ndarray of shape (X, Y, Z) that
+    has been initialised to zeros before the function call. The values
+    will be modified in-place in the function to reflect the number of
+    lines that pass through each voxel.
+lines : numpy.ndarray(dtype = numpy.float64, ndim = 2)
+    The `lines` parameter is a numpy.ndarray of shape(N, 7), where each
+    row is formatted as [time, x1, y1, z1, x2, y2, z2]. Only indices 1:7
+    will be used as the two points P1 = [x1, y1, z2] and P2 = [x2, y2, z2]
+    defining the line (or LoR).
+grid_x : numpy.ndarray(dtype = numpy.float64, ndim = 1)
+    The grid_x parameter is a one-dimensional grid that delimits the
+    voxels in the x-dimension. It must be *sorted* in ascending order
+    with *equally-spaced* numbers and length X + 1 (voxels.shape[0] + 1).
+grid_y : numpy.ndarray(dtype = numpy.float64, ndim = 1)
+    The grid_y parameter is a one-dimensional grid that delimits the
+    voxels in the y-dimension. It must be *sorted* in ascending order
+    with *equally-spaced* numbers and length Y + 1 (voxels.shape[1] + 1).
+grid_z : numpy.ndarray(dtype = numpy.float64, ndim = 1)
+    The grid_z parameter is a one-dimensional grid that delimits the
+    voxels in the z-dimension. It must be *sorted* in ascending order
+    with *equally-spaced* numbers and length Z + 1 (voxels.shape[2] + 1).
+</code></pre>
+<h2 id="example-usage">Example usage</h2>
+<p>The input parameters can be easily generated using numpy before calling the
+function. For example, if a volume of 300 x 400 x 500 is split into
+30 x 40 x 50 voxels, a possible code would be:</p>
+<pre><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from pept.utilities.traverse import traverse3d
+&gt;&gt;&gt;
+&gt;&gt;&gt; volume = [300, 400, 500]
+&gt;&gt;&gt; number_of_voxels = [30, 40, 50]
+&gt;&gt;&gt; voxels = np.zeros(number_of_voxels)
+</code></pre>
+<p>The grid has one extra element than the number of voxels. For example, 5
+voxels between 0 and 5 would be delimited by the grid [0, 1, 2, 3, 4, 5]
+which has 6 elements (see off-by-one errors - story of my life).</p>
+<pre><code>&gt;&gt;&gt; grid_x = np.linspace(0, volume[0], number_of_voxels[0] + 1)
+&gt;&gt;&gt; grid_y = np.linspace(0, volume[1], number_of_voxels[1] + 1)
+&gt;&gt;&gt; grid_z = np.linspace(0, volume[2], number_of_voxels[2] + 1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; random_lines = np.random.random((100, 7)) * 300
+</code></pre>
+<p>Calling <a title="pept.utilities.traverse.traverse3d" href="#pept.utilities.traverse.traverse3d"><code>traverse3d()</code></a> will modify <code>voxels</code> in-place.</p>
+<pre><code>&gt;&gt;&gt; traverse3d(voxels, random_lines, grid_x, grid_y, grid_z)
+</code></pre>
+<h2 id="note">Note</h2>
+<p>This function is an adaptation of a widely-used algorithm [1], optimised
+for PEPT LoRs traversal.</p>
+<p>.. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
+InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10)..</p></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pept.utilities" href="../index.html">pept.utilities</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pept.utilities.traverse.traverse2d" href="#pept.utilities.traverse.traverse2d">traverse2d</a></code></li>
+<li><code><a title="pept.utilities.traverse.traverse3d" href="#pept.utilities.traverse.traverse3d">traverse3d</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

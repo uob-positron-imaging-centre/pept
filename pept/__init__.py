@@ -8,9 +8,10 @@
 
 
 '''
-![version](https://img.shields.io/badge/version-0.1.2-blue)
+
+![version](https://img.shields.io/badge/version-0.1.4-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
-[![docs](https://img.shields.io/badge/docs-docs-success)](https://uob-positron-imaging-centre.github.io)
+[![](https://img.shields.io/badge/-docs-success)](https://uob-positron-imaging-centre.github.io)
 
 # PEPT
 
@@ -34,7 +35,7 @@ systems - making it ideal for industrial as well as scientific applications.
 
 ## Getting Started
 
-These instructions will help you get started PEPT data analysis.
+These instructions will help you get started with PEPT data analysis.
 
 ### Prerequisites
 
@@ -81,7 +82,7 @@ clusterer = peptml.HDBSCANClusterer(min_sample_size = 30)
 centres, clustered_cutpoints = clusterer.fit_cutpoints(cutpoints)
 
 fig = PlotlyGrapher().create_figure()
-fig.add_trace(centres.all_points_trace())
+fig.add_trace(centres.points_trace())
 fig.show()
 ```
 
@@ -118,39 +119,57 @@ expanding tutorials, is always welcome. To contribute please fork the project, m
 your changes and submit a pull request. We will do our best to work through any
 issues with you and get your code merged into the main branch.
 
+## Citing
+
+If you used this codebase or any software making use of it in a scientific
+publication, you must cite the following paper:
+
+> Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+
+> https://doi.org/10.1063/1.5129251
+
 ## Licensing
 
 The `pept` package is GNU v3.0 licensed.
+Copyright (C) 2020 Andrei Leonard Nicusan.
+
+
 '''
 
 
 # Import base data structures
-from    .base       import  LineData
-from    .base       import  PointData
+from    .base.line_data     import  LineData
+from    .base.point_data    import  PointData
+from    .base.voxel_data    import  VoxelData
 
 # Import subpackages
-from    .           import  scanners
-from    .           import  simulation
-from    .           import  diagnostics
-from    .           import  tracking
-from    .           import  visualisation
+from    .                   import  scanners
+from    .                   import  simulation
+from    .                   import  diagnostics
+from    .                   import  tracking
+from    .                   import  visualisation
+from    .                   import  utilities
+
+# Import package version
+from    .__version__        import  __version__
 
 
 __all__ = [
     'LineData',
     'PointData',
+    'VoxelData',
     'scanners',
     'simulation',
     'diagnostics',
     'tracking',
-    'visualisation'
+    'visualisation',
+    'utilities'
 ]
 
 
 __author__ =        "Andrei Leonard Nicusan"
 __credits__ =       ["Andrei Leonard Nicusan", "Kit Windows-Yule", "Sam Manger"]
 __license__ =       "GNU v3.0"
-__version__ =       "0.1"
 __maintainer__ =    "Andrei Leonard Nicusan"
 __email__ =         "a.l.nicusan@bham.ac.uk"
 __status__ =        "Development"

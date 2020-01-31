@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
 <title>pept API documentation</title>
-<meta name="description" content="![version](https://img.shields.io/badge/version-0.1.2-blue)
+<meta name="description" content="![version](https://img.shields.io/badge/version-0.1.4-blue)
 [![Open In …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -21,9 +21,9 @@
 <h1 class="title">Module <code>pept</code></h1>
 </header>
 <section id="section-intro">
-<p><img alt="version" src="https://img.shields.io/badge/version-0.1.2-blue">
+<p><img alt="version" src="https://img.shields.io/badge/version-0.1.4-blue">
 <a href="https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-<a href="https://uob-positron-imaging-centre.github.io"><img alt="docs" src="https://img.shields.io/badge/docs-docs-success"></a></p>
+<a href="https://uob-positron-imaging-centre.github.io"><img alt="" src="https://img.shields.io/badge/-docs-success"></a></p>
 <h1 id="pept">PEPT</h1>
 <p>A Python library that integrates all the tools necessary to
 perform research using Positron Emission Particle Tracking (PEPT). The library
@@ -39,7 +39,7 @@ resolution and, due to its use of highly-penetrating 511keV gamma rays, can be
 used to probe the internal dynamics of even large, dense, optically opaque
 systems - making it ideal for industrial as well as scientific applications.</p>
 <h2 id="getting-started">Getting Started</h2>
-<p>These instructions will help you get started PEPT data analysis.</p>
+<p>These instructions will help you get started with PEPT data analysis.</p>
 <h3 id="prerequisites">Prerequisites</h3>
 <p>This package supports Python 3. You also need to have <code>NumPy</code> and <code>Cython</code>
 on your system in order to install it.</p>
@@ -70,7 +70,7 @@ clusterer = peptml.HDBSCANClusterer(min_sample_size = 30)
 centres, clustered_cutpoints = clusterer.fit_cutpoints(cutpoints)
 
 fig = PlotlyGrapher().create_figure()
-fig.add_trace(centres.all_points_trace())
+fig.add_trace(centres.points_trace())
 fig.show()
 </code></pre>
 <p>A more in-depth tutorial is available on <a href="https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO">Google
@@ -96,8 +96,16 @@ authors will attempt to respond in a reasonably timely fashion.</p>
 expanding tutorials, is always welcome. To contribute please fork the project, make
 your changes and submit a pull request. We will do our best to work through any
 issues with you and get your code merged into the main branch.</p>
+<h2 id="citing">Citing</h2>
+<p>If you used this codebase or any software making use of it in a scientific
+publication, you must cite the following paper:</p>
+<blockquote>
+<p>Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.</p>
+<p><a href="https://doi.org/10.1063/1.5129251">https://doi.org/10.1063/1.5129251</a></p>
+</blockquote>
 <h2 id="licensing">Licensing</h2>
-<p>The <code>pept</code> package is GNU v3.0 licensed.</p>
+<p>The <code>pept</code> package is GNU v3.0 licensed.
+Copyright (C) 2020 Andrei Leonard Nicusan.</p>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">#!/usr/bin/env python3
@@ -110,9 +118,10 @@ issues with you and get your code merged into the main branch.</p>
 
 
 &#39;&#39;&#39;
-![version](https://img.shields.io/badge/version-0.1.2-blue)
+
+![version](https://img.shields.io/badge/version-0.1.4-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
-[![docs](https://img.shields.io/badge/docs-docs-success)](https://uob-positron-imaging-centre.github.io)
+[![](https://img.shields.io/badge/-docs-success)](https://uob-positron-imaging-centre.github.io)
 
 # PEPT
 
@@ -136,7 +145,7 @@ systems - making it ideal for industrial as well as scientific applications.
 
 ## Getting Started
 
-These instructions will help you get started PEPT data analysis.
+These instructions will help you get started with PEPT data analysis.
 
 ### Prerequisites
 
@@ -183,7 +192,7 @@ clusterer = peptml.HDBSCANClusterer(min_sample_size = 30)
 centres, clustered_cutpoints = clusterer.fit_cutpoints(cutpoints)
 
 fig = PlotlyGrapher().create_figure()
-fig.add_trace(centres.all_points_trace())
+fig.add_trace(centres.points_trace())
 fig.show()
 ```
 
@@ -220,41 +229,57 @@ expanding tutorials, is always welcome. To contribute please fork the project, m
 your changes and submit a pull request. We will do our best to work through any
 issues with you and get your code merged into the main branch.
 
+## Citing
+
+If you used this codebase or any software making use of it in a scientific
+publication, you must cite the following paper:
+
+&gt; Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+
+&gt; https://doi.org/10.1063/1.5129251
+
 ## Licensing
 
 The `pept` package is GNU v3.0 licensed.
+Copyright (C) 2020 Andrei Leonard Nicusan.
+
+
 &#39;&#39;&#39;
 
 
 # Import base data structures
-from    .data.base  import  LineData
-from    .data.base  import  PointData
+from    .base.line_data     import  LineData
+from    .base.point_data    import  PointData
+from    .base.voxel_data    import  VoxelData
 
 # Import subpackages
-from    .           import  data
-from    .           import  scanners
-from    .           import  simulation
-from    .           import  diagnostics
-from    .           import  tracking
-from    .           import  visualisation
+from    .                   import  scanners
+from    .                   import  simulation
+from    .                   import  diagnostics
+from    .                   import  tracking
+from    .                   import  visualisation
+from    .                   import  utilities
+
+# Import package version
+from    .__version__        import  __version__
 
 
 __all__ = [
     &#39;LineData&#39;,
     &#39;PointData&#39;,
-    &#39;data&#39;,
+    &#39;VoxelData&#39;,
     &#39;scanners&#39;,
     &#39;simulation&#39;,
     &#39;diagnostics&#39;,
     &#39;tracking&#39;,
-    &#39;visualisation&#39;
+    &#39;visualisation&#39;,
+    &#39;utilities&#39;
 ]
 
 
 __author__ =        &#34;Andrei Leonard Nicusan&#34;
 __credits__ =       [&#34;Andrei Leonard Nicusan&#34;, &#34;Kit Windows-Yule&#34;, &#34;Sam Manger&#34;]
 __license__ =       &#34;GNU v3.0&#34;
-__version__ =       &#34;0.1&#34;
 __maintainer__ =    &#34;Andrei Leonard Nicusan&#34;
 __email__ =         &#34;a.l.nicusan@bham.ac.uk&#34;
 __status__ =        &#34;Development&#34;</code></pre>
@@ -263,7 +288,7 @@ __status__ =        &#34;Development&#34;</code></pre>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="pept.data" href="data/index.html">pept.data</a></code></dt>
+<dt><code class="name"><a title="pept.base" href="base/index.html">pept.base</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -284,6 +309,10 @@ __status__ =        &#34;Development&#34;</code></pre>
 <section class="desc"></section>
 </dd>
 <dt><code class="name"><a title="pept.tracking" href="tracking/index.html">pept.tracking</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="pept.utilities" href="utilities/index.html">pept.utilities</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -444,17 +473,21 @@ instantiating the class.</p></section>
 
     &#39;&#39;&#39;
 
-    def __init__(self,
-                 line_data,
-                 sample_size = 200,
-                 overlap = 0,
-                 verbose = False):
+    def __init__(
+        self,
+        line_data,
+        sample_size = 200,
+        overlap = 0,
+        verbose = False
+    ):
 
         if verbose:
             start = time.time()
 
         # If sample_size != 0 (in which case the class returns all data in one
         # sample), check the `overlap` is not larger or equal to `sample_size`.
+        if sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(sample_size))
         if sample_size != 0 and overlap &gt;= sample_size:
             raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n&#39;.format(overlap, sample_size))
 
@@ -528,6 +561,8 @@ instantiating the class.</p></section>
 
         &#39;&#39;&#39;
 
+        if new_sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(new_sample_size))
         if new_sample_size != 0 and self._overlap &gt;= new_sample_size:
             raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n&#39;.format(self._overlap, new_sample_size))
 
@@ -858,87 +893,130 @@ instantiating the class.</p></section>
         return fig, ax
 
 
-    def all_lines_traces(self):
-        &#39;&#39;&#39;Get a list of Plotly traces for each line.
+    def lines_trace(
+        self,
+        sample_indices = 0,
+        width = 2,
+        color = None,
+        opacity = 0.6,
+        colorbar = True,
+        colorbar_col = 0,
+        colorbar_title = None
+    ):
+        &#39;&#39;&#39;Get a Plotly trace for all the lines in selected samples.
 
-        Creates a `plotly.graph_objects.Scatter3d` object for each line
-        and returns them as a list. Can then be passed to the
-        `plotly.graph_objects.figure.add_traces` function or a
-        `PlotlyGrapher` instance using the `add_traces` method.
-
-        Returns
-        -------
-        list
-            A list of `plotly.graph_objects.Scatter3d` objects.
-
-        Note
-        ----
-        Plotting all lines in the case of large LoR arrays is *very*
-        computationally intensive. For large arrays (&gt; 10000), plotting
-        individual samples using `lines_sample_n_traces` is recommended.
-
-        &#39;&#39;&#39;
-
-        p1 = self._line_data[:, 1:4]
-        p2 = self._line_data[:, 4:7]
-
-        traces = []
-        for i in range(0, self._number_of_lines):
-            traces.append(go.Scatter3d(
-                x = [ p1[i][0], p2[i][0] ],
-                y = [ p1[i][1], p2[i][1] ],
-                z = [ p1[i][2], p2[i][2] ],
-                mode = &#39;lines&#39;,
-                opacity = 0.8,
-                line = dict(
-                    width = 2,
-                )
-            ))
-
-        return traces
-
-
-    def lines_sample_n_traces(self, n):
-        &#39;&#39;&#39;Get a list of Plotly traces for each line in sample `n`.
-
-        Creates a `plotly.graph_objects.Scatter3d` object for each line
-        include in sample number `sampleN` and returns them as a list.
-        Can then be passed to the `plotly.graph_objects.figure.add_traces`
-        function or a `PlotlyGrapher` instance using the `add_traces` method.
+        Creates a `plotly.graph_objects.Scatter3d` object for all the lines
+        included in the samples selected by `sample_indices`. `sample_indices`
+        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+        [1,5,6]).
+        Can then be passed to the `plotly.graph_objects.figure.add_trace`
+        function or a `PlotlyGrapher` instance using the `add_trace` method.
 
         Parameters
         ----------
-        n : int
-            The number of the sample to be plotted.
+        sample_indices : int or iterable
+            The index or indices of the samples of LoRs.
+        width : float
+            The width of the lines. The default is 2.
+        color : str or list-like
+            Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+            Is ignored if `colorbar` is set to True. For more information, check the Plotly
+            documentation. The default is None.
+        opacity : float
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque. The default is 0.6.
+        colorbar : bool
+            If set to True, will color-code the data in the sample column `colorbar_col`.
+            Overrides `color` if set to True. The default is True, so that every line has
+            a different color.
+        colorbar_col : int
+            The column in the data samples that will be used to color the points. Only has
+            an effect if `colorbar` is set to True. The default is 0 (the first column - time).
+        colorbar_title : str
+            If set, the colorbar will have this title above. The default is None.
 
         Returns
         -------
-        list
-            A list of `plotly.graph_objects.Scatter3d` objects.
+        plotly.graph_objs.Scatter3d
+            A Plotly trace of the LoRs.
 
         &#39;&#39;&#39;
 
-        sample = self.sample_n(n)
-        traces = []
-        for i in range(0, len(sample)):
-            traces.append(go.Scatter3d(
-                x = [ sample[i][1], sample[i][4] ],
-                y = [ sample[i][2], sample[i][5] ],
-                z = [ sample[i][3], sample[i][6] ],
-                mode = &#39;lines&#39;,
-                opacity = 0.6,
-                line = dict(
-                    width = 2,
-                )
-            ))
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just &#34;iterate&#34; over the single number
+        if not hasattr(sample_indices, &#34;__iter__&#34;):
+            sample_indices = [sample_indices]
 
-        return traces
+        marker = dict(
+            width = width,
+            color = color,
+        )
+
+        if colorbar:
+            marker[&#39;color&#39;] = []
+            marker.update(colorscale = &#34;Magma&#34;)
+
+            if colorbar_title is not None:
+                marker.update(colorbar = dict(title = colorbar_title))
+
+        coords_x = []
+        coords_y = []
+        coords_z = []
+
+        # For each selected sample include all the lines&#39; coordinates
+        for n in sample_indices:
+            sample = self[n]
+
+            for line in sample:
+                coords_x.extend([line[1], line[4], None])
+                coords_y.extend([line[2], line[5], None])
+                coords_z.extend([line[3], line[6], None])
+
+                if colorbar:
+                    marker[&#39;color&#39;].extend(3 * [line[colorbar_col]])
+
+        trace = go.Scatter3d(
+            x = coords_x,
+            y = coords_y,
+            z = coords_z,
+            mode = &#39;lines&#39;,
+            opacity = opacity,
+            line = marker
+        )
+
+        return trace
 
 
     def __len__(self):
         # Defined so that len(class_instance) returns the number of samples.
 
         return self.number_of_samples
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = &#34;&#34;
+
+        docstr += &#34;number_of_lines =   {}\n\n&#34;.format(self.number_of_lines)
+        docstr += &#34;sample_size =       {}\n&#34;.format(self._sample_size)
+        docstr += &#34;overlap =           {}\n&#34;.format(self._overlap)
+        docstr += &#34;number_of_samples = {}\n\n&#34;.format(self.number_of_samples)
+        docstr += &#34;line_data = \n&#34;
+        docstr += self._line_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = &#34;Class instance that inherits from `pept.LineData`.\n\n&#34; + self.__str__() + &#34;\n\n&#34;
+        docstr += &#34;Particular cases:\n&#34;
+        docstr += &#34; &gt; If sample_size == 0, all line_data is returned as one single sample.\n&#34;
+        docstr += &#34; &gt; If overlap &gt;= sample_size, an error is raised.\n&#34;
+        docstr += &#34; &gt; If overlap &lt; 0, lines are skipped between samples.\n&#34;
+
+        return docstr
 
 
     def __getitem__(self, key):
@@ -1133,122 +1211,139 @@ def sample_size(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="pept.LineData.all_lines_traces"><code class="name flex">
-<span>def <span class="ident">all_lines_traces</span></span>(<span>self)</span>
+<dt id="pept.LineData.lines_trace"><code class="name flex">
+<span>def <span class="ident">lines_trace</span></span>(<span>self, sample_indices=0, width=2, color=None, opacity=0.6, colorbar=True, colorbar_col=0, colorbar_title=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get a list of Plotly traces for each line.</p>
-<p>Creates a <code>plotly.graph_objects.Scatter3d</code> object for each line
-and returns them as a list. Can then be passed to the
-<code>plotly.graph_objects.figure.add_traces</code> function or a
-<code>PlotlyGrapher</code> instance using the <code>add_traces</code> method.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>list</code></dt>
-<dd>A list of <code>plotly.graph_objects.Scatter3d</code> objects.</dd>
-</dl>
-<h2 id="note">Note</h2>
-<p>Plotting all lines in the case of large LoR arrays is <em>very</em>
-computationally intensive. For large arrays (&gt; 10000), plotting
-individual samples using <code>lines_sample_n_traces</code> is recommended.</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def all_lines_traces(self):
-    &#39;&#39;&#39;Get a list of Plotly traces for each line.
-
-    Creates a `plotly.graph_objects.Scatter3d` object for each line
-    and returns them as a list. Can then be passed to the
-    `plotly.graph_objects.figure.add_traces` function or a
-    `PlotlyGrapher` instance using the `add_traces` method.
-
-    Returns
-    -------
-    list
-        A list of `plotly.graph_objects.Scatter3d` objects.
-
-    Note
-    ----
-    Plotting all lines in the case of large LoR arrays is *very*
-    computationally intensive. For large arrays (&gt; 10000), plotting
-    individual samples using `lines_sample_n_traces` is recommended.
-
-    &#39;&#39;&#39;
-
-    p1 = self._line_data[:, 1:4]
-    p2 = self._line_data[:, 4:7]
-
-    traces = []
-    for i in range(0, self._number_of_lines):
-        traces.append(go.Scatter3d(
-            x = [ p1[i][0], p2[i][0] ],
-            y = [ p1[i][1], p2[i][1] ],
-            z = [ p1[i][2], p2[i][2] ],
-            mode = &#39;lines&#39;,
-            opacity = 0.8,
-            line = dict(
-                width = 2,
-            )
-        ))
-
-    return traces</code></pre>
-</details>
-</dd>
-<dt id="pept.LineData.lines_sample_n_traces"><code class="name flex">
-<span>def <span class="ident">lines_sample_n_traces</span></span>(<span>self, n)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Get a list of Plotly traces for each line in sample <code>n</code>.</p>
-<p>Creates a <code>plotly.graph_objects.Scatter3d</code> object for each line
-include in sample number <code>sampleN</code> and returns them as a list.
-Can then be passed to the <code>plotly.graph_objects.figure.add_traces</code>
-function or a <code>PlotlyGrapher</code> instance using the <code>add_traces</code> method.</p>
+<section class="desc"><p>Get a Plotly trace for all the lines in selected samples.</p>
+<p>Creates a <code>plotly.graph_objects.Scatter3d</code> object for all the lines
+included in the samples selected by <code>sample_indices</code>. <code>sample_indices</code>
+can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+[1,5,6]).
+Can then be passed to the <code>plotly.graph_objects.figure.add_trace</code>
+function or a <code>PlotlyGrapher</code> instance using the <code>add_trace</code> method.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
-<dd>The number of the sample to be plotted.</dd>
+<dt><strong><code>sample_indices</code></strong> :&ensp;<code>int</code> or <code>iterable</code></dt>
+<dd>The index or indices of the samples of LoRs.</dd>
+<dt><strong><code>width</code></strong> :&ensp;<code>float</code></dt>
+<dd>The width of the lines. The default is 2.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>str</code> or <code>list</code>-<code>like</code></dt>
+<dd>Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a colorbar list.
+Is ignored if <code>colorbar</code> is set to True. For more information, check the Plotly
+documentation. The default is None.</dd>
+<dt><strong><code>opacity</code></strong> :&ensp;<code>float</code></dt>
+<dd>The opacity of the lines, where 0 is transparent and 1 is fully
+opaque. The default is 0.6.</dd>
+<dt><strong><code>colorbar</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If set to True, will color-code the data in the sample column <code>colorbar_col</code>.
+Overrides <code>color</code> if set to True. The default is True, so that every line has
+a different color.</dd>
+<dt><strong><code>colorbar_col</code></strong> :&ensp;<code>int</code></dt>
+<dd>The column in the data samples that will be used to color the points. Only has
+an effect if <code>colorbar</code> is set to True. The default is 0 (the first column - time).</dd>
+<dt><strong><code>colorbar_title</code></strong> :&ensp;<code>str</code></dt>
+<dd>If set, the colorbar will have this title above. The default is None.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>list</code></dt>
-<dd>A list of <code>plotly.graph_objects.Scatter3d</code> objects.</dd>
+<dt><code>plotly.graph_objs.Scatter3d</code></dt>
+<dd>A Plotly trace of the LoRs.</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def lines_sample_n_traces(self, n):
-    &#39;&#39;&#39;Get a list of Plotly traces for each line in sample `n`.
+<pre><code class="python">def lines_trace(
+    self,
+    sample_indices = 0,
+    width = 2,
+    color = None,
+    opacity = 0.6,
+    colorbar = True,
+    colorbar_col = 0,
+    colorbar_title = None
+):
+    &#39;&#39;&#39;Get a Plotly trace for all the lines in selected samples.
 
-    Creates a `plotly.graph_objects.Scatter3d` object for each line
-    include in sample number `sampleN` and returns them as a list.
-    Can then be passed to the `plotly.graph_objects.figure.add_traces`
-    function or a `PlotlyGrapher` instance using the `add_traces` method.
+    Creates a `plotly.graph_objects.Scatter3d` object for all the lines
+    included in the samples selected by `sample_indices`. `sample_indices`
+    can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+    [1,5,6]).
+    Can then be passed to the `plotly.graph_objects.figure.add_trace`
+    function or a `PlotlyGrapher` instance using the `add_trace` method.
 
     Parameters
     ----------
-    n : int
-        The number of the sample to be plotted.
+    sample_indices : int or iterable
+        The index or indices of the samples of LoRs.
+    width : float
+        The width of the lines. The default is 2.
+    color : str or list-like
+        Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+        Is ignored if `colorbar` is set to True. For more information, check the Plotly
+        documentation. The default is None.
+    opacity : float
+        The opacity of the lines, where 0 is transparent and 1 is fully
+        opaque. The default is 0.6.
+    colorbar : bool
+        If set to True, will color-code the data in the sample column `colorbar_col`.
+        Overrides `color` if set to True. The default is True, so that every line has
+        a different color.
+    colorbar_col : int
+        The column in the data samples that will be used to color the points. Only has
+        an effect if `colorbar` is set to True. The default is 0 (the first column - time).
+    colorbar_title : str
+        If set, the colorbar will have this title above. The default is None.
 
     Returns
     -------
-    list
-        A list of `plotly.graph_objects.Scatter3d` objects.
+    plotly.graph_objs.Scatter3d
+        A Plotly trace of the LoRs.
 
     &#39;&#39;&#39;
 
-    sample = self.sample_n(n)
-    traces = []
-    for i in range(0, len(sample)):
-        traces.append(go.Scatter3d(
-            x = [ sample[i][1], sample[i][4] ],
-            y = [ sample[i][2], sample[i][5] ],
-            z = [ sample[i][3], sample[i][6] ],
-            mode = &#39;lines&#39;,
-            opacity = 0.6,
-            line = dict(
-                width = 2,
-            )
-        ))
+    # Check if sample_indices is an iterable collection (list-like)
+    # otherwise just &#34;iterate&#34; over the single number
+    if not hasattr(sample_indices, &#34;__iter__&#34;):
+        sample_indices = [sample_indices]
 
-    return traces</code></pre>
+    marker = dict(
+        width = width,
+        color = color,
+    )
+
+    if colorbar:
+        marker[&#39;color&#39;] = []
+        marker.update(colorscale = &#34;Magma&#34;)
+
+        if colorbar_title is not None:
+            marker.update(colorbar = dict(title = colorbar_title))
+
+    coords_x = []
+    coords_y = []
+    coords_z = []
+
+    # For each selected sample include all the lines&#39; coordinates
+    for n in sample_indices:
+        sample = self[n]
+
+        for line in sample:
+            coords_x.extend([line[1], line[4], None])
+            coords_y.extend([line[2], line[5], None])
+            coords_z.extend([line[3], line[6], None])
+
+            if colorbar:
+                marker[&#39;color&#39;].extend(3 * [line[colorbar_col]])
+
+    trace = go.Scatter3d(
+        x = coords_x,
+        y = coords_y,
+        z = coords_z,
+        mode = &#39;lines&#39;,
+        opacity = opacity,
+        line = marker
+    )
+
+    return trace</code></pre>
 </details>
 </dd>
 <dt id="pept.LineData.plot_all_lines"><code class="name flex">
@@ -1798,15 +1893,19 @@ efficient access in C extensions.</p></section>
     &#39;&#39;&#39;
 
 
-    def __init__(self,
-                 point_data,
-                 sample_size = 0,
-                 overlap = 0,
-                 verbose = False):
+    def __init__(
+        self,
+        point_data,
+        sample_size = 0,
+        overlap = 0,
+        verbose = False
+    ):
 
         if verbose:
             start = time.time()
 
+        if sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(sample_size))
         if sample_size != 0 and overlap &gt;= sample_size:
             raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n&#39;.format(overlap, sample_size))
 
@@ -1877,6 +1976,8 @@ efficient access in C extensions.</p></section>
 
         &#39;&#39;&#39;
 
+        if new_sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(new_sample_size))
         if new_sample_size != 0 and self._overlap &gt;= new_sample_size:
             raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n&#39;.format(self._overlap, new_sample_size))
 
@@ -2366,10 +2467,128 @@ efficient access in C extensions.</p></section>
         return trace
 
 
+    def points_trace(
+        self,
+        sample_indices = 0,
+        size = 2,
+        color = None,
+        opacity = 0.8,
+        colorbar = False,
+        colorbar_col = -1,
+        colorbar_title = None
+    ):
+        &#39;&#39;&#39;Get a Plotly trace for all points in selected samples, with possible color-coding.
+
+        Returns a `plotly.graph_objects.Scatter3d` trace containing all points
+        included in in the samples selected by `sample_indices`. `sample_indices`
+        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+        [1,5,6]).
+        Can then be passed to the `plotly.graph_objects.figure.add_trace`
+        function or a `PlotlyGrapher` instance using the `add_trace` method.
+
+        Parameters
+        ----------
+        sample_indices : int or iterable
+            The index or indices of the samples of LoRs. The default is 0 (the first sample).
+        size : float
+            The marker size of the points. The default is 2.
+        color : str or list-like
+            Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+            Is ignored if `colorbar` is set to True. For more information, check the Plotly
+            documentation. The default is None.
+        opacity : float
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque. The default is 0.8.
+        colorbar : bool
+            If set to True, will color-code the data in the sample column `colorbar_col`.
+            Overrides `color` if set to True. The default is False.
+        colorbar_col : int
+            The column in the data samples that will be used to color the points. Only has
+            an effect if `colorbar` is set to True. The default is -1 (the last column).
+        colorbar_title : str
+            If set, the colorbar will have this title above. The default is None.
+
+        Returns
+        -------
+        plotly.graph_objs.Scatter3d
+            A Plotly trace of the points.
+
+        &#39;&#39;&#39;
+
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just &#34;iterate&#34; over the single number
+        if not hasattr(sample_indices, &#34;__iter__&#34;):
+            sample_indices = [sample_indices]
+
+        coords_x = []
+        coords_y = []
+        coords_z = []
+
+        marker = dict(
+            size = size,
+            color = color,
+            opacity = opacity
+        )
+
+        if colorbar:
+            marker[&#39;color&#39;] = []
+            marker.update(colorscale = &#34;Magma&#34;)
+
+            if colorbar_title is not None:
+                marker.update(colorbar = dict(title = colorbar_title))
+
+        # For each selected sample include all the needed coordinates
+        for n in sample_indices:
+            sample = self[n]
+
+            coords_x.extend(sample[:, 1])
+            coords_y.extend(sample[:, 2])
+            coords_z.extend(sample[:, 3])
+
+            if colorbar == True:
+                marker[&#39;color&#39;].extend(sample[:, colorbar_col])
+
+        trace = go.Scatter3d(
+            x = coords_x,
+            y = coords_y,
+            z = coords_z,
+            mode = &#34;markers&#34;,
+            marker = marker
+        )
+
+        return trace
+
+
     def __len__(self):
         # Defined so that len(class_instance) returns the number of samples.
 
         return self.number_of_samples
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = &#34;&#34;
+
+        docstr += &#34;number_of_points =  {}\n\n&#34;.format(self.number_of_points)
+        docstr += &#34;sample_size =       {}\n&#34;.format(self._sample_size)
+        docstr += &#34;overlap =           {}\n&#34;.format(self._overlap)
+        docstr += &#34;number_of_samples = {}\n\n&#34;.format(self.number_of_samples)
+        docstr += &#34;point_data = \n&#34;
+        docstr += self._point_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = &#34;Class instance that inherits from `pept.PointData`.\n\n&#34; + self.__str__() + &#34;\n\n&#34;
+        docstr += &#34;Particular cases:\n&#34;
+        docstr += &#34; &gt; If sample_size == 0, all point_data is returned as one single sample.\n&#34;
+        docstr += &#34; &gt; If overlap &gt;= sample_size, an error is raised.\n&#34;
+        docstr += &#34; &gt; If overlap &lt; 0, points are skipped between samples.\n&#34;
+
+        return docstr
 
 
     def __getitem__(self, key):
@@ -3076,6 +3295,138 @@ function or a <code>PlotlyGrapher</code> instance using the <code>add_trace</cod
     return trace</code></pre>
 </details>
 </dd>
+<dt id="pept.PointData.points_trace"><code class="name flex">
+<span>def <span class="ident">points_trace</span></span>(<span>self, sample_indices=0, size=2, color=None, opacity=0.8, colorbar=False, colorbar_col=-1, colorbar_title=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get a Plotly trace for all points in selected samples, with possible color-coding.</p>
+<p>Returns a <code>plotly.graph_objects.Scatter3d</code> trace containing all points
+included in in the samples selected by <code>sample_indices</code>. <code>sample_indices</code>
+can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+[1,5,6]).
+Can then be passed to the <code>plotly.graph_objects.figure.add_trace</code>
+function or a <code>PlotlyGrapher</code> instance using the <code>add_trace</code> method.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_indices</code></strong> :&ensp;<code>int</code> or <code>iterable</code></dt>
+<dd>The index or indices of the samples of LoRs. The default is 0 (the first sample).</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>float</code></dt>
+<dd>The marker size of the points. The default is 2.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>str</code> or <code>list</code>-<code>like</code></dt>
+<dd>Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a colorbar list.
+Is ignored if <code>colorbar</code> is set to True. For more information, check the Plotly
+documentation. The default is None.</dd>
+<dt><strong><code>opacity</code></strong> :&ensp;<code>float</code></dt>
+<dd>The opacity of the lines, where 0 is transparent and 1 is fully
+opaque. The default is 0.8.</dd>
+<dt><strong><code>colorbar</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If set to True, will color-code the data in the sample column <code>colorbar_col</code>.
+Overrides <code>color</code> if set to True. The default is False.</dd>
+<dt><strong><code>colorbar_col</code></strong> :&ensp;<code>int</code></dt>
+<dd>The column in the data samples that will be used to color the points. Only has
+an effect if <code>colorbar</code> is set to True. The default is -1 (the last column).</dd>
+<dt><strong><code>colorbar_title</code></strong> :&ensp;<code>str</code></dt>
+<dd>If set, the colorbar will have this title above. The default is None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>plotly.graph_objs.Scatter3d</code></dt>
+<dd>A Plotly trace of the points.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def points_trace(
+    self,
+    sample_indices = 0,
+    size = 2,
+    color = None,
+    opacity = 0.8,
+    colorbar = False,
+    colorbar_col = -1,
+    colorbar_title = None
+):
+    &#39;&#39;&#39;Get a Plotly trace for all points in selected samples, with possible color-coding.
+
+    Returns a `plotly.graph_objects.Scatter3d` trace containing all points
+    included in in the samples selected by `sample_indices`. `sample_indices`
+    can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+    [1,5,6]).
+    Can then be passed to the `plotly.graph_objects.figure.add_trace`
+    function or a `PlotlyGrapher` instance using the `add_trace` method.
+
+    Parameters
+    ----------
+    sample_indices : int or iterable
+        The index or indices of the samples of LoRs. The default is 0 (the first sample).
+    size : float
+        The marker size of the points. The default is 2.
+    color : str or list-like
+        Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+        Is ignored if `colorbar` is set to True. For more information, check the Plotly
+        documentation. The default is None.
+    opacity : float
+        The opacity of the lines, where 0 is transparent and 1 is fully
+        opaque. The default is 0.8.
+    colorbar : bool
+        If set to True, will color-code the data in the sample column `colorbar_col`.
+        Overrides `color` if set to True. The default is False.
+    colorbar_col : int
+        The column in the data samples that will be used to color the points. Only has
+        an effect if `colorbar` is set to True. The default is -1 (the last column).
+    colorbar_title : str
+        If set, the colorbar will have this title above. The default is None.
+
+    Returns
+    -------
+    plotly.graph_objs.Scatter3d
+        A Plotly trace of the points.
+
+    &#39;&#39;&#39;
+
+    # Check if sample_indices is an iterable collection (list-like)
+    # otherwise just &#34;iterate&#34; over the single number
+    if not hasattr(sample_indices, &#34;__iter__&#34;):
+        sample_indices = [sample_indices]
+
+    coords_x = []
+    coords_y = []
+    coords_z = []
+
+    marker = dict(
+        size = size,
+        color = color,
+        opacity = opacity
+    )
+
+    if colorbar:
+        marker[&#39;color&#39;] = []
+        marker.update(colorscale = &#34;Magma&#34;)
+
+        if colorbar_title is not None:
+            marker.update(colorbar = dict(title = colorbar_title))
+
+    # For each selected sample include all the needed coordinates
+    for n in sample_indices:
+        sample = self[n]
+
+        coords_x.extend(sample[:, 1])
+        coords_y.extend(sample[:, 2])
+        coords_z.extend(sample[:, 3])
+
+        if colorbar == True:
+            marker[&#39;color&#39;].extend(sample[:, colorbar_col])
+
+    trace = go.Scatter3d(
+        x = coords_x,
+        y = coords_y,
+        z = coords_z,
+        mode = &#34;markers&#34;,
+        marker = marker
+    )
+
+    return trace</code></pre>
+</details>
+</dd>
 <dt id="pept.PointData.sample_n"><code class="name flex">
 <span>def <span class="ident">sample_n</span></span>(<span>self, n)</span>
 </code></dt>
@@ -3188,6 +3539,964 @@ sample. Raised if <code>n</code> is not 1.</dd>
 </dd>
 </dl>
 </dd>
+<dt id="pept.VoxelData"><code class="flex name class">
+<span>class <span class="ident">VoxelData</span></span>
+<span>(</span><span>line_data, volume_limits=[500.0, 500.0, 500.0], number_of_voxels=[10, 10, 10], traverse=True, verbose=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class VoxelData:
+
+
+    def __init__(
+        self,
+        line_data,
+        volume_limits = [500., 500., 500.],
+        number_of_voxels = [10, 10, 10],
+        traverse = True,
+        verbose = False
+    ):
+
+        if verbose:
+            start = time.time()
+
+        # If `line_data` is not C-contiguous, create a C-contiguous copy
+        self._line_data = np.asarray(line_data, order = &#39;C&#39;, dtype = float)
+        # Check that line_data has shape (N, 7)
+        if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
+            raise ValueError(&#39;\n[ERROR]: line_data should have dimensions (N, 7). Received {}\n&#39;.format(self._line_data.shape))
+
+        self._number_of_lines = len(self._line_data)
+
+        # If `volume_limits` is not C-contiguous, create a C-contiguous copy
+        self._volume_limits = np.asarray(volume_limits, dtype = float, order = &#34;C&#34;)
+        # Check that volume_limits has shape (3,)
+        if self._volume_limits.ndim != 1 or self._volume_limits.shape[0] != 3:
+            raise ValueError(&#34;\n[ERROR]: volume_limits should have dimensions (3,). Received {}\n&#34;.format(self._volume_limits.shape))
+
+        # If `number_of_voxels` is not C-contiguous, create a C-contiguous copy
+        self._number_of_voxels = np.asarray(number_of_voxels, dtype = int, order = &#34;C&#34;)
+        # Check that number_of_voxels has shape(3,)
+        if self._number_of_voxels.ndim != 1 or self._number_of_voxels.shape[0] != 3:
+            raise ValueError(&#34;\n[ERROR]: number_of_voxels should have dimensions (3,). Received {}\n&#34;.format(self._number_of_voxels.shape))
+
+        self._voxel_sizes = self._volume_limits / self._number_of_voxels
+
+        # If, for dimension x, there are 5 voxels between coordinates 0
+        # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
+        self._voxel_grid = [np.linspace(0, self._volume_limits[i], self._number_of_voxels[i] + 1) for i in range(3)]
+
+        # All access to voxel_positions will be done directly through the inner
+        # class _VoxelPositions, so no need for a private property here
+        self.voxel_positions = self._VoxelPositions(self._volume_limits, self._number_of_voxels)
+        self._voxel_data = np.zeros(self._number_of_voxels, dtype = int)
+
+        if traverse:
+            if verbose:
+                start_traverse = time.time()
+
+            if traverse == True:
+                self.traverse()
+            else:
+                self.traverse(traverse)
+
+            if verbose:
+                end_traverse = time.time()
+
+        if verbose:
+            end = time.time()
+            print(&#34;Initialising the instance of VoxelData took {} seconds.\n&#34;.format(end - start))
+            if traverse:
+                print(&#34;Traversing all voxels took {} seconds.\n&#34;.format(end_traverse - start_traverse))
+
+
+    class _VoxelPositions:
+
+        def __init__(self, volume_limits, number_of_voxels):
+
+            self.volume_limits = np.asarray(volume_limits, dtype = float, order = &#34;C&#34;)
+            self.number_of_voxels = np.asarray(number_of_voxels, dtype = int, order = &#34;C&#34;)
+            self.voxel_sizes = self.volume_limits / self.number_of_voxels
+
+            self._index = 0
+
+
+        def at(self, ix, iy, iz):
+            # Evaluate the position of the voxel (the centre of it) at indices
+            # [ix, iy, iz]
+
+            indices = np.array([ix, iy, iz], dtype = int)
+
+            if (indices &gt;= self.number_of_voxels).any() or (indices &lt; 0).any():
+                raise IndexError(&#34;[ERROR]: Each of the [ix, iy, iz] indices must be between 0 and the corresponding `number_of_voxels`.&#34;)
+
+            return self._at(indices)
+
+
+        def _at(self, indices):
+            # Unchecked!
+            return self.voxel_sizes * (0.5 + indices)
+
+
+        def at_corner(self, ix, iy, iz):
+            # Evaluate the position of the voxel (the corner of it) at indices
+            # [ix, iy, iz]
+
+            indices = np.array([ix, iy, iz], dtype = int)
+
+            if (indices &gt;= self.number_of_voxels).any() or (indices &lt; 0).any():
+                raise IndexError(&#34;[ERROR]: Each of the [ix, iy, iz] indices must be between 0 and the corresponding `number_of_voxels`.&#34;)
+
+            return self._at_corner(indices)
+
+
+        def _at_corner(self, indices):
+            # Unchecked!
+            return self.voxel_sizes * indices
+
+
+        def all(self):
+
+            positions = []
+            for i in range(self.number_of_voxels[0]):
+                for j in range(self.number_of_voxels[1]):
+                    for k in range(self.number_of_voxels[2]):
+                        positions.append(self._at(np.array([i, j, k])))
+
+            return np.array(positions)
+
+
+        def __len__(self):
+            return self.number_of_voxels[0]
+
+
+        def __getitem__(self, key):
+
+            if not isinstance(key, tuple):
+                key = (key,)
+
+            if len(key) &gt; 3:
+                raise ValueError(&#34;[ERROR]: The accessor takes maximum 3 indices, {} were given.&#34;.format(len(key)))
+
+            # Calculate the starting and ending indices and the step for the
+            # [x, y, z] coordinates of all the elements that are accessed.
+            # The default (:, :, :) is the whole range.
+            start = [0, 0, 0]
+            stop = list(self.number_of_voxels)
+            step = [1, 1, 1]
+
+            # The ranges of data selection for each dimension. Default is a
+            # range, but can be an explicit list too (e.g. select elements
+            # [1,2,5]).
+            xyz_ranges = [range(stop[i]) for i in range(3)]
+
+            # Handles negative indices for each of the 3 dimensions.
+            def make_positive(index, dimension):
+                while index &lt; 0:
+                    index += self.number_of_voxels[dimension]
+                return index
+
+            # Interpret each key
+            for i in range(len(key)):
+                # If key[i] is an int, only access the elements at that index,
+                # equivalent to range(key[i], key[i] + 1, 1).
+                if isinstance(key[i], (int, np.integer)):
+                    if key[i] &gt;= self.number_of_voxels[i]:
+                        raise IndexError(&#34;[ERROR]: Tried to access voxel number {} (indexed from 0), when there are {} voxels for dimension {}.&#34;.format(key[i], self.number_of_voxels[i], i))
+
+                    index = make_positive(key[i], i)
+                    start[i] = index
+                    stop[i] = index + 1
+
+                    xyz_ranges[i] = range(start[i], stop[i], step[i])
+
+                # Interpret the possible slices (1:5, ::-1, etc.).
+                elif isinstance(key[i], slice):
+                    # First interpret the step for the ::-1 corner case.
+                    if key[i].step is not None:
+                        if not isinstance(key[i].step, (int, np.integer)):
+                            raise TypeError(&#34;Slice step must be an int. Received {}.&#34;.format(type(key[i].step)))
+                        if key[i].step == 0:
+                            raise ValueError(&#34;Slice step cannot be zero.&#34;)
+                        elif key[i].step &lt; 0:
+                            # If the step is negative, the default start and
+                            # stop become (max_index - 1) and -1, such that
+                            # ::-1 works.
+                            start[i] = self.number_of_voxels[i] - 1
+                            stop[i] = -1
+                            step[i] = key[i].step
+                        else:
+                            step[i] = key[i].step
+
+                    if key[i].start is not None:
+                        if not isinstance(key[i].start, (int, np.integer)):
+                            raise TypeError(&#34;Slice start must be an int. Received {}.&#34;.format(type(key[i].start)))
+                        # Corner case: x = [1,2,3] =&gt; x[5:10] == []
+                        start[i] = min(make_positive(key[i].start, i), self.number_of_voxels[i])
+
+                    if key[i].stop is not None:
+                        if not isinstance(key[i].stop, (int, np.integer)):
+                            raise TypeError(&#34;Slice stop must be an int. Received {}.&#34;.format(type(key[i].stop)))
+                        # Corner case: x = [1,2,3] =&gt; x[5:10] == []
+                        stop[i] = min(make_positive(key[i].stop, i), self.number_of_voxels[i])
+
+                    xyz_ranges[i] = range(start[i], stop[i], step[i])
+
+                # Interpret iterable sequence of selected elements
+                elif hasattr(key[i], &#34;__iter__&#34;):
+                    xyz_ranges[i] = np.asarray(key[i], dtype = int)
+
+                else:
+                    raise TypeError(&#34;Indices must be either `int`, `slice` or iterable of `int`s. Received {}.&#34;.format(type(key[i])))
+
+            positions = []
+            # Iterate through all the elements that need to be accessed
+            for x in xyz_ranges[0]:
+                for y in xyz_ranges[1]:
+                    for z in xyz_ranges[2]:
+                        positions.append(self._at(np.array([x, y, z])))
+
+            if len(positions) == 1:
+                return positions[0]
+            else:
+                return np.array(positions)
+
+
+        def __iter__(self):
+            return self
+
+
+        def __next__(self):
+            if self._index &gt;= len(self):
+                self._index = 0
+                raise StopIteration
+
+            self._index += 1
+            return self[self._index - 1]
+
+
+    @property
+    def line_data(self):
+        return self._line_data
+
+
+    @property
+    def number_of_lines(self):
+        return self._number_of_lines
+
+
+    @property
+    def volume_limits(self):
+        return self._volume_limits
+
+
+    @volume_limits.setter
+    def volume_limits(self, volume_limits):
+        # If `volume_limits` is not C-contiguous, create a C-contiguous copy
+        self._volume_limits = np.asarray(volume_limits, dtype = float, order = &#34;C&#34;)
+        # Check that volume_limits has shape (3,)
+        if self._volume_limits.ndim != 1 or self._volume_limits.shape[0] != 3:
+            raise ValueError(&#34;\n[ERROR]: volume_limits should have dimensions (3,). Received {}\n&#34;.format(self._volume_limits.shape))
+
+        self._voxel_sizes = self._volume_limits / self._number_of_voxels
+
+        # If, for dimension x, there are 5 voxels between coordinates 0
+        # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
+        self._voxel_grid = [np.linspace(0, self._volume_limits[i], self._number_of_voxels[i] + 1) for i in range(3)]
+
+        # All access to voxel_positions will be done directly through the inner
+        # class _VoxelPositions, so no need for a private property here
+        self.voxel_positions = self._VoxelPositions(self._volume_limits, self._number_of_voxels)
+        self._voxel_data = np.zeros(self._number_of_voxels, dtype = int)
+
+
+    @property
+    def number_of_voxels(self):
+        return self._number_of_voxels
+
+
+    @number_of_voxels.setter
+    def number_of_voxels(self, number_of_voxels):
+        # If `number_of_voxels` is not C-contiguous, create a C-contiguous copy
+        self._number_of_voxels = np.asarray(number_of_voxels, dtype = int, order = &#34;C&#34;)
+        # Check that number_of_voxels has shape(3,)
+        if self._number_of_voxels.ndim != 1 or self._number_of_voxels.shape[0] != 3:
+            raise ValueError(&#34;\n[ERROR]: number_of_voxels should have dimensions (3,). Received {}\n&#34;.format(self._number_of_voxels.shape))
+
+        self._voxel_sizes = self._volume_limits / self._number_of_voxels
+
+        # If, for dimension x, there are 5 voxels between coordinates 0
+        # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
+        self._voxel_grid = [np.linspace(0, self._volume_limits[i], self._number_of_voxels[i] + 1) for i in range(3)]
+
+        # All access to voxel_positions will be done directly through the inner
+        # class _VoxelPositions, so no need for a private property here
+        self.voxel_positions = self._VoxelPositions(self._volume_limits, self._number_of_voxels)
+        self._voxel_data = np.zeros(self._number_of_voxels, dtype = int)
+
+
+    @property
+    def voxel_sizes(self):
+        return self._voxel_sizes
+
+
+    @property
+    def voxel_grid(self):
+        return self._voxel_grid
+
+
+    @property
+    def voxel_data(self):
+        return self._voxel_data
+
+
+    def traverse_python(self, lor_indices = None):
+        # Adapted from &#34;A Fast Voxel Traversal Algorithm for Ray Tracing&#34; by
+        # John Amanatides and Andrew Woo.
+
+        # Traverse voxels for all LoRs by default
+        if lor_indices is None:
+            lor_indices = range(self._number_of_lines)
+
+        if not hasattr(lor_indices, &#34;__iter__&#34;):
+            raise TypeError(&#34;[ERROR]: The `lor_indices` parameter must be iterable.&#34;)
+
+        # The adapted grid traversal algorithm
+        for li in lor_indices:
+            # Define a line as L(t) = U + t V
+            # If an LoR is defined as two points P1 and P2, then
+            # U = P1 and V = P2 - P1
+            p1 = self._line_data[li, 1:4]
+            p2 = self._line_data[li, 4:7]
+            u = p1
+            v = p2 - p1
+
+            ##############################################################
+            # Initialisation stage
+
+            # The step [sx, sy, sz] defines the sense of the LoR.
+            # If V[0] is positive, then sx = 1
+            # If V[0] is negative, then sx = -1
+            step = np.array([1, 1, 1], dtype = int)
+            for i, c in enumerate(v):
+                if c &lt; 0:
+                    step[i] = -1
+
+            # The current voxel indices [ix, iy, iz] that the line passes
+            # through.
+            voxel_index = np.array([0, 0, 0], dtype = int)
+
+            # The value of t at which the line passes through to the next
+            # voxel, for each dimension.
+            t_next = np.array([0., 0., 0.], dtype = float)
+
+            # Find the initial voxel that the line starts from, for each
+            # dimension.
+            for i in range(len(voxel_index)):
+                # If, for dimension x, there are 5 voxels between coordinates 0
+                # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
+                # If the line starts at 1.5, then it is part of the voxel at
+                # index 1.
+                voxel_index[i] = np.searchsorted(self._voxel_grid[i], u[i], side = &#34;right&#34;) - 1
+
+                # If the line is going &#34;up&#34;, the next voxel is the next one
+                if v[i] &gt;= 0:
+                    offset = 1
+                # If the line is going &#34;down&#34;, the next voxel is the current one
+                else:
+                    offset = 0
+                t_next[i] = (self._voxel_grid[i][voxel_index[i] + offset] - u[i]) / v[i]
+
+            # delta_t indicates how far along the ray we must move (in units of
+            # t) for each component to be equal to the size of the voxel in
+            # that dimension.
+            delta_t = np.abs(self._voxel_sizes / v)
+
+            ###############################################################
+            # Incremental traversal stage
+
+            # Loop until we reach the last voxel in space
+            while (voxel_index &lt; self._number_of_voxels).all() and (voxel_index &gt;= 0).all():
+
+                self._voxel_data[tuple(voxel_index)] += 1
+
+                # If p2 is fully bounded by the voxel, stop the algorithm
+                if ((self.voxel_positions._at_corner(voxel_index) &lt; p2).all() and
+                    (self.voxel_positions._at_corner(voxel_index + 1) &gt; p2).all()):
+                    break
+
+                # The dimension of the minimum t that makes the line pass
+                # through to the next voxel
+                min_i = t_next.argmin()
+                t_next[min_i] += delta_t[min_i]
+                voxel_index[min_i] += step[min_i]
+
+
+    def traverse(self, lor_indices = None):
+        # Traverse all intersecting voxels for selected LoRs.
+
+        # Traverse voxels for all LoRs by default
+        if lor_indices is None:
+            lor_indices = range(self._number_of_lines)
+
+        if not hasattr(lor_indices, &#34;__iter__&#34;):
+            raise TypeError(&#34;[ERROR]: The `lor_indices` parameter must be iterable.&#34;)
+
+        traverse3d(
+            self._voxel_data,
+            self._line_data[lor_indices],
+            self._voxel_grid[0],
+            self._voxel_grid[1],
+            self._voxel_grid[2]
+        )
+
+
+    def indices(self, coords):
+        # Find the voxel indices for a point at `coords`
+        coords = np.asarray(coords, dtype = float)
+        if coords.ndim != 1 or coords.shape[0] != 3:
+            raise ValueError(&#34;The `coords` parameter must have shape (3,). Received {}.&#34;.format(coords))
+
+        indices = np.array([0, 0, 0], dtype = int)
+        for i in range(3):
+            indices[i] = np.searchsorted(self._voxel_grid[i], coords[i], side = &#34;right&#34;) - 1
+
+        return indices
+
+
+    def cube_trace(self, index, opacity = 0.4, color = None, colorscale = False):
+        # For a small number of cubes
+
+        index = np.asarray(index, dtype = int)
+        xyz = self.voxel_positions.at_corner(*index)
+
+        x = np.array([0, 0, 1, 1, 0, 0, 1, 1]) * self._voxel_sizes[0]
+        y = np.array([0, 1, 1, 0, 0, 1, 1, 0]) * self._voxel_sizes[1]
+        z = np.array([0, 0, 0, 0, 1, 1, 1, 1]) * self._voxel_sizes[2]
+        i = np.array([7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2])
+        j = np.array([3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3])
+        k = np.array([0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6])
+
+        cube = dict(
+            x =  x + xyz[0],
+            y =  y + xyz[1],
+            z =  z + xyz[2],
+            i =  i,
+            j =  j,
+            k =  k,
+            opacity = opacity,
+            color = color
+        )
+
+        if colorscale:
+            cmap = matplotlib.cm.get_cmap(&#34;magma&#34;)
+            c = cmap(self._voxel_data[tuple(index)] / (self._voxel_data.max() or 1))
+            cube.update(
+                color = &#34;rgb({},{},{})&#34;.format(c[0], c[1], c[2])
+            )
+
+        return go.Mesh3d(cube)
+
+
+    def cubes_traces(
+        self,
+        condition = lambda voxel_data: voxel_data &gt; 0,
+        opacity = 0.4,
+        color = None,
+        colorscale = False
+    ):
+        # For a small number of cubes
+
+        indices = np.argwhere(condition(self._voxel_data))
+        traces = [self.cube_trace(i, opacity = opacity, color = color, colorscale = colorscale) for i in indices]
+
+        return traces
+
+
+    def voxels_trace(
+        self,
+        condition = lambda voxel_data: voxel_data &gt; 0,
+        size = 4,
+        opacity = 0.4,
+        color = None,
+        colorscale = False
+    ):
+        # For a large number of cubes
+
+        filtered_indices = np.argwhere(condition(self._voxel_data))
+        positions = self.voxel_positions._at(filtered_indices)
+
+        marker = dict(
+            size = size,
+            color = color,
+            symbol = &#34;square&#34;
+        )
+
+        if colorscale:
+            cvalues = [self._voxel_data[tuple(t)] for t in filtered_indices]
+            marker.update(colorscale = &#34;Magma&#34;, color = cvalues)
+
+        voxels = dict(
+            x = positions[:, 0],
+            y = positions[:, 1],
+            z = positions[:, 2],
+            opacity = opacity,
+            mode = &#34;markers&#34;,
+            marker = marker
+        )
+
+        return go.Scatter3d(voxels)
+
+
+    def heatmap_trace(
+        self,
+        ix = None,
+        iy = None,
+        iz = None,
+        width = 0
+    ):
+
+        if ix is not None:
+            x = self._voxel_grid[1]
+            y = self._voxel_grid[2]
+            z = self._voxel_data[ix, :, :]
+
+            for i in range(1, width + 1):
+                z = z + self._voxel_data[ix + i, :, :]
+                z = z + self._voxel_data[ix - i, :, :]
+
+        elif iy is not None:
+            x = self._voxel_grid[0]
+            y = self._voxel_grid[2]
+            z = self._voxel_data[:, iy, :]
+
+            for i in range(1, width + 1):
+                z = z + self._voxel_data[:, iy + i, :]
+                z = z + self._voxel_data[:, iy - i, :]
+
+        elif iz is not None:
+            x = self._voxel_grid[0]
+            y = self._voxel_grid[1]
+            z = self._voxel_data[:, :, iz]
+
+            for i in range(1, width + 1):
+                z = z + self._voxel_data[:, :, iz + i]
+                z = z + self._voxel_data[:, :, iz - i]
+
+        else:
+            raise ValueError(&#34;[ERROR]: One of the `ix`, `iy`, `iz` slice indices must be provided.&#34;)
+
+        heatmap = dict(
+            x = x,
+            y = y,
+            z = z,
+            colorscale = &#34;Magma&#34;,
+            transpose = True
+        )
+
+        return go.Heatmap(heatmap)
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = &#34;&#34;
+
+        docstr += &#34;number_of_lines =   {}\n\n&#34;.format(self.number_of_lines)
+        docstr += &#34;volume_limits =     {}\n&#34;.format(self.volume_limits)
+        docstr += &#34;number_of_voxels =  {}\n&#34;.format(self.number_of_voxels)
+        docstr += &#34;voxel_sizes =       {}\n\n&#34;.format(self.voxel_sizes)
+
+        docstr += &#34;line_data = \n&#34;
+        docstr += self._line_data.__str__()
+
+        docstr += &#34;\n\nvoxel_data = \n&#34;
+        docstr += self._voxel_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = &#34;Class instance that inherits from `pept.VoxelData`.\n\n&#34; + self.__str__() + &#34;\n\n&#34;
+
+        return docstr</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pept.VoxelData.line_data"><code class="name">var <span class="ident">line_data</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def line_data(self):
+    return self._line_data</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.number_of_lines"><code class="name">var <span class="ident">number_of_lines</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def number_of_lines(self):
+    return self._number_of_lines</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.number_of_voxels"><code class="name">var <span class="ident">number_of_voxels</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def number_of_voxels(self):
+    return self._number_of_voxels</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.volume_limits"><code class="name">var <span class="ident">volume_limits</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def volume_limits(self):
+    return self._volume_limits</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.voxel_data"><code class="name">var <span class="ident">voxel_data</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def voxel_data(self):
+    return self._voxel_data</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.voxel_grid"><code class="name">var <span class="ident">voxel_grid</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def voxel_grid(self):
+    return self._voxel_grid</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.voxel_sizes"><code class="name">var <span class="ident">voxel_sizes</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def voxel_sizes(self):
+    return self._voxel_sizes</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pept.VoxelData.cube_trace"><code class="name flex">
+<span>def <span class="ident">cube_trace</span></span>(<span>self, index, opacity=0.4, color=None, colorscale=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def cube_trace(self, index, opacity = 0.4, color = None, colorscale = False):
+    # For a small number of cubes
+
+    index = np.asarray(index, dtype = int)
+    xyz = self.voxel_positions.at_corner(*index)
+
+    x = np.array([0, 0, 1, 1, 0, 0, 1, 1]) * self._voxel_sizes[0]
+    y = np.array([0, 1, 1, 0, 0, 1, 1, 0]) * self._voxel_sizes[1]
+    z = np.array([0, 0, 0, 0, 1, 1, 1, 1]) * self._voxel_sizes[2]
+    i = np.array([7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2])
+    j = np.array([3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3])
+    k = np.array([0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6])
+
+    cube = dict(
+        x =  x + xyz[0],
+        y =  y + xyz[1],
+        z =  z + xyz[2],
+        i =  i,
+        j =  j,
+        k =  k,
+        opacity = opacity,
+        color = color
+    )
+
+    if colorscale:
+        cmap = matplotlib.cm.get_cmap(&#34;magma&#34;)
+        c = cmap(self._voxel_data[tuple(index)] / (self._voxel_data.max() or 1))
+        cube.update(
+            color = &#34;rgb({},{},{})&#34;.format(c[0], c[1], c[2])
+        )
+
+    return go.Mesh3d(cube)</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.cubes_traces"><code class="name flex">
+<span>def <span class="ident">cubes_traces</span></span>(<span>self, condition=<function VoxelData.<lambda> at 0x11815e560>, opacity=0.4, color=None, colorscale=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def cubes_traces(
+    self,
+    condition = lambda voxel_data: voxel_data &gt; 0,
+    opacity = 0.4,
+    color = None,
+    colorscale = False
+):
+    # For a small number of cubes
+
+    indices = np.argwhere(condition(self._voxel_data))
+    traces = [self.cube_trace(i, opacity = opacity, color = color, colorscale = colorscale) for i in indices]
+
+    return traces</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.heatmap_trace"><code class="name flex">
+<span>def <span class="ident">heatmap_trace</span></span>(<span>self, ix=None, iy=None, iz=None, width=0)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def heatmap_trace(
+    self,
+    ix = None,
+    iy = None,
+    iz = None,
+    width = 0
+):
+
+    if ix is not None:
+        x = self._voxel_grid[1]
+        y = self._voxel_grid[2]
+        z = self._voxel_data[ix, :, :]
+
+        for i in range(1, width + 1):
+            z = z + self._voxel_data[ix + i, :, :]
+            z = z + self._voxel_data[ix - i, :, :]
+
+    elif iy is not None:
+        x = self._voxel_grid[0]
+        y = self._voxel_grid[2]
+        z = self._voxel_data[:, iy, :]
+
+        for i in range(1, width + 1):
+            z = z + self._voxel_data[:, iy + i, :]
+            z = z + self._voxel_data[:, iy - i, :]
+
+    elif iz is not None:
+        x = self._voxel_grid[0]
+        y = self._voxel_grid[1]
+        z = self._voxel_data[:, :, iz]
+
+        for i in range(1, width + 1):
+            z = z + self._voxel_data[:, :, iz + i]
+            z = z + self._voxel_data[:, :, iz - i]
+
+    else:
+        raise ValueError(&#34;[ERROR]: One of the `ix`, `iy`, `iz` slice indices must be provided.&#34;)
+
+    heatmap = dict(
+        x = x,
+        y = y,
+        z = z,
+        colorscale = &#34;Magma&#34;,
+        transpose = True
+    )
+
+    return go.Heatmap(heatmap)</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.indices"><code class="name flex">
+<span>def <span class="ident">indices</span></span>(<span>self, coords)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def indices(self, coords):
+    # Find the voxel indices for a point at `coords`
+    coords = np.asarray(coords, dtype = float)
+    if coords.ndim != 1 or coords.shape[0] != 3:
+        raise ValueError(&#34;The `coords` parameter must have shape (3,). Received {}.&#34;.format(coords))
+
+    indices = np.array([0, 0, 0], dtype = int)
+    for i in range(3):
+        indices[i] = np.searchsorted(self._voxel_grid[i], coords[i], side = &#34;right&#34;) - 1
+
+    return indices</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.traverse"><code class="name flex">
+<span>def <span class="ident">traverse</span></span>(<span>self, lor_indices=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def traverse(self, lor_indices = None):
+    # Traverse all intersecting voxels for selected LoRs.
+
+    # Traverse voxels for all LoRs by default
+    if lor_indices is None:
+        lor_indices = range(self._number_of_lines)
+
+    if not hasattr(lor_indices, &#34;__iter__&#34;):
+        raise TypeError(&#34;[ERROR]: The `lor_indices` parameter must be iterable.&#34;)
+
+    traverse3d(
+        self._voxel_data,
+        self._line_data[lor_indices],
+        self._voxel_grid[0],
+        self._voxel_grid[1],
+        self._voxel_grid[2]
+    )</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.traverse_python"><code class="name flex">
+<span>def <span class="ident">traverse_python</span></span>(<span>self, lor_indices=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def traverse_python(self, lor_indices = None):
+    # Adapted from &#34;A Fast Voxel Traversal Algorithm for Ray Tracing&#34; by
+    # John Amanatides and Andrew Woo.
+
+    # Traverse voxels for all LoRs by default
+    if lor_indices is None:
+        lor_indices = range(self._number_of_lines)
+
+    if not hasattr(lor_indices, &#34;__iter__&#34;):
+        raise TypeError(&#34;[ERROR]: The `lor_indices` parameter must be iterable.&#34;)
+
+    # The adapted grid traversal algorithm
+    for li in lor_indices:
+        # Define a line as L(t) = U + t V
+        # If an LoR is defined as two points P1 and P2, then
+        # U = P1 and V = P2 - P1
+        p1 = self._line_data[li, 1:4]
+        p2 = self._line_data[li, 4:7]
+        u = p1
+        v = p2 - p1
+
+        ##############################################################
+        # Initialisation stage
+
+        # The step [sx, sy, sz] defines the sense of the LoR.
+        # If V[0] is positive, then sx = 1
+        # If V[0] is negative, then sx = -1
+        step = np.array([1, 1, 1], dtype = int)
+        for i, c in enumerate(v):
+            if c &lt; 0:
+                step[i] = -1
+
+        # The current voxel indices [ix, iy, iz] that the line passes
+        # through.
+        voxel_index = np.array([0, 0, 0], dtype = int)
+
+        # The value of t at which the line passes through to the next
+        # voxel, for each dimension.
+        t_next = np.array([0., 0., 0.], dtype = float)
+
+        # Find the initial voxel that the line starts from, for each
+        # dimension.
+        for i in range(len(voxel_index)):
+            # If, for dimension x, there are 5 voxels between coordinates 0
+            # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
+            # If the line starts at 1.5, then it is part of the voxel at
+            # index 1.
+            voxel_index[i] = np.searchsorted(self._voxel_grid[i], u[i], side = &#34;right&#34;) - 1
+
+            # If the line is going &#34;up&#34;, the next voxel is the next one
+            if v[i] &gt;= 0:
+                offset = 1
+            # If the line is going &#34;down&#34;, the next voxel is the current one
+            else:
+                offset = 0
+            t_next[i] = (self._voxel_grid[i][voxel_index[i] + offset] - u[i]) / v[i]
+
+        # delta_t indicates how far along the ray we must move (in units of
+        # t) for each component to be equal to the size of the voxel in
+        # that dimension.
+        delta_t = np.abs(self._voxel_sizes / v)
+
+        ###############################################################
+        # Incremental traversal stage
+
+        # Loop until we reach the last voxel in space
+        while (voxel_index &lt; self._number_of_voxels).all() and (voxel_index &gt;= 0).all():
+
+            self._voxel_data[tuple(voxel_index)] += 1
+
+            # If p2 is fully bounded by the voxel, stop the algorithm
+            if ((self.voxel_positions._at_corner(voxel_index) &lt; p2).all() and
+                (self.voxel_positions._at_corner(voxel_index + 1) &gt; p2).all()):
+                break
+
+            # The dimension of the minimum t that makes the line pass
+            # through to the next voxel
+            min_i = t_next.argmin()
+            t_next[min_i] += delta_t[min_i]
+            voxel_index[min_i] += step[min_i]</code></pre>
+</details>
+</dd>
+<dt id="pept.VoxelData.voxels_trace"><code class="name flex">
+<span>def <span class="ident">voxels_trace</span></span>(<span>self, condition=<function VoxelData.<lambda> at 0x11815e680>, size=4, opacity=0.4, color=None, colorscale=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def voxels_trace(
+    self,
+    condition = lambda voxel_data: voxel_data &gt; 0,
+    size = 4,
+    opacity = 0.4,
+    color = None,
+    colorscale = False
+):
+    # For a large number of cubes
+
+    filtered_indices = np.argwhere(condition(self._voxel_data))
+    positions = self.voxel_positions._at(filtered_indices)
+
+    marker = dict(
+        size = size,
+        color = color,
+        symbol = &#34;square&#34;
+    )
+
+    if colorscale:
+        cvalues = [self._voxel_data[tuple(t)] for t in filtered_indices]
+        marker.update(colorscale = &#34;Magma&#34;, color = cvalues)
+
+    voxels = dict(
+        x = positions[:, 0],
+        y = positions[:, 1],
+        z = positions[:, 2],
+        opacity = opacity,
+        mode = &#34;markers&#34;,
+        marker = marker
+    )
+
+    return go.Scatter3d(voxels)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -3206,6 +4515,7 @@ sample. Raised if <code>n</code> is not 1.</dd>
 <li><a href="#performance">Performance</a></li>
 <li><a href="#help-and-support">Help and Support</a></li>
 <li><a href="#contributing">Contributing</a></li>
+<li><a href="#citing">Citing</a></li>
 <li><a href="#licensing">Licensing</a></li>
 </ul>
 </li>
@@ -3214,12 +4524,13 @@ sample. Raised if <code>n</code> is not 1.</dd>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="pept.data" href="data/index.html">pept.data</a></code></li>
+<li><code><a title="pept.base" href="base/index.html">pept.base</a></code></li>
 <li><code><a title="pept.diagnostics" href="diagnostics/index.html">pept.diagnostics</a></code></li>
 <li><code><a title="pept.scanners" href="scanners/index.html">pept.scanners</a></code></li>
 <li><code><a title="pept.simulation" href="simulation/index.html">pept.simulation</a></code></li>
 <li><code><a title="pept.tests" href="tests/index.html">pept.tests</a></code></li>
 <li><code><a title="pept.tracking" href="tracking/index.html">pept.tracking</a></code></li>
+<li><code><a title="pept.utilities" href="utilities/index.html">pept.utilities</a></code></li>
 <li><code><a title="pept.visualisation" href="visualisation/index.html">pept.visualisation</a></code></li>
 </ul>
 </li>
@@ -3228,9 +4539,8 @@ sample. Raised if <code>n</code> is not 1.</dd>
 <li>
 <h4><code><a title="pept.LineData" href="#pept.LineData">LineData</a></code></h4>
 <ul class="">
-<li><code><a title="pept.LineData.all_lines_traces" href="#pept.LineData.all_lines_traces">all_lines_traces</a></code></li>
 <li><code><a title="pept.LineData.line_data" href="#pept.LineData.line_data">line_data</a></code></li>
-<li><code><a title="pept.LineData.lines_sample_n_traces" href="#pept.LineData.lines_sample_n_traces">lines_sample_n_traces</a></code></li>
+<li><code><a title="pept.LineData.lines_trace" href="#pept.LineData.lines_trace">lines_trace</a></code></li>
 <li><code><a title="pept.LineData.number_of_lines" href="#pept.LineData.number_of_lines">number_of_lines</a></code></li>
 <li><code><a title="pept.LineData.number_of_samples" href="#pept.LineData.number_of_samples">number_of_samples</a></code></li>
 <li><code><a title="pept.LineData.overlap" href="#pept.LineData.overlap">overlap</a></code></li>
@@ -3258,9 +4568,29 @@ sample. Raised if <code>n</code> is not 1.</dd>
 <li><code><a title="pept.PointData.point_data" href="#pept.PointData.point_data">point_data</a></code></li>
 <li><code><a title="pept.PointData.points_sample_n_trace" href="#pept.PointData.points_sample_n_trace">points_sample_n_trace</a></code></li>
 <li><code><a title="pept.PointData.points_sample_n_trace_colorbar" href="#pept.PointData.points_sample_n_trace_colorbar">points_sample_n_trace_colorbar</a></code></li>
+<li><code><a title="pept.PointData.points_trace" href="#pept.PointData.points_trace">points_trace</a></code></li>
 <li><code><a title="pept.PointData.sample_n" href="#pept.PointData.sample_n">sample_n</a></code></li>
 <li><code><a title="pept.PointData.sample_size" href="#pept.PointData.sample_size">sample_size</a></code></li>
 <li><code><a title="pept.PointData.to_csv" href="#pept.PointData.to_csv">to_csv</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pept.VoxelData" href="#pept.VoxelData">VoxelData</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pept.VoxelData.cube_trace" href="#pept.VoxelData.cube_trace">cube_trace</a></code></li>
+<li><code><a title="pept.VoxelData.cubes_traces" href="#pept.VoxelData.cubes_traces">cubes_traces</a></code></li>
+<li><code><a title="pept.VoxelData.heatmap_trace" href="#pept.VoxelData.heatmap_trace">heatmap_trace</a></code></li>
+<li><code><a title="pept.VoxelData.indices" href="#pept.VoxelData.indices">indices</a></code></li>
+<li><code><a title="pept.VoxelData.line_data" href="#pept.VoxelData.line_data">line_data</a></code></li>
+<li><code><a title="pept.VoxelData.number_of_lines" href="#pept.VoxelData.number_of_lines">number_of_lines</a></code></li>
+<li><code><a title="pept.VoxelData.number_of_voxels" href="#pept.VoxelData.number_of_voxels">number_of_voxels</a></code></li>
+<li><code><a title="pept.VoxelData.traverse" href="#pept.VoxelData.traverse">traverse</a></code></li>
+<li><code><a title="pept.VoxelData.traverse_python" href="#pept.VoxelData.traverse_python">traverse_python</a></code></li>
+<li><code><a title="pept.VoxelData.volume_limits" href="#pept.VoxelData.volume_limits">volume_limits</a></code></li>
+<li><code><a title="pept.VoxelData.voxel_data" href="#pept.VoxelData.voxel_data">voxel_data</a></code></li>
+<li><code><a title="pept.VoxelData.voxel_grid" href="#pept.VoxelData.voxel_grid">voxel_grid</a></code></li>
+<li><code><a title="pept.VoxelData.voxel_sizes" href="#pept.VoxelData.voxel_sizes">voxel_sizes</a></code></li>
+<li><code><a title="pept.VoxelData.voxels_trace" href="#pept.VoxelData.voxels_trace">voxels_trace</a></code></li>
 </ul>
 </li>
 </ul>

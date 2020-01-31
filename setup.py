@@ -44,18 +44,24 @@ try:
     from    Cython.Distutils    import  build_ext
 except ImportError as e:
     warnings.warn(e.args[0])
-    warnings.warn('The pept package requires Cython and numpy to be pre-installed')
-    raise ImportError('Cython or numpy not found! Please install cython and numpy (or run pip install -r requirements.txt) and try again')
+    warnings.warn('The pept package requires Cython and Numpy to be pre-installed')
+    raise ImportError(
+        'Cython or Numpy not found! Please install Cython and Numpy (or run '
+        '`pip install -r requirements.txt`) and try again.'
+    )
 
 
 # Package meta-data.
 NAME = 'pept'
-DESCRIPTION = 'A Python library that unifies Positron Emission Particle Tracking (PEPT) research, including tracking, simulation, data analysis and visualisation tools.'
+DESCRIPTION = (
+    'A Python library that unifies Positron Emission Particle Tracking (PEPT) '
+    'research, including tracking, simulation, data analysis and '
+    'visualisation tools.'
+)
 URL = 'https://github.com/uob-positron-imaging-centre/pept'
 EMAIL = 'a.l.nicusan@bham.ac.uk'
 AUTHOR = 'Andrei Leonard Nicusan'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.2'
 
 
 def requirements():
@@ -73,12 +79,15 @@ EXTRAS = {
     # 'fancy feature': ['django'],
 }
 
-
 cythonize_kw = dict(language_level = 3)
 cy_extension_kw = dict()
 
-extra_compile_args = ['-O3']
+extra_compile_args = ['-O3', '-ffast-math', '-march=native']
 cy_extension_kw['extra_compile_args'] = extra_compile_args
+
+extra_link_args = []
+cy_extension_kw['extra_link_args'] = extra_link_args
+
 cy_extension_kw['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
@@ -87,6 +96,12 @@ cy_extensions = [
               **cy_extension_kw),
     Extension('pept.scanners.modular_camera.extensions.get_pept_event',
               ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
+              **cy_extension_kw),
+    Extension('pept.utilities.traverse.traverse3d',
+              ['pept/utilities/traverse/traverse3d.pyx'],
+              **cy_extension_kw),
+    Extension('pept.utilities.traverse.traverse2d',
+              ['pept/utilities/traverse/traverse2d.pyx'],
               **cy_extension_kw),
 ]
 
@@ -112,12 +127,9 @@ except FileNotFoundError:
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
-if not VERSION:
-    project_slug = NAME.lower().replace("-", "_").replace(" ", "_")
-    with open(os.path.join(here, project_slug, '__version__.py')) as f:
-        exec(f.read(), about)
-else:
-    about['__version__'] = VERSION
+project_slug = NAME.lower().replace("-", "_").replace(" ", "_")
+with open(os.path.join(here, project_slug, '__version__.py')) as f:
+    exec(f.read(), about)
 
 
 class UploadCommand(Command):

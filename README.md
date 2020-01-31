@@ -1,8 +1,8 @@
 
 
-![version](https://img.shields.io/badge/version-0.1.3-blue)
+![version](https://img.shields.io/badge/version-0.1.4-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
-[![docs](https://img.shields.io/badge/-docs-success)](https://uob-positron-imaging-centre.github.io)
+[![](https://img.shields.io/badge/-docs-success)](https://uob-positron-imaging-centre.github.io)
 
 # PEPT
 
@@ -73,7 +73,7 @@ clusterer = peptml.HDBSCANClusterer(min_sample_size = 30)
 centres, clustered_cutpoints = clusterer.fit_cutpoints(cutpoints)
 
 fig = PlotlyGrapher().create_figure()
-fig.add_trace(centres.all_points_trace())
+fig.add_trace(centres.points_trace())
 fig.show()
 ```
 
@@ -110,9 +110,19 @@ expanding tutorials, is always welcome. To contribute please fork the project, m
 your changes and submit a pull request. We will do our best to work through any
 issues with you and get your code merged into the main branch.
 
+## Citing
+
+If you used this codebase or any software making use of it in a scientific
+publication, you must cite the following paper:
+
+> Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+
+> https://doi.org/10.1063/1.5129251
+
 ## Licensing
 
 The `pept` package is GNU v3.0 licensed.
+Copyright (C) 2020 Andrei Leonard Nicusan.
 
 
 

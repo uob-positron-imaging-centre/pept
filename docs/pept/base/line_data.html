@@ -1,0 +1,2208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>pept.base.line_data API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pept.base.line_data</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools.
+#
+#    If you used this codebase or any software making use of it in a scientific
+#    publication, you must cite the following paper:
+#        Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
+#        using machine learning. Review of Scientific Instruments.
+#        2020 Jan 1;91(1):013329.
+#        https://doi.org/10.1063/1.5129251
+#
+#    Copyright (C) 2019 Andrei Leonard Nicusan
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+
+# File   : line_data.py
+# License: License: GNU v3.0
+# Author : Andrei Leonard Nicusan &lt;a.l.nicusan@bham.ac.uk&gt;
+# Date   : 19.08.2019
+
+
+import  time
+import  numpy                   as      np
+
+import  plotly.graph_objects    as      go
+
+import  matplotlib
+import  matplotlib.pyplot       as      plt
+from    matplotlib.colors       import  Normalize
+from    mpl_toolkits.mplot3d    import  Axes3D
+
+
+class LineData:
+    &#39;&#39;&#39;A class for PEPT LoR data iteration, manipulation and visualisation.
+
+    Generally, PEPT LoRs are lines in 3D space, each defined by two points,
+    irrespective of the geometry of the scanner used. This class is used
+    for LoRs (or any lines!) encapsulation. It can yield samples of the
+    `line_data` of an adaptive `sample_size` and `overlap`, without requiring
+    additional storage.
+
+    Parameters
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs (or any generic set of
+        lines) as time and cartesian (3D) coordinates of two points defining each
+        line, **in mm**. A row is then [time, x1, y1, z1, x2, y2, z2].
+    sample_size : int, optional
+        An `int`` that defines the number of lines that should be
+        returned when iterating over `line_data`. A `sample_size` of 0
+        yields all the data as one single sample. (Default is 200)
+    overlap : int, optional
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. An
+        error is raised if `overlap` is larger than or equal to
+        `sample_size`. (Default is 0)
+    verbose : bool, optional
+        An option that enables printing the time taken for the
+        initialisation of an instance of the class. Useful when
+        reading large files (10gb files for PEPT data is not unheard
+        of). (Default is True)
+
+    Attributes
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs as time and
+        cartesian (3D) coordinates of two points defining a line, **in mm**.
+        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
+    sample_size : int
+        An `int` that defines the number of lines that should be
+        returned when iterating over `line_data`. (Default is 200)
+    overlap : int
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. It
+        is required to be smaller than `sample_size`. (Default is 0)
+    number_of_lines : int
+        An `int` that corresponds to len(`line_data`), or the number of
+        LoRs stored by `line_data`.
+    number_of_samples : int
+        An `int` that corresponds to the number of samples that can be
+        accessed from the class. It takes `overlap` into consideration.
+
+    Raises
+    ------
+    ValueError
+        If `overlap` &gt;= `sample_size` unless `sample_size` is 0. Overlap
+        has to be smaller than `sample_size`. Note that it can also be negative.
+    ValueError
+        If `line_data` does not have (N, 7) shape.
+
+    Notes
+    -----
+    The class saves `line_data` as a **contiguous** numpy array for
+    efficient access in C functions. It should not be changed after
+    instantiating the class.
+
+    &#39;&#39;&#39;
+
+    def __init__(
+        self,
+        line_data,
+        sample_size = 200,
+        overlap = 0,
+        verbose = False
+    ):
+
+        if verbose:
+            start = time.time()
+
+        # If sample_size != 0 (in which case the class returns all data in one
+        # sample), check the `overlap` is not larger or equal to `sample_size`.
+        if sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(sample_size))
+        if sample_size != 0 and overlap &gt;= sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n&#39;.format(overlap, sample_size))
+
+        # Initialise the inner parameters of the class
+        self._index = 0
+        self._sample_size = sample_size
+        self._overlap = overlap
+
+        # If `line_data` is not C-contiguous, create a C-contiguous copy
+        self._line_data = np.asarray(line_data, order = &#39;C&#39;, dtype = float)
+
+        # Check that line_data has shape (N, 7)
+        if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
+            raise ValueError(&#39;\n[ERROR]: line_data should have dimensions (N, 7). Received {}\n&#39;.format(self._line_data.shape))
+
+        self._number_of_lines = len(self._line_data)
+
+        if verbose:
+            end = time.time()
+            print(&#34;Initialising the PEPT data took {} seconds\n&#34;.format(end - start))
+
+
+    @property
+    def line_data(self):
+        &#39;&#39;&#39;Get the lines stored in the class.
+
+        Returns
+        -------
+        (, 7) numpy.ndarray
+            A memory view of the lines stored in `line_data`.
+
+        &#39;&#39;&#39;
+
+        return self._line_data
+
+
+    @property
+    def sample_size(self):
+        &#39;&#39;&#39;Get the number of lines in one sample returned by the class.
+
+        Returns
+        -------
+        int
+            The sample size (number of lines) in one sample returned by
+            the class.
+
+        &#39;&#39;&#39;
+
+        return self._sample_size
+
+
+    @sample_size.setter
+    def sample_size(self, new_sample_size):
+        &#39;&#39;&#39;Change `sample_size` without instantiating a new object
+
+        It also resets the inner index of the class.
+
+        Parameters
+        ----------
+        new_sample_size : int
+            The new sample size. It has to be larger than `overlap`,
+            unless it is 0 (in which case all `line_data` will be returned
+            as one sample).
+
+        Raises
+        ------
+        ValueError
+            If `overlap` &gt;= `new_sample_size`. Overlap has to be
+            smaller than `sample_size`, unless `sample_size` is 0.
+            Note that it can also be negative.
+
+        &#39;&#39;&#39;
+
+        if new_sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(new_sample_size))
+        if new_sample_size != 0 and self._overlap &gt;= new_sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n&#39;.format(self._overlap, new_sample_size))
+
+        self._index = 0
+        self._sample_size = new_sample_size
+
+
+    @property
+    def overlap(self):
+        &#39;&#39;&#39;Get the overlap between every two samples returned by the class.
+
+        Returns
+        -------
+        int
+            The overlap (number of lines) between every two samples  returned by
+            the class.
+
+        &#39;&#39;&#39;
+
+        return self._overlap
+
+
+    @overlap.setter
+    def overlap(self, new_overlap):
+        &#39;&#39;&#39;Change `overlap` without instantiating a new object
+
+        It also resets the inner index of the class.
+
+        Parameters
+        ----------
+        new_overlap : int
+            The new overlap. It has to be smaller than `sample_size`, unless
+            `sample_size` is 0 (in which case all `line_data` will be returned
+            as one sample and so overlap does not play any role).
+
+        Raises
+        ------
+        ValueError
+            If `new_overlap` &gt;= `sample_size`. `new_overlap` has to be
+            smaller than `sample_size`, unless `sample_size` is 0.
+            Note that it can also be negative.
+
+        &#39;&#39;&#39;
+
+        if self._sample_size != 0 and new_overlap &gt;= self._sample_size:
+            raise ValueError(&#39;\n[ERROR]: new_overlap = {} must be smaller than sample_size = {}\n&#39;.format(new_overlap, self._sample_size))
+
+        self._index = 0
+        self._overlap = new_overlap
+
+
+    @property
+    def number_of_samples(self):
+        &#39;&#39;&#39;Get number of samples, considering overlap.
+
+        If `sample_size == 0`, all data is returned as a single sample,
+        and so `number_of_samples` will be 1. Otherwise, it checks the
+        number of samples every time it is called, taking `overlap` into
+        consideration.
+
+        Returns
+        -------
+        int
+            The number of samples, taking `overlap` into consideration.
+
+        &#39;&#39;&#39;
+        # If self.sample_size == 0, all data is returned as a single sample
+        if self._sample_size == 0:
+            return 1
+
+        # If self.sample_size != 0, check there is at least one sample
+        if self._number_of_lines &gt;= self._sample_size:
+            return (self._number_of_lines - self._sample_size) // (self.sample_size - self.overlap) + 1
+        else:
+            return 0
+
+
+    @property
+    def number_of_lines(self):
+        &#39;&#39;&#39;Get the number of lines stored in the class.
+
+        Returns
+        -------
+        int
+            The number of lines stored in `line_data`.
+
+        &#39;&#39;&#39;
+        return self._number_of_lines
+
+
+    def sample_n(self, n):
+        &#39;&#39;&#39;Get sample number n (indexed from 1, i.e. `n &gt; 0`)
+
+        Returns the lines from `line_data` included in sample number
+        `n`. Samples are numbered starting from 1.
+
+        Parameters
+        ----------
+        n : int
+            The number of the sample required. Note that `1 &lt;= n &lt;=
+            number_of_samples`.
+
+        Returns
+        -------
+        (, 7) numpy.ndarray
+            A shallow copy of the lines from `line_data` included in
+            sample number n.
+
+        Raises
+        ------
+        IndexError
+            If `sample_size == 0`, all data is returned as one single
+            sample. Raised if `n` is not 1.
+        IndexError
+            If `n &gt; number_of_samples` or `n &lt;= 0`.
+
+        &#39;&#39;&#39;
+        if self._sample_size == 0:
+            if n == 1:
+                return self._line_data
+            else:
+                raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there is only 1 sample (sample_size == 0)\n&#34;.format(n))
+        elif (n &gt; self.number_of_samples) or n &lt;= 0:
+            raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there are {} samples\n&#34;.format(n, self.number_of_samples))
+
+        start_index = (n - 1) * (self._sample_size - self._overlap)
+        return self._line_data[start_index:(start_index + self._sample_size)]
+
+
+    def to_csv(self, filepath, delimiter = &#39;  &#39;, newline = &#39;\n&#39;):
+        &#39;&#39;&#39;Write `line_data` to a CSV file
+
+        Write all LoRs stored in the class to a CSV file.
+
+        Parameters
+        ----------
+            filepath : filename or file handle
+                If filepath is a path (rather than file handle), it is relative
+                to where python is called.
+            delimiter : str, optional
+                The delimiter between values. The default is two spaces &#39;  &#39;,
+                such that numbers in the format &#39;123,456.78&#39; are well-understood.
+            newline : str, optional
+                The sequence of characters at the end of every line. The default
+                is a new line &#39;\n&#39;
+
+        &#39;&#39;&#39;
+        np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
+
+
+    def plot_all_lines(self, ax = None, color=&#39;r&#39;, alpha=1.0 ):
+        &#39;&#39;&#39;Plot all lines using matplotlib
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on it.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `plot_lines_sample_n` is recommended.
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        for i in range(0, self._number_of_lines):
+            ax.plot([ p1[i][0], p2[i][0] ],
+                    [ p1[i][1], p2[i][1] ],
+                    [ p1[i][2], p2[i][2] ],
+                    c = color, alpha = alpha)
+
+        return fig, ax
+
+
+    def plot_all_lines_alt_axes(self, ax, color=&#39;r&#39;, alpha=1.0):
+        &#39;&#39;&#39;Plot all lines using matplotlib on PEPT-style axes
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
+        the PEPT-style convention: **x** is *parallel and horizontal* to the
+        screens, **y** is *parallel and vertical* to the screens, **z** is
+        *perpendicular* to the screens. The mapping relative to the
+        Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        for i in range(0, self._number_of_lines):
+            ax.plot([ p1[i][2], p2[i][2] ],
+                    [ p1[i][0], p2[i][0] ],
+                    [ p1[i][1], p2[i][1] ],
+                    c = color, alpha=alpha)
+
+        return fig, ax
+
+
+    def plot_lines_sample_n(self, n, ax = None, color = &#39;r&#39;, alpha = 1.0):
+        &#39;&#39;&#39;Plot lines from sample `n` using matplotlib
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines
+        from sample number `n`.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        sampleN : int
+            The number of the sample to be plotted.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+        sample = self.sample_n(n)
+        for i in range(0, len(sample)):
+            ax.plot([ sample[i][1], sample[i][4] ],
+                    [ sample[i][2], sample[i][5] ],
+                    [ sample[i][3], sample[i][6] ],
+                    c = color, alpha = alpha)
+
+        return fig, ax
+
+
+    def plot_lines_sample_n_alt_axes(self, n, ax=None, color=&#39;r&#39;, alpha=1.0):
+        &#39;&#39;&#39;Plot lines from sample `n` using matplotlib on PEPT-style axes
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines from
+        sample number sampleN on the PEPT-style coordinates convention:
+        **x** is *parallel and horizontal* to the screens, **y** is
+        *parallel and vertical* to the screens, **z** is *perpendicular*
+        to the screens. The mapping relative to the Cartesian coordinates
+        would then be: (x, y, z) -&gt; (z, x, y)
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+        n : int
+            The number of the sample to be plotted.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+        sample = self.sample_n(n)
+        for i in range(0, len(sample)):
+            ax.plot([ sample[i][3], sample[i][6] ],
+                    [ sample[i][1], sample[i][4] ],
+                    [ sample[i][2], sample[i][5] ],
+                    c = color, alpha = alpha)
+
+        return fig, ax
+
+
+    def lines_trace(
+        self,
+        sample_indices = 0,
+        width = 2,
+        color = None,
+        opacity = 0.6,
+        colorbar = True,
+        colorbar_col = 0,
+        colorbar_title = None
+    ):
+        &#39;&#39;&#39;Get a Plotly trace for all the lines in selected samples.
+
+        Creates a `plotly.graph_objects.Scatter3d` object for all the lines
+        included in the samples selected by `sample_indices`. `sample_indices`
+        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+        [1,5,6]).
+        Can then be passed to the `plotly.graph_objects.figure.add_trace`
+        function or a `PlotlyGrapher` instance using the `add_trace` method.
+
+        Parameters
+        ----------
+        sample_indices : int or iterable
+            The index or indices of the samples of LoRs.
+        width : float
+            The width of the lines. The default is 2.
+        color : str or list-like
+            Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+            Is ignored if `colorbar` is set to True. For more information, check the Plotly
+            documentation. The default is None.
+        opacity : float
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque. The default is 0.6.
+        colorbar : bool
+            If set to True, will color-code the data in the sample column `colorbar_col`.
+            Overrides `color` if set to True. The default is True, so that every line has
+            a different color.
+        colorbar_col : int
+            The column in the data samples that will be used to color the points. Only has
+            an effect if `colorbar` is set to True. The default is 0 (the first column - time).
+        colorbar_title : str
+            If set, the colorbar will have this title above. The default is None.
+
+        Returns
+        -------
+        plotly.graph_objs.Scatter3d
+            A Plotly trace of the LoRs.
+
+        &#39;&#39;&#39;
+
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just &#34;iterate&#34; over the single number
+        if not hasattr(sample_indices, &#34;__iter__&#34;):
+            sample_indices = [sample_indices]
+
+        marker = dict(
+            width = width,
+            color = color,
+        )
+
+        if colorbar:
+            marker[&#39;color&#39;] = []
+            marker.update(colorscale = &#34;Magma&#34;)
+
+            if colorbar_title is not None:
+                marker.update(colorbar = dict(title = colorbar_title))
+
+        coords_x = []
+        coords_y = []
+        coords_z = []
+
+        # For each selected sample include all the lines&#39; coordinates
+        for n in sample_indices:
+            sample = self[n]
+
+            for line in sample:
+                coords_x.extend([line[1], line[4], None])
+                coords_y.extend([line[2], line[5], None])
+                coords_z.extend([line[3], line[6], None])
+
+                if colorbar:
+                    marker[&#39;color&#39;].extend(3 * [line[colorbar_col]])
+
+        trace = go.Scatter3d(
+            x = coords_x,
+            y = coords_y,
+            z = coords_z,
+            mode = &#39;lines&#39;,
+            opacity = opacity,
+            line = marker
+        )
+
+        return trace
+
+
+    def __len__(self):
+        # Defined so that len(class_instance) returns the number of samples.
+
+        return self.number_of_samples
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = &#34;&#34;
+
+        docstr += &#34;number_of_lines =   {}\n\n&#34;.format(self.number_of_lines)
+        docstr += &#34;sample_size =       {}\n&#34;.format(self._sample_size)
+        docstr += &#34;overlap =           {}\n&#34;.format(self._overlap)
+        docstr += &#34;number_of_samples = {}\n\n&#34;.format(self.number_of_samples)
+        docstr += &#34;line_data = \n&#34;
+        docstr += self._line_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = &#34;Class instance that inherits from `pept.LineData`.\n\n&#34; + self.__str__() + &#34;\n\n&#34;
+        docstr += &#34;Particular cases:\n&#34;
+        docstr += &#34; &gt; If sample_size == 0, all line_data is returned as one single sample.\n&#34;
+        docstr += &#34; &gt; If overlap &gt;= sample_size, an error is raised.\n&#34;
+        docstr += &#34; &gt; If overlap &lt; 0, lines are skipped between samples.\n&#34;
+
+        return docstr
+
+
+    def __getitem__(self, key):
+        # Defined so that samples can be accessed as class_instance[0]
+
+        if self.number_of_samples == 0:
+            raise IndexError(&#34;Tried to access sample {} (indexed from 0), when there are {} samples&#34;.format(key, self.number_of_samples))
+
+        if key &gt;= self.number_of_samples:
+            raise IndexError(&#34;Tried to access sample {} (indexed from 0), when there are {} samples&#34;.format(key, self.number_of_samples))
+
+
+        while key &lt; 0:
+            key += self.number_of_samples
+
+        return self.sample_n(key + 1)
+
+
+    def __iter__(self):
+        # Defined so the class can be iterated as `for sample in class_instance: ...`
+        return self
+
+
+    def __next__(self):
+        # sample_size = 0 =&gt; return all data
+        if self._sample_size == 0:
+            self._sample_size = -1
+            return self._line_data
+        # Use -1 as a flag
+        if self._sample_size == -1:
+            self._sample_size = 0
+            raise StopIteration
+
+        # sample_size &gt; 0 =&gt; return slices
+        if self._index != 0:
+            self._index = self._index + self._sample_size - self.overlap
+        else:
+            self._index = self._index + self.sample_size
+
+
+        if self._index &gt; self.number_of_lines:
+            self._index = 0
+            raise StopIteration
+
+        return self._line_data[(self._index - self._sample_size):self._index]</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pept.base.line_data.LineData"><code class="flex name class">
+<span>class <span class="ident">LineData</span></span>
+<span>(</span><span>line_data, sample_size=200, overlap=0, verbose=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A class for PEPT LoR data iteration, manipulation and visualisation.</p>
+<p>Generally, PEPT LoRs are lines in 3D space, each defined by two points,
+irrespective of the geometry of the scanner used. This class is used
+for LoRs (or any lines!) encapsulation. It can yield samples of the
+<code>line_data</code> of an adaptive <code>sample_size</code> and <code>overlap</code>, without requiring
+additional storage.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>line_data</code></strong> :&ensp;(<code>N</code>, <code>7</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, 7) numpy array that stores the PEPT LoRs (or any generic set of
+lines) as time and cartesian (3D) coordinates of two points defining each
+line, <strong>in mm</strong>. A row is then [time, x1, y1, z1, x2, y2, z2].</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int`` that defines the number of lines that should be
+returned when iterating over</code>line_data<code>. A</code>sample_size` of 0
+yields all the data as one single sample. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>line_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. An
+error is raised if <code>overlap</code> is larger than or equal to
+<code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>An option that enables printing the time taken for the
+initialisation of an instance of the class. Useful when
+reading large files (10gb files for PEPT data is not unheard
+of). (Default is True)</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>line_data</code></strong> :&ensp;(<code>N</code>, <code>7</code>) <code>numpy.ndarray</code></dt>
+<dd>An (N, 7) numpy array that stores the PEPT LoRs as time and
+cartesian (3D) coordinates of two points defining a line, <strong>in mm</strong>.
+Each row is then <code>[time, x1, y1, z1, x2, y2, z2]</code>.</dd>
+<dt><strong><code>sample_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the number of lines that should be
+returned when iterating over <code>line_data</code>. (Default is 200)</dd>
+<dt><strong><code>overlap</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that defines the overlap between two consecutive
+samples that are returned when iterating over <code>line_data</code>.
+An overlap of 0 means consecutive samples, while an overlap
+of (<code>sample_size</code> - 1) means incrementing the samples by one.
+A negative overlap means skipping values between samples. It
+is required to be smaller than <code>sample_size</code>. (Default is 0)</dd>
+<dt><strong><code>number_of_lines</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to len(<code>line_data</code>), or the number of
+LoRs stored by <code>line_data</code>.</dd>
+<dt><strong><code>number_of_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>An <code>int</code> that corresponds to the number of samples that can be
+accessed from the class. It takes <code>overlap</code> into consideration.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>overlap</code> &gt;= <code>sample_size</code> unless <code>sample_size</code> is 0. Overlap
+has to be smaller than <code>sample_size</code>. Note that it can also be negative.</dd>
+<dt><code>ValueError</code></dt>
+<dd>If <code>line_data</code> does not have (N, 7) shape.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>The class saves <code>line_data</code> as a <strong>contiguous</strong> numpy array for
+efficient access in C functions. It should not be changed after
+instantiating the class.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class LineData:
+    &#39;&#39;&#39;A class for PEPT LoR data iteration, manipulation and visualisation.
+
+    Generally, PEPT LoRs are lines in 3D space, each defined by two points,
+    irrespective of the geometry of the scanner used. This class is used
+    for LoRs (or any lines!) encapsulation. It can yield samples of the
+    `line_data` of an adaptive `sample_size` and `overlap`, without requiring
+    additional storage.
+
+    Parameters
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs (or any generic set of
+        lines) as time and cartesian (3D) coordinates of two points defining each
+        line, **in mm**. A row is then [time, x1, y1, z1, x2, y2, z2].
+    sample_size : int, optional
+        An `int`` that defines the number of lines that should be
+        returned when iterating over `line_data`. A `sample_size` of 0
+        yields all the data as one single sample. (Default is 200)
+    overlap : int, optional
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. An
+        error is raised if `overlap` is larger than or equal to
+        `sample_size`. (Default is 0)
+    verbose : bool, optional
+        An option that enables printing the time taken for the
+        initialisation of an instance of the class. Useful when
+        reading large files (10gb files for PEPT data is not unheard
+        of). (Default is True)
+
+    Attributes
+    ----------
+    line_data : (N, 7) numpy.ndarray
+        An (N, 7) numpy array that stores the PEPT LoRs as time and
+        cartesian (3D) coordinates of two points defining a line, **in mm**.
+        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
+    sample_size : int
+        An `int` that defines the number of lines that should be
+        returned when iterating over `line_data`. (Default is 200)
+    overlap : int
+        An `int` that defines the overlap between two consecutive
+        samples that are returned when iterating over `line_data`.
+        An overlap of 0 means consecutive samples, while an overlap
+        of (`sample_size` - 1) means incrementing the samples by one.
+        A negative overlap means skipping values between samples. It
+        is required to be smaller than `sample_size`. (Default is 0)
+    number_of_lines : int
+        An `int` that corresponds to len(`line_data`), or the number of
+        LoRs stored by `line_data`.
+    number_of_samples : int
+        An `int` that corresponds to the number of samples that can be
+        accessed from the class. It takes `overlap` into consideration.
+
+    Raises
+    ------
+    ValueError
+        If `overlap` &gt;= `sample_size` unless `sample_size` is 0. Overlap
+        has to be smaller than `sample_size`. Note that it can also be negative.
+    ValueError
+        If `line_data` does not have (N, 7) shape.
+
+    Notes
+    -----
+    The class saves `line_data` as a **contiguous** numpy array for
+    efficient access in C functions. It should not be changed after
+    instantiating the class.
+
+    &#39;&#39;&#39;
+
+    def __init__(
+        self,
+        line_data,
+        sample_size = 200,
+        overlap = 0,
+        verbose = False
+    ):
+
+        if verbose:
+            start = time.time()
+
+        # If sample_size != 0 (in which case the class returns all data in one
+        # sample), check the `overlap` is not larger or equal to `sample_size`.
+        if sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(sample_size))
+        if sample_size != 0 and overlap &gt;= sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n&#39;.format(overlap, sample_size))
+
+        # Initialise the inner parameters of the class
+        self._index = 0
+        self._sample_size = sample_size
+        self._overlap = overlap
+
+        # If `line_data` is not C-contiguous, create a C-contiguous copy
+        self._line_data = np.asarray(line_data, order = &#39;C&#39;, dtype = float)
+
+        # Check that line_data has shape (N, 7)
+        if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
+            raise ValueError(&#39;\n[ERROR]: line_data should have dimensions (N, 7). Received {}\n&#39;.format(self._line_data.shape))
+
+        self._number_of_lines = len(self._line_data)
+
+        if verbose:
+            end = time.time()
+            print(&#34;Initialising the PEPT data took {} seconds\n&#34;.format(end - start))
+
+
+    @property
+    def line_data(self):
+        &#39;&#39;&#39;Get the lines stored in the class.
+
+        Returns
+        -------
+        (, 7) numpy.ndarray
+            A memory view of the lines stored in `line_data`.
+
+        &#39;&#39;&#39;
+
+        return self._line_data
+
+
+    @property
+    def sample_size(self):
+        &#39;&#39;&#39;Get the number of lines in one sample returned by the class.
+
+        Returns
+        -------
+        int
+            The sample size (number of lines) in one sample returned by
+            the class.
+
+        &#39;&#39;&#39;
+
+        return self._sample_size
+
+
+    @sample_size.setter
+    def sample_size(self, new_sample_size):
+        &#39;&#39;&#39;Change `sample_size` without instantiating a new object
+
+        It also resets the inner index of the class.
+
+        Parameters
+        ----------
+        new_sample_size : int
+            The new sample size. It has to be larger than `overlap`,
+            unless it is 0 (in which case all `line_data` will be returned
+            as one sample).
+
+        Raises
+        ------
+        ValueError
+            If `overlap` &gt;= `new_sample_size`. Overlap has to be
+            smaller than `sample_size`, unless `sample_size` is 0.
+            Note that it can also be negative.
+
+        &#39;&#39;&#39;
+
+        if new_sample_size &lt; 0:
+            raise ValueError(&#39;\n[ERROR]: sample_size = {} must be positive (&gt;= 0)&#39;.format(new_sample_size))
+        if new_sample_size != 0 and self._overlap &gt;= new_sample_size:
+            raise ValueError(&#39;\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n&#39;.format(self._overlap, new_sample_size))
+
+        self._index = 0
+        self._sample_size = new_sample_size
+
+
+    @property
+    def overlap(self):
+        &#39;&#39;&#39;Get the overlap between every two samples returned by the class.
+
+        Returns
+        -------
+        int
+            The overlap (number of lines) between every two samples  returned by
+            the class.
+
+        &#39;&#39;&#39;
+
+        return self._overlap
+
+
+    @overlap.setter
+    def overlap(self, new_overlap):
+        &#39;&#39;&#39;Change `overlap` without instantiating a new object
+
+        It also resets the inner index of the class.
+
+        Parameters
+        ----------
+        new_overlap : int
+            The new overlap. It has to be smaller than `sample_size`, unless
+            `sample_size` is 0 (in which case all `line_data` will be returned
+            as one sample and so overlap does not play any role).
+
+        Raises
+        ------
+        ValueError
+            If `new_overlap` &gt;= `sample_size`. `new_overlap` has to be
+            smaller than `sample_size`, unless `sample_size` is 0.
+            Note that it can also be negative.
+
+        &#39;&#39;&#39;
+
+        if self._sample_size != 0 and new_overlap &gt;= self._sample_size:
+            raise ValueError(&#39;\n[ERROR]: new_overlap = {} must be smaller than sample_size = {}\n&#39;.format(new_overlap, self._sample_size))
+
+        self._index = 0
+        self._overlap = new_overlap
+
+
+    @property
+    def number_of_samples(self):
+        &#39;&#39;&#39;Get number of samples, considering overlap.
+
+        If `sample_size == 0`, all data is returned as a single sample,
+        and so `number_of_samples` will be 1. Otherwise, it checks the
+        number of samples every time it is called, taking `overlap` into
+        consideration.
+
+        Returns
+        -------
+        int
+            The number of samples, taking `overlap` into consideration.
+
+        &#39;&#39;&#39;
+        # If self.sample_size == 0, all data is returned as a single sample
+        if self._sample_size == 0:
+            return 1
+
+        # If self.sample_size != 0, check there is at least one sample
+        if self._number_of_lines &gt;= self._sample_size:
+            return (self._number_of_lines - self._sample_size) // (self.sample_size - self.overlap) + 1
+        else:
+            return 0
+
+
+    @property
+    def number_of_lines(self):
+        &#39;&#39;&#39;Get the number of lines stored in the class.
+
+        Returns
+        -------
+        int
+            The number of lines stored in `line_data`.
+
+        &#39;&#39;&#39;
+        return self._number_of_lines
+
+
+    def sample_n(self, n):
+        &#39;&#39;&#39;Get sample number n (indexed from 1, i.e. `n &gt; 0`)
+
+        Returns the lines from `line_data` included in sample number
+        `n`. Samples are numbered starting from 1.
+
+        Parameters
+        ----------
+        n : int
+            The number of the sample required. Note that `1 &lt;= n &lt;=
+            number_of_samples`.
+
+        Returns
+        -------
+        (, 7) numpy.ndarray
+            A shallow copy of the lines from `line_data` included in
+            sample number n.
+
+        Raises
+        ------
+        IndexError
+            If `sample_size == 0`, all data is returned as one single
+            sample. Raised if `n` is not 1.
+        IndexError
+            If `n &gt; number_of_samples` or `n &lt;= 0`.
+
+        &#39;&#39;&#39;
+        if self._sample_size == 0:
+            if n == 1:
+                return self._line_data
+            else:
+                raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there is only 1 sample (sample_size == 0)\n&#34;.format(n))
+        elif (n &gt; self.number_of_samples) or n &lt;= 0:
+            raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there are {} samples\n&#34;.format(n, self.number_of_samples))
+
+        start_index = (n - 1) * (self._sample_size - self._overlap)
+        return self._line_data[start_index:(start_index + self._sample_size)]
+
+
+    def to_csv(self, filepath, delimiter = &#39;  &#39;, newline = &#39;\n&#39;):
+        &#39;&#39;&#39;Write `line_data` to a CSV file
+
+        Write all LoRs stored in the class to a CSV file.
+
+        Parameters
+        ----------
+            filepath : filename or file handle
+                If filepath is a path (rather than file handle), it is relative
+                to where python is called.
+            delimiter : str, optional
+                The delimiter between values. The default is two spaces &#39;  &#39;,
+                such that numbers in the format &#39;123,456.78&#39; are well-understood.
+            newline : str, optional
+                The sequence of characters at the end of every line. The default
+                is a new line &#39;\n&#39;
+
+        &#39;&#39;&#39;
+        np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
+
+
+    def plot_all_lines(self, ax = None, color=&#39;r&#39;, alpha=1.0 ):
+        &#39;&#39;&#39;Plot all lines using matplotlib
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on it.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `plot_lines_sample_n` is recommended.
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        for i in range(0, self._number_of_lines):
+            ax.plot([ p1[i][0], p2[i][0] ],
+                    [ p1[i][1], p2[i][1] ],
+                    [ p1[i][2], p2[i][2] ],
+                    c = color, alpha = alpha)
+
+        return fig, ax
+
+
+    def plot_all_lines_alt_axes(self, ax, color=&#39;r&#39;, alpha=1.0):
+        &#39;&#39;&#39;Plot all lines using matplotlib on PEPT-style axes
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
+        the PEPT-style convention: **x** is *parallel and horizontal* to the
+        screens, **y** is *parallel and vertical* to the screens, **z** is
+        *perpendicular* to the screens. The mapping relative to the
+        Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        Note
+        ----
+        Plotting all lines in the case of large LoR arrays is *very*
+        computationally intensive. For large arrays (&gt; 10000), plotting
+        individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+
+        p1 = self._line_data[:, 1:4]
+        p2 = self._line_data[:, 4:7]
+
+        for i in range(0, self._number_of_lines):
+            ax.plot([ p1[i][2], p2[i][2] ],
+                    [ p1[i][0], p2[i][0] ],
+                    [ p1[i][1], p2[i][1] ],
+                    c = color, alpha=alpha)
+
+        return fig, ax
+
+
+    def plot_lines_sample_n(self, n, ax = None, color = &#39;r&#39;, alpha = 1.0):
+        &#39;&#39;&#39;Plot lines from sample `n` using matplotlib
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines
+        from sample number `n`.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+
+        sampleN : int
+            The number of the sample to be plotted.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+        sample = self.sample_n(n)
+        for i in range(0, len(sample)):
+            ax.plot([ sample[i][1], sample[i][4] ],
+                    [ sample[i][2], sample[i][5] ],
+                    [ sample[i][3], sample[i][6] ],
+                    c = color, alpha = alpha)
+
+        return fig, ax
+
+
+    def plot_lines_sample_n_alt_axes(self, n, ax=None, color=&#39;r&#39;, alpha=1.0):
+        &#39;&#39;&#39;Plot lines from sample `n` using matplotlib on PEPT-style axes
+
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines from
+        sample number sampleN on the PEPT-style coordinates convention:
+        **x** is *parallel and horizontal* to the screens, **y** is
+        *parallel and vertical* to the screens, **z** is *perpendicular*
+        to the screens. The mapping relative to the Cartesian coordinates
+        would then be: (x, y, z) -&gt; (z, x, y)
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object
+            The 3D matplotlib-based axis for plotting.
+        n : int
+            The number of the sample to be plotted.
+
+        color : matplotlib color option (default &#39;r&#39;)
+
+        alpha : matplotlib opacity option (default 1.0)
+
+        Returns
+        -------
+
+        fig, ax : matplotlib figure and axes objects
+
+        &#39;&#39;&#39;
+
+        if ax == None:
+            fig = plt.figure()
+            ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+        else:
+            fig = plt.gcf()
+
+        sample = self.sample_n(n)
+        for i in range(0, len(sample)):
+            ax.plot([ sample[i][3], sample[i][6] ],
+                    [ sample[i][1], sample[i][4] ],
+                    [ sample[i][2], sample[i][5] ],
+                    c = color, alpha = alpha)
+
+        return fig, ax
+
+
+    def lines_trace(
+        self,
+        sample_indices = 0,
+        width = 2,
+        color = None,
+        opacity = 0.6,
+        colorbar = True,
+        colorbar_col = 0,
+        colorbar_title = None
+    ):
+        &#39;&#39;&#39;Get a Plotly trace for all the lines in selected samples.
+
+        Creates a `plotly.graph_objects.Scatter3d` object for all the lines
+        included in the samples selected by `sample_indices`. `sample_indices`
+        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+        [1,5,6]).
+        Can then be passed to the `plotly.graph_objects.figure.add_trace`
+        function or a `PlotlyGrapher` instance using the `add_trace` method.
+
+        Parameters
+        ----------
+        sample_indices : int or iterable
+            The index or indices of the samples of LoRs.
+        width : float
+            The width of the lines. The default is 2.
+        color : str or list-like
+            Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+            Is ignored if `colorbar` is set to True. For more information, check the Plotly
+            documentation. The default is None.
+        opacity : float
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque. The default is 0.6.
+        colorbar : bool
+            If set to True, will color-code the data in the sample column `colorbar_col`.
+            Overrides `color` if set to True. The default is True, so that every line has
+            a different color.
+        colorbar_col : int
+            The column in the data samples that will be used to color the points. Only has
+            an effect if `colorbar` is set to True. The default is 0 (the first column - time).
+        colorbar_title : str
+            If set, the colorbar will have this title above. The default is None.
+
+        Returns
+        -------
+        plotly.graph_objs.Scatter3d
+            A Plotly trace of the LoRs.
+
+        &#39;&#39;&#39;
+
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just &#34;iterate&#34; over the single number
+        if not hasattr(sample_indices, &#34;__iter__&#34;):
+            sample_indices = [sample_indices]
+
+        marker = dict(
+            width = width,
+            color = color,
+        )
+
+        if colorbar:
+            marker[&#39;color&#39;] = []
+            marker.update(colorscale = &#34;Magma&#34;)
+
+            if colorbar_title is not None:
+                marker.update(colorbar = dict(title = colorbar_title))
+
+        coords_x = []
+        coords_y = []
+        coords_z = []
+
+        # For each selected sample include all the lines&#39; coordinates
+        for n in sample_indices:
+            sample = self[n]
+
+            for line in sample:
+                coords_x.extend([line[1], line[4], None])
+                coords_y.extend([line[2], line[5], None])
+                coords_z.extend([line[3], line[6], None])
+
+                if colorbar:
+                    marker[&#39;color&#39;].extend(3 * [line[colorbar_col]])
+
+        trace = go.Scatter3d(
+            x = coords_x,
+            y = coords_y,
+            z = coords_z,
+            mode = &#39;lines&#39;,
+            opacity = opacity,
+            line = marker
+        )
+
+        return trace
+
+
+    def __len__(self):
+        # Defined so that len(class_instance) returns the number of samples.
+
+        return self.number_of_samples
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = &#34;&#34;
+
+        docstr += &#34;number_of_lines =   {}\n\n&#34;.format(self.number_of_lines)
+        docstr += &#34;sample_size =       {}\n&#34;.format(self._sample_size)
+        docstr += &#34;overlap =           {}\n&#34;.format(self._overlap)
+        docstr += &#34;number_of_samples = {}\n\n&#34;.format(self.number_of_samples)
+        docstr += &#34;line_data = \n&#34;
+        docstr += self._line_data.__str__()
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPR
+
+        docstr = &#34;Class instance that inherits from `pept.LineData`.\n\n&#34; + self.__str__() + &#34;\n\n&#34;
+        docstr += &#34;Particular cases:\n&#34;
+        docstr += &#34; &gt; If sample_size == 0, all line_data is returned as one single sample.\n&#34;
+        docstr += &#34; &gt; If overlap &gt;= sample_size, an error is raised.\n&#34;
+        docstr += &#34; &gt; If overlap &lt; 0, lines are skipped between samples.\n&#34;
+
+        return docstr
+
+
+    def __getitem__(self, key):
+        # Defined so that samples can be accessed as class_instance[0]
+
+        if self.number_of_samples == 0:
+            raise IndexError(&#34;Tried to access sample {} (indexed from 0), when there are {} samples&#34;.format(key, self.number_of_samples))
+
+        if key &gt;= self.number_of_samples:
+            raise IndexError(&#34;Tried to access sample {} (indexed from 0), when there are {} samples&#34;.format(key, self.number_of_samples))
+
+
+        while key &lt; 0:
+            key += self.number_of_samples
+
+        return self.sample_n(key + 1)
+
+
+    def __iter__(self):
+        # Defined so the class can be iterated as `for sample in class_instance: ...`
+        return self
+
+
+    def __next__(self):
+        # sample_size = 0 =&gt; return all data
+        if self._sample_size == 0:
+            self._sample_size = -1
+            return self._line_data
+        # Use -1 as a flag
+        if self._sample_size == -1:
+            self._sample_size = 0
+            raise StopIteration
+
+        # sample_size &gt; 0 =&gt; return slices
+        if self._index != 0:
+            self._index = self._index + self._sample_size - self.overlap
+        else:
+            self._index = self._index + self.sample_size
+
+
+        if self._index &gt; self.number_of_lines:
+            self._index = 0
+            raise StopIteration
+
+        return self._line_data[(self._index - self._sample_size):self._index]</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pept.scanners.parallel_screens.parallel_screens.ParallelScreens" href="../scanners/parallel_screens/parallel_screens.html#pept.scanners.parallel_screens.parallel_screens.ParallelScreens">ParallelScreens</a></li>
+<li><a title="pept.scanners.modular_camera.modular_camera.ModularCamera" href="../scanners/modular_camera/modular_camera.html#pept.scanners.modular_camera.modular_camera.ModularCamera">ModularCamera</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pept.base.line_data.LineData.line_data"><code class="name">var <span class="ident">line_data</span></code></dt>
+<dd>
+<section class="desc"><p>Get the lines stored in the class.</p>
+<h2 id="returns">Returns</h2>
+<p>(, 7) numpy.ndarray
+A memory view of the lines stored in <code>line_data</code>.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def line_data(self):
+    &#39;&#39;&#39;Get the lines stored in the class.
+
+    Returns
+    -------
+    (, 7) numpy.ndarray
+        A memory view of the lines stored in `line_data`.
+
+    &#39;&#39;&#39;
+
+    return self._line_data</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.number_of_lines"><code class="name">var <span class="ident">number_of_lines</span></code></dt>
+<dd>
+<section class="desc"><p>Get the number of lines stored in the class.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The number of lines stored in <code>line_data</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def number_of_lines(self):
+    &#39;&#39;&#39;Get the number of lines stored in the class.
+
+    Returns
+    -------
+    int
+        The number of lines stored in `line_data`.
+
+    &#39;&#39;&#39;
+    return self._number_of_lines</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.number_of_samples"><code class="name">var <span class="ident">number_of_samples</span></code></dt>
+<dd>
+<section class="desc"><p>Get number of samples, considering overlap.</p>
+<p>If <code>sample_size == 0</code>, all data is returned as a single sample,
+and so <code>number_of_samples</code> will be 1. Otherwise, it checks the
+number of samples every time it is called, taking <code>overlap</code> into
+consideration.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The number of samples, taking <code>overlap</code> into consideration.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def number_of_samples(self):
+    &#39;&#39;&#39;Get number of samples, considering overlap.
+
+    If `sample_size == 0`, all data is returned as a single sample,
+    and so `number_of_samples` will be 1. Otherwise, it checks the
+    number of samples every time it is called, taking `overlap` into
+    consideration.
+
+    Returns
+    -------
+    int
+        The number of samples, taking `overlap` into consideration.
+
+    &#39;&#39;&#39;
+    # If self.sample_size == 0, all data is returned as a single sample
+    if self._sample_size == 0:
+        return 1
+
+    # If self.sample_size != 0, check there is at least one sample
+    if self._number_of_lines &gt;= self._sample_size:
+        return (self._number_of_lines - self._sample_size) // (self.sample_size - self.overlap) + 1
+    else:
+        return 0</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.overlap"><code class="name">var <span class="ident">overlap</span></code></dt>
+<dd>
+<section class="desc"><p>Get the overlap between every two samples returned by the class.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The overlap (number of lines) between every two samples
+returned by
+the class.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def overlap(self):
+    &#39;&#39;&#39;Get the overlap between every two samples returned by the class.
+
+    Returns
+    -------
+    int
+        The overlap (number of lines) between every two samples  returned by
+        the class.
+
+    &#39;&#39;&#39;
+
+    return self._overlap</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.sample_size"><code class="name">var <span class="ident">sample_size</span></code></dt>
+<dd>
+<section class="desc"><p>Get the number of lines in one sample returned by the class.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The sample size (number of lines) in one sample returned by
+the class.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@property
+def sample_size(self):
+    &#39;&#39;&#39;Get the number of lines in one sample returned by the class.
+
+    Returns
+    -------
+    int
+        The sample size (number of lines) in one sample returned by
+        the class.
+
+    &#39;&#39;&#39;
+
+    return self._sample_size</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pept.base.line_data.LineData.lines_trace"><code class="name flex">
+<span>def <span class="ident">lines_trace</span></span>(<span>self, sample_indices=0, width=2, color=None, opacity=0.6, colorbar=True, colorbar_col=0, colorbar_title=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get a Plotly trace for all the lines in selected samples.</p>
+<p>Creates a <code>plotly.graph_objects.Scatter3d</code> object for all the lines
+included in the samples selected by <code>sample_indices</code>. <code>sample_indices</code>
+can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+[1,5,6]).
+Can then be passed to the <code>plotly.graph_objects.figure.add_trace</code>
+function or a <code>PlotlyGrapher</code> instance using the <code>add_trace</code> method.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_indices</code></strong> :&ensp;<code>int</code> or <code>iterable</code></dt>
+<dd>The index or indices of the samples of LoRs.</dd>
+<dt><strong><code>width</code></strong> :&ensp;<code>float</code></dt>
+<dd>The width of the lines. The default is 2.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>str</code> or <code>list</code>-<code>like</code></dt>
+<dd>Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a colorbar list.
+Is ignored if <code>colorbar</code> is set to True. For more information, check the Plotly
+documentation. The default is None.</dd>
+<dt><strong><code>opacity</code></strong> :&ensp;<code>float</code></dt>
+<dd>The opacity of the lines, where 0 is transparent and 1 is fully
+opaque. The default is 0.6.</dd>
+<dt><strong><code>colorbar</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If set to True, will color-code the data in the sample column <code>colorbar_col</code>.
+Overrides <code>color</code> if set to True. The default is True, so that every line has
+a different color.</dd>
+<dt><strong><code>colorbar_col</code></strong> :&ensp;<code>int</code></dt>
+<dd>The column in the data samples that will be used to color the points. Only has
+an effect if <code>colorbar</code> is set to True. The default is 0 (the first column - time).</dd>
+<dt><strong><code>colorbar_title</code></strong> :&ensp;<code>str</code></dt>
+<dd>If set, the colorbar will have this title above. The default is None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>plotly.graph_objs.Scatter3d</code></dt>
+<dd>A Plotly trace of the LoRs.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def lines_trace(
+    self,
+    sample_indices = 0,
+    width = 2,
+    color = None,
+    opacity = 0.6,
+    colorbar = True,
+    colorbar_col = 0,
+    colorbar_title = None
+):
+    &#39;&#39;&#39;Get a Plotly trace for all the lines in selected samples.
+
+    Creates a `plotly.graph_objects.Scatter3d` object for all the lines
+    included in the samples selected by `sample_indices`. `sample_indices`
+    can be a single sample index (e.g. 0) or an iterable of indices (e.g.
+    [1,5,6]).
+    Can then be passed to the `plotly.graph_objects.figure.add_trace`
+    function or a `PlotlyGrapher` instance using the `add_trace` method.
+
+    Parameters
+    ----------
+    sample_indices : int or iterable
+        The index or indices of the samples of LoRs.
+    width : float
+        The width of the lines. The default is 2.
+    color : str or list-like
+        Can be a single color (e.g. &#34;black&#34;, &#34;rgb(122, 15, 241)&#34;) or a colorbar list.
+        Is ignored if `colorbar` is set to True. For more information, check the Plotly
+        documentation. The default is None.
+    opacity : float
+        The opacity of the lines, where 0 is transparent and 1 is fully
+        opaque. The default is 0.6.
+    colorbar : bool
+        If set to True, will color-code the data in the sample column `colorbar_col`.
+        Overrides `color` if set to True. The default is True, so that every line has
+        a different color.
+    colorbar_col : int
+        The column in the data samples that will be used to color the points. Only has
+        an effect if `colorbar` is set to True. The default is 0 (the first column - time).
+    colorbar_title : str
+        If set, the colorbar will have this title above. The default is None.
+
+    Returns
+    -------
+    plotly.graph_objs.Scatter3d
+        A Plotly trace of the LoRs.
+
+    &#39;&#39;&#39;
+
+    # Check if sample_indices is an iterable collection (list-like)
+    # otherwise just &#34;iterate&#34; over the single number
+    if not hasattr(sample_indices, &#34;__iter__&#34;):
+        sample_indices = [sample_indices]
+
+    marker = dict(
+        width = width,
+        color = color,
+    )
+
+    if colorbar:
+        marker[&#39;color&#39;] = []
+        marker.update(colorscale = &#34;Magma&#34;)
+
+        if colorbar_title is not None:
+            marker.update(colorbar = dict(title = colorbar_title))
+
+    coords_x = []
+    coords_y = []
+    coords_z = []
+
+    # For each selected sample include all the lines&#39; coordinates
+    for n in sample_indices:
+        sample = self[n]
+
+        for line in sample:
+            coords_x.extend([line[1], line[4], None])
+            coords_y.extend([line[2], line[5], None])
+            coords_z.extend([line[3], line[6], None])
+
+            if colorbar:
+                marker[&#39;color&#39;].extend(3 * [line[colorbar_col]])
+
+    trace = go.Scatter3d(
+        x = coords_x,
+        y = coords_y,
+        z = coords_z,
+        mode = &#39;lines&#39;,
+        opacity = opacity,
+        line = marker
+    )
+
+    return trace</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.plot_all_lines"><code class="name flex">
+<span>def <span class="ident">plot_all_lines</span></span>(<span>self, ax=None, color='r', alpha=1.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot all lines using matplotlib</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis <code>ax</code>, plots all lines on it.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>matplotlib</code> <code>color</code> <code>option</code> (default <code>'r'</code>)</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>matplotlib</code> <code>opacity</code> <code>option</code> (default <code>1.0</code>)</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>fig</code></strong>, <strong><code>ax</code></strong> :&ensp;<code>matplotlib</code> <code>figure</code> <code>and</code> <code>axes</code> <code>objects</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>Plotting all lines in the case of large LoR arrays is <em>very</em>
+computationally intensive. For large arrays (&gt; 10000), plotting
+individual samples using <code>plot_lines_sample_n</code> is recommended.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_all_lines(self, ax = None, color=&#39;r&#39;, alpha=1.0 ):
+    &#39;&#39;&#39;Plot all lines using matplotlib
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on it.
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+
+    color : matplotlib color option (default &#39;r&#39;)
+
+    alpha : matplotlib opacity option (default 1.0)
+
+    Returns
+    -------
+
+    fig, ax : matplotlib figure and axes objects
+
+    Note
+    ----
+    Plotting all lines in the case of large LoR arrays is *very*
+    computationally intensive. For large arrays (&gt; 10000), plotting
+    individual samples using `plot_lines_sample_n` is recommended.
+
+    &#39;&#39;&#39;
+
+    if ax == None:
+        fig = plt.figure()
+        ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+    else:
+        fig = plt.gcf()
+
+    p1 = self._line_data[:, 1:4]
+    p2 = self._line_data[:, 4:7]
+
+    for i in range(0, self._number_of_lines):
+        ax.plot([ p1[i][0], p2[i][0] ],
+                [ p1[i][1], p2[i][1] ],
+                [ p1[i][2], p2[i][2] ],
+                c = color, alpha = alpha)
+
+    return fig, ax</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.plot_all_lines_alt_axes"><code class="name flex">
+<span>def <span class="ident">plot_all_lines_alt_axes</span></span>(<span>self, ax, color='r', alpha=1.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot all lines using matplotlib on PEPT-style axes</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis <code>ax</code>, plots all lines on
+the PEPT-style convention: <strong>x</strong> is <em>parallel and horizontal</em> to the
+screens, <strong>y</strong> is <em>parallel and vertical</em> to the screens, <strong>z</strong> is
+<em>perpendicular</em> to the screens. The mapping relative to the
+Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>matplotlib</code> <code>color</code> <code>option</code> (default <code>'r'</code>)</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>matplotlib</code> <code>opacity</code> <code>option</code> (default <code>1.0</code>)</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>fig</code></strong>, <strong><code>ax</code></strong> :&ensp;<code>matplotlib</code> <code>figure</code> <code>and</code> <code>axes</code> <code>objects</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>Plotting all lines in the case of large LoR arrays is <em>very</em>
+computationally intensive. For large arrays (&gt; 10000), plotting
+individual samples using <code>plot_lines_sample_n_alt_axes</code> is recommended.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_all_lines_alt_axes(self, ax, color=&#39;r&#39;, alpha=1.0):
+    &#39;&#39;&#39;Plot all lines using matplotlib on PEPT-style axes
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
+    the PEPT-style convention: **x** is *parallel and horizontal* to the
+    screens, **y** is *parallel and vertical* to the screens, **z** is
+    *perpendicular* to the screens. The mapping relative to the
+    Cartesian coordinates would then be: (x, y, z) -&gt; (z, x, y)
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+
+    color : matplotlib color option (default &#39;r&#39;)
+
+    alpha : matplotlib opacity option (default 1.0)
+
+    Returns
+    -------
+
+    fig, ax : matplotlib figure and axes objects
+
+    Note
+    ----
+    Plotting all lines in the case of large LoR arrays is *very*
+    computationally intensive. For large arrays (&gt; 10000), plotting
+    individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+
+    &#39;&#39;&#39;
+
+    if ax == None:
+        fig = plt.figure()
+        ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+    else:
+        fig = plt.gcf()
+
+
+    p1 = self._line_data[:, 1:4]
+    p2 = self._line_data[:, 4:7]
+
+    for i in range(0, self._number_of_lines):
+        ax.plot([ p1[i][2], p2[i][2] ],
+                [ p1[i][0], p2[i][0] ],
+                [ p1[i][1], p2[i][1] ],
+                c = color, alpha=alpha)
+
+    return fig, ax</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.plot_lines_sample_n"><code class="name flex">
+<span>def <span class="ident">plot_lines_sample_n</span></span>(<span>self, n, ax=None, color='r', alpha=1.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot lines from sample <code>n</code> using matplotlib</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis <code>ax</code>, plots all lines
+from sample number <code>n</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+<dt><strong><code>sampleN</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample to be plotted.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>matplotlib</code> <code>color</code> <code>option</code> (default <code>'r'</code>)</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>matplotlib</code> <code>opacity</code> <code>option</code> (default <code>1.0</code>)</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>fig</code></strong>, <strong><code>ax</code></strong> :&ensp;<code>matplotlib</code> <code>figure</code> <code>and</code> <code>axes</code> <code>objects</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_lines_sample_n(self, n, ax = None, color = &#39;r&#39;, alpha = 1.0):
+    &#39;&#39;&#39;Plot lines from sample `n` using matplotlib
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines
+    from sample number `n`.
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+
+    sampleN : int
+        The number of the sample to be plotted.
+
+    color : matplotlib color option (default &#39;r&#39;)
+
+    alpha : matplotlib opacity option (default 1.0)
+
+    Returns
+    -------
+
+    fig, ax : matplotlib figure and axes objects
+
+    &#39;&#39;&#39;
+
+    if ax == None:
+        fig = plt.figure()
+        ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+    else:
+        fig = plt.gcf()
+
+    sample = self.sample_n(n)
+    for i in range(0, len(sample)):
+        ax.plot([ sample[i][1], sample[i][4] ],
+                [ sample[i][2], sample[i][5] ],
+                [ sample[i][3], sample[i][6] ],
+                c = color, alpha = alpha)
+
+    return fig, ax</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.plot_lines_sample_n_alt_axes"><code class="name flex">
+<span>def <span class="ident">plot_lines_sample_n_alt_axes</span></span>(<span>self, n, ax=None, color='r', alpha=1.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Plot lines from sample <code>n</code> using matplotlib on PEPT-style axes</p>
+<p>Given a <strong>mpl_toolkits.mplot3d.Axes3D</strong> axis <code>ax</code>, plots all lines from
+sample number sampleN on the PEPT-style coordinates convention:
+<strong>x</strong> is <em>parallel and horizontal</em> to the screens, <strong>y</strong> is
+<em>parallel and vertical</em> to the screens, <strong>z</strong> is <em>perpendicular</em>
+to the screens. The mapping relative to the Cartesian coordinates
+would then be: (x, y, z) -&gt; (z, x, y)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>mpl_toolkits.mplot3D.Axes3D</code> <code>object</code></dt>
+<dd>The 3D matplotlib-based axis for plotting.</dd>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample to be plotted.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>matplotlib</code> <code>color</code> <code>option</code> (default <code>'r'</code>)</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>matplotlib</code> <code>opacity</code> <code>option</code> (default <code>1.0</code>)</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>fig</code></strong>, <strong><code>ax</code></strong> :&ensp;<code>matplotlib</code> <code>figure</code> <code>and</code> <code>axes</code> <code>objects</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def plot_lines_sample_n_alt_axes(self, n, ax=None, color=&#39;r&#39;, alpha=1.0):
+    &#39;&#39;&#39;Plot lines from sample `n` using matplotlib on PEPT-style axes
+
+    Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines from
+    sample number sampleN on the PEPT-style coordinates convention:
+    **x** is *parallel and horizontal* to the screens, **y** is
+    *parallel and vertical* to the screens, **z** is *perpendicular*
+    to the screens. The mapping relative to the Cartesian coordinates
+    would then be: (x, y, z) -&gt; (z, x, y)
+
+    Parameters
+    ----------
+    ax : mpl_toolkits.mplot3D.Axes3D object
+        The 3D matplotlib-based axis for plotting.
+    n : int
+        The number of the sample to be plotted.
+
+    color : matplotlib color option (default &#39;r&#39;)
+
+    alpha : matplotlib opacity option (default 1.0)
+
+    Returns
+    -------
+
+    fig, ax : matplotlib figure and axes objects
+
+    &#39;&#39;&#39;
+
+    if ax == None:
+        fig = plt.figure()
+        ax  = fig.add_subplot(111, projection=&#39;3d&#39;)
+    else:
+        fig = plt.gcf()
+
+    sample = self.sample_n(n)
+    for i in range(0, len(sample)):
+        ax.plot([ sample[i][3], sample[i][6] ],
+                [ sample[i][1], sample[i][4] ],
+                [ sample[i][2], sample[i][5] ],
+                c = color, alpha = alpha)
+
+    return fig, ax</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.sample_n"><code class="name flex">
+<span>def <span class="ident">sample_n</span></span>(<span>self, n)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get sample number n (indexed from 1, i.e. <code>n &gt; 0</code>)</p>
+<p>Returns the lines from <code>line_data</code> included in sample number
+<code>n</code>. Samples are numbered starting from 1.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the sample required. Note that <code>1 &lt;= n &lt;=
+number_of_samples</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>(, 7) numpy.ndarray
+A shallow copy of the lines from <code>line_data</code> included in
+sample number n.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>IndexError</code></dt>
+<dd>If <code>sample_size == 0</code>, all data is returned as one single
+sample. Raised if <code>n</code> is not 1.</dd>
+<dt><code>IndexError</code></dt>
+<dd>If <code>n &gt; number_of_samples</code> or <code>n &lt;= 0</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def sample_n(self, n):
+    &#39;&#39;&#39;Get sample number n (indexed from 1, i.e. `n &gt; 0`)
+
+    Returns the lines from `line_data` included in sample number
+    `n`. Samples are numbered starting from 1.
+
+    Parameters
+    ----------
+    n : int
+        The number of the sample required. Note that `1 &lt;= n &lt;=
+        number_of_samples`.
+
+    Returns
+    -------
+    (, 7) numpy.ndarray
+        A shallow copy of the lines from `line_data` included in
+        sample number n.
+
+    Raises
+    ------
+    IndexError
+        If `sample_size == 0`, all data is returned as one single
+        sample. Raised if `n` is not 1.
+    IndexError
+        If `n &gt; number_of_samples` or `n &lt;= 0`.
+
+    &#39;&#39;&#39;
+    if self._sample_size == 0:
+        if n == 1:
+            return self._line_data
+        else:
+            raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there is only 1 sample (sample_size == 0)\n&#34;.format(n))
+    elif (n &gt; self.number_of_samples) or n &lt;= 0:
+        raise IndexError(&#34;\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there are {} samples\n&#34;.format(n, self.number_of_samples))
+
+    start_index = (n - 1) * (self._sample_size - self._overlap)
+    return self._line_data[start_index:(start_index + self._sample_size)]</code></pre>
+</details>
+</dd>
+<dt id="pept.base.line_data.LineData.to_csv"><code class="name flex">
+<span>def <span class="ident">to_csv</span></span>(<span>self, filepath, delimiter='
+', newline='\n')</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Write <code>line_data</code> to a CSV file</p>
+<pre><code>    Write all LoRs stored in the class to a CSV file.
+
+    Parameters
+    ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+        delimiter : str, optional
+            The delimiter between values. The default is two spaces '  ',
+            such that numbers in the format '123,456.78' are well-understood.
+        newline : str, optional
+            The sequence of characters at the end of every line. The default
+            is a new line '
+</code></pre>
+<p>'</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def to_csv(self, filepath, delimiter = &#39;  &#39;, newline = &#39;\n&#39;):
+    &#39;&#39;&#39;Write `line_data` to a CSV file
+
+    Write all LoRs stored in the class to a CSV file.
+
+    Parameters
+    ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+        delimiter : str, optional
+            The delimiter between values. The default is two spaces &#39;  &#39;,
+            such that numbers in the format &#39;123,456.78&#39; are well-understood.
+        newline : str, optional
+            The sequence of characters at the end of every line. The default
+            is a new line &#39;\n&#39;
+
+    &#39;&#39;&#39;
+    np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pept.base" href="index.html">pept.base</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pept.base.line_data.LineData" href="#pept.base.line_data.LineData">LineData</a></code></h4>
+<ul class="">
+<li><code><a title="pept.base.line_data.LineData.line_data" href="#pept.base.line_data.LineData.line_data">line_data</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.lines_trace" href="#pept.base.line_data.LineData.lines_trace">lines_trace</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.number_of_lines" href="#pept.base.line_data.LineData.number_of_lines">number_of_lines</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.number_of_samples" href="#pept.base.line_data.LineData.number_of_samples">number_of_samples</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.overlap" href="#pept.base.line_data.LineData.overlap">overlap</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.plot_all_lines" href="#pept.base.line_data.LineData.plot_all_lines">plot_all_lines</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.plot_all_lines_alt_axes" href="#pept.base.line_data.LineData.plot_all_lines_alt_axes">plot_all_lines_alt_axes</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.plot_lines_sample_n" href="#pept.base.line_data.LineData.plot_lines_sample_n">plot_lines_sample_n</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.plot_lines_sample_n_alt_axes" href="#pept.base.line_data.LineData.plot_lines_sample_n_alt_axes">plot_lines_sample_n_alt_axes</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.sample_n" href="#pept.base.line_data.LineData.sample_n">sample_n</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.sample_size" href="#pept.base.line_data.LineData.sample_size">sample_size</a></code></li>
+<li><code><a title="pept.base.line_data.LineData.to_csv" href="#pept.base.line_data.LineData.to_csv">to_csv</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
