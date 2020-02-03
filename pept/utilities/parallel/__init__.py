@@ -3,16 +3,14 @@
 # File   : __init__.py
 # License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
-# Date   : 14.01.2020
+# Date   : 03.02.2020
 
 
-from    .           import  traverse
-from    .           import  parallel
+from    .parallel_map   import  parallel_map_file
 
 
 __all__ = [
-    "traverse",
-    "parallel"
+    "parallel_map_file"
 ]
 
 
@@ -22,6 +20,8 @@ __license__ =       "GNU v3.0"
 __maintainer__ =    "Andrei Leonard Nicusan"
 __email__ =         "a.l.nicusan@bham.ac.uk"
 __status__ =        "Development"
+
+
 
 
 
