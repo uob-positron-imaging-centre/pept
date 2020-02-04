@@ -10,7 +10,7 @@ import  numpy               as      np
 from    multiprocessing     import  Pool
 
 
-def parallel_map_file(
+def map_file(
     func,           # Called as func(data_chunk, chunk_number, *args, **kwargs)
     fname,          # File that will be supplied to numpy.loadtxt
     start,          # Start line

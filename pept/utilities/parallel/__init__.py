@@ -6,11 +6,11 @@
 # Date   : 03.02.2020
 
 
-from    .parallel_map   import  parallel_map_file
+from    .parallel_map   import  map_file
 
 
 __all__ = [
-    "parallel_map_file"
+    "map_file"
 ]
 
 
