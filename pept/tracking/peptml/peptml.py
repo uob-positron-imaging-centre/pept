@@ -4,7 +4,14 @@
 
 #    pept is a Python library that unifies Positron Emission Particle
 #    Tracking (PEPT) research, including tracking, simulation, data analysis
-#    and visualisation tools
+#    and visualisation tools.
+#
+#    If you used this codebase or any software making use of it in a scientific
+#    publication, you must cite the following paper:
+#        Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
+#        using machine learning. Review of Scientific Instruments.
+#        2020 Jan 1;91(1):013329.
+#        https://doi.org/10.1063/1.5129251
 #
 #    Copyright (C) 2019 Andrei Leonard Nicusan
 #
@@ -86,6 +93,61 @@ from    .extensions.find_cutpoints_api          import      find_cutpoints_api
 
 
 
+def find_cutpoints_sample(sample, max_distance, cutoffs = None):
+    '''Find the cutpoints in a sample of LoRs.
+
+    This is a static method, meaning it can be called without
+    instantiating the `Cutpoints` class. It computes the cutpoints
+    from a given `sample` that are associated with pairs of lines
+    closer than `max_distance`.
+
+    Parameters
+    ----------
+    sample : (N, 7) numpy.ndarray
+        A sample of LoRs, where each row is `[time, x1, y1, z1, x2, y2, z2]`,
+        such that every line is defined by the points `[x1, y1, z1]` and
+        `[x2, y2, z2]`.
+    max_distance : float
+        The maximum distance between any pair of lines so that their cutpoint
+        will be considered.
+    cutoffs : list, optional
+        The cutoffs for each dimension, formatted as `[x_min, x_max,
+        y_min, y_max, z_min, z_max]`. If not defined, they are computed
+        automatically by calling `get_cutoffs`. The default is `None`.
+
+    Returns
+    -------
+    sample_cutpoints : (N, 4) numpy.ndarray
+        The computed cutpoints for the given LoRs, where each row is
+        formatted as `[time, x, y, z]` for every cutpoint.
+
+    Raises
+    ------
+    TypeError
+        If `sample` is not a numpy array with shape (N, 7).
+    TypeError
+        If `cutoffs` is not a `one-dimensional array with values [min_x,
+        max_x, min_y, max_y, min_z, max_z]`
+
+    '''
+
+    # Check sample has shape (N, 7)
+    if sample.ndim != 2 or sample.shape[1] != 7:
+        raise TypeError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
+
+    if cutoffs is None:
+        cutoffs = Cutpoints.get_cutoffs(sample)
+    else:
+        cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
+        if cutoffs.ndim != 1 or len(cutoffs) != 6:
+            raise TypeError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
+
+    sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
+    return sample_cutpoints
+
+
+
+
 class Cutpoints(pept.PointData):
     '''A class that transforms LoRs into *cutpoints* for clustering.
 
@@ -154,11 +216,13 @@ class Cutpoints(pept.PointData):
 
     '''
 
-    def __init__(self,
-                 line_data,
-                 max_distance,
-                 cutoffs = None,
-                 verbose = True):
+    def __init__(
+        self,
+        line_data,
+        max_distance,
+        cutoffs = None,
+        verbose = True
+    ):
 
         # Find the cutpoints when instantiated. The method
         # also initialises the instance as a `PointData` subclass.
@@ -329,65 +393,13 @@ class Cutpoints(pept.PointData):
         return cutoffs
 
 
-    @staticmethod
-    def find_cutpoints_sample(sample, max_distance, cutoffs = None):
-        '''Find the cutpoints in a sample of LoRs.
-
-        This is a static method, meaning it can be called without
-        instantiating the `Cutpoints` class. It computes the cutpoints
-        from a given `sample` that are associated with pairs of lines
-        closer than `max_distance`.
-
-        Parameters
-        ----------
-        sample : (N, 7) numpy.ndarray
-            A sample of LoRs, where each row is `[time, x1, y1, z1, x2, y2, z2]`,
-            such that every line is defined by the points `[x1, y1, z1]` and
-            `[x2, y2, z2]`.
-        max_distance : float
-            The maximum distance between any pair of lines so that their cutpoint
-            will be considered.
-        cutoffs : list, optional
-            The cutoffs for each dimension, formatted as `[x_min, x_max,
-            y_min, y_max, z_min, z_max]`. If not defined, they are computed
-            automatically by calling `get_cutoffs`. The default is `None`.
-
-        Returns
-        -------
-        sample_cutpoints : (N, 4) numpy.ndarray
-            The computed cutpoints for the given LoRs, where each row is
-            formatted as `[time, x, y, z]` for every cutpoint.
-
-        Raises
-        ------
-        TypeError
-            If `sample` is not a numpy array with shape (N, 7).
-        TypeError
-            If `cutoffs` is not a `one-dimensional array with values [min_x,
-            max_x, min_y, max_y, min_z, max_z]`
-
-        '''
-
-        # Check sample has shape (N, 7)
-        if sample.ndim != 2 or sample.shape[1] != 7:
-            raise TypeError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
-
-        if cutoffs is None:
-            cutoffs = Cutpoints.get_cutoffs(sample)
-        else:
-            cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
-            if cutoffs.ndim != 1 or len(cutoffs) != 6:
-                raise TypeError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
-
-        sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
-        return sample_cutpoints
-
-
-    def find_cutpoints(self,
-                       line_data,
-                       max_distance,
-                       cutoffs = None,
-                       verbose = False):
+    def find_cutpoints(
+        self,
+        line_data,
+        max_distance,
+        cutoffs = None,
+        verbose = False
+    ):
         '''Find the cutpoints of the samples in a `LineData` instance.
 
         Parameters
@@ -447,9 +459,9 @@ class Cutpoints(pept.PointData):
         # Using joblib, collect the cutpoints from every sample in a list
         # of arrays. If verbose, show progress bar using tqdm.
         if verbose:
-            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
+            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
         else:
-            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(self.find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in line_data)
+            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in line_data)
 
         # cutpoints shape: (n, m, 4), where n is the number of samples, and
         # m is the number of cutpoints in the sample
@@ -462,10 +474,12 @@ class Cutpoints(pept.PointData):
         # Average number of cutpoints per sample
         cutpoints_per_sample = int(number_of_cutpoints / number_of_samples)
 
-        super().__init__(cutpoints,
-                         sample_size = cutpoints_per_sample,
-                         overlap = 0,
-                         verbose = False)
+        super().__init__(
+            cutpoints,
+            sample_size = cutpoints_per_sample,
+            overlap = 0,
+            verbose = False
+        )
 
         if verbose:
             end = time.time()

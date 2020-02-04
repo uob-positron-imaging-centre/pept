@@ -8,11 +8,13 @@
 # Date   : 22.08.2019
 
 
+from    .peptml     import  find_cutpoints_sample
 from    .peptml     import  Cutpoints
 from    .peptml     import  HDBSCANClusterer
 
 
 __all__ = [
+    "find_cutpoints_sample",
     "Cutpoints",
     "HDBSCANClusterer"
 ]
@@ -21,11 +23,8 @@ __all__ = [
 __author__ =        "Andrei Leonard Nicusan"
 __credits__ =       ["Andrei Leonard Nicusan", "Kit Windows-Yule", "Sam Manger"]
 __license__ =       "GNU v3.0"
-__version__ =       "0.1"
 __maintainer__ =    "Andrei Leonard Nicusan"
 __email__ =         "a.l.nicusan@bham.ac.uk"
 __status__ =        "Development"
-
-
 
 
