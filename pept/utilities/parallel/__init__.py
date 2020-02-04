@@ -6,11 +6,11 @@
 # Date   : 03.02.2020
 
 
-from    .parallel_map   import  map_file
+from    .parallel_map   import  parallel_map_file
 
 
 __all__ = [
-    "map_file"
+    "parallel_map_file"
 ]
 
 
@@ -20,8 +20,5 @@ __license__ =       "GNU v3.0"
 __maintainer__ =    "Andrei Leonard Nicusan"
 __email__ =         "a.l.nicusan@bham.ac.uk"
 __status__ =        "Development"
-
-
-
 
 

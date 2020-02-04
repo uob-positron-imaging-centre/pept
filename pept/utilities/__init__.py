@@ -6,14 +6,8 @@
 # Date   : 14.01.2020
 
 
-from    .           import  traverse
-from    .           import  parallel
-
-
-__all__ = [
-    "traverse",
-    "parallel"
-]
+from    .traverse   import  *
+from    .parallel   import  *
 
 
 __author__ =        "Andrei Leonard Nicusan"
@@ -22,6 +16,5 @@ __license__ =       "GNU v3.0"
 __maintainer__ =    "Andrei Leonard Nicusan"
 __email__ =         "a.l.nicusan@bham.ac.uk"
 __status__ =        "Development"
-
 
 
