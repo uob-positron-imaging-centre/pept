@@ -206,13 +206,6 @@ class ParallelScreensArray(LineData):
         The attribute `line_data`, with each row being
         `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
         `z2 = separation`. (Default is 712)
-    skiprows : int, optional
-        The number of rows to skip from the beginning of the data file.
-        Useful when the data file includes a header of text that should
-        be skipped. (Default is 0)
-    max_rows : int, optional
-        The maximum number of rows that will be read from the data file.
-        (Default is `None`)
     verbose : bool, optional
         An option that enables printing the time taken for the
         initialisation of an instance of the class. Useful when
@@ -261,8 +254,6 @@ class ParallelScreensArray(LineData):
         separation,
         sample_size = 200,
         overlap = 0,
-        skiprows = 0,
-        max_rows = None,
         verbose = True
     ):
 
