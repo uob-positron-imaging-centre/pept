@@ -35,35 +35,34 @@
 # Date   : 28.08.2019
 
 
-'''The *peptml* package implements a hierarchical density-based clustering
+'''The `peptml` package implements a hierarchical density-based clustering
 algorithm for general Positron Emission Particle Tracking (PEPT).
 
-The package includes tools for PEPT data analysis and visualisation. It  exports
-two main classes that are meant to work together: `Cutpoints`
-and `HDBSCANClusterer`. `Cutpoints` transforms the LoR data into *cutpoints* that
-can then be clustered using `HDBSCANClusterer`. `Cutpoints` accepts any instance
-of a class that inherits from `LineData` - this is a requirement due to the
-low-level C-API that it calls. `HDBSCANClusterer` can work with both `PointData`,
-as well as typical `numpy.ndarray`s.
+The PEPT-ML algorithm [1] works using the following steps:
+    1. Split the data into a series of individual "samples", each containing
+    a given number of LoRs. Use the base class pept.LineData for this.
+    2. For every sample of LoRs, compute the *cutpoints*, or the points in
+    space that minimise the distance to every pair of lines.
+    3. Cluster every sample using HDBSCAN and extract the centres of the
+    clusters ("1-pass clustering").
+    4. Splirt the centres into samples of a given size.
+    5. Cluster every sample of centres using HDBSCAN and extract the centres
+    of the clusters ("2-pass clustering").
+    6. Construct the trajectory of every particle using the centres from the
+    previous step.
 
-The module aims to provide general classes which can
-then be used in a script file as the user sees fit. For example scripts,
-look at the base of the pept library.
+A typical workflow for using the `peptml` package would be:
+    1. Read the LoRs into a `pept.LineData` class instance and set the
+    `sample_size` and `overlap` appropriately.
+    2. Compute the cutpoints using the `pept.tracking.peptml.Cutpoints` class.
+    3. Instantiate an `pept.tracking.peptml.HDBSCANClusterer` class and cluster
+    the cutpoints found previously.
 
-`peptml` requires the following packages:
+More tutorials and examples can be found on the University of Birmingham
+Positron Imaging Centre's GitHub repository.
 
-* **numpy**
-* **joblib** for multithreaded operations (such as cutpoints-finding)
-* **tqdm** for showing progress bars
-* **plotly >= 4.1.0** for plotly-based plotting
-* **hdbscan** for clustering cutpoints and centres
-* **time** for verbose timing of operations
-
-It was successfuly used at the University of Birmingham to analyse real
+PEPT-ML was successfuly used at the University of Birmingham to analyse real
 Fluorine-18 tracers in air.
-
-If you use this package, you should cite
-the following paper: [TODO: paper signature].
 
 '''
 
@@ -71,13 +70,11 @@ the following paper: [TODO: paper signature].
 import  time
 import  sys
 
-import  numpy                                   as          np
-from    scipy.spatial                           import      cKDTree
+import  numpy               as      np
+from    scipy.spatial       import  cKDTree
 
-from    joblib                                  import      Parallel,       delayed
-from    tqdm                                    import      tqdm
-from    plotly.subplots                         import      make_subplots
-import  plotly.graph_objects                    as          go
+from    joblib              import  Parallel, delayed
+from    tqdm                import  tqdm
 
 # Fix a deprecation warning inside the sklearn library
 try:
@@ -88,7 +85,7 @@ except ImportError:
     import hdbscan
 
 import  pept
-from    .extensions.find_cutpoints_api          import      find_cutpoints_api
+from    pept.utilities      import  find_cutpoints
 
 
 
@@ -96,10 +93,14 @@ from    .extensions.find_cutpoints_api          import      find_cutpoints_api
 def find_cutpoints_sample(sample, max_distance, cutoffs = None):
     '''Find the cutpoints in a sample of LoRs.
 
-    This is a static method, meaning it can be called without
-    instantiating the `Cutpoints` class. It computes the cutpoints
-    from a given `sample` that are associated with pairs of lines
-    closer than `max_distance`.
+    A cutpoint is the point in 3D space that minimises the distance between any
+    two lines. For any two non-parallel 3D lines, this point corresponds to
+    half the distance between the two lines and is unique.
+
+    This function considers every pair of lines in `sample_lines` and returns
+    all the cutpoints that satisfy the following conditions:
+        1. The distance between the two lines is smaller than `max_distance`.
+        2. The cutpoints is within the `cutoffs`.
 
     Parameters
     ----------
@@ -131,6 +132,9 @@ def find_cutpoints_sample(sample, max_distance, cutoffs = None):
 
     '''
 
+    sample = np.asarray(sample, order = 'C', dtype = float)
+    max_distance = float(max_distance)
+
     # Check sample has shape (N, 7)
     if sample.ndim != 2 or sample.shape[1] != 7:
         raise TypeError('\n[ERROR]: sample should have dimensions (N, 7). Received {}\n'.format(sample.shape))
@@ -142,7 +146,7 @@ def find_cutpoints_sample(sample, max_distance, cutoffs = None):
         if cutoffs.ndim != 1 or len(cutoffs) != 6:
             raise TypeError('\n[ERROR]: cutoffs should be a one-dimensional array with values [min_x, max_x, min_y, max_y, min_z, max_z]\n')
 
-    sample_cutpoints = find_cutpoints_api(sample, max_distance, cutoffs)
+    sample_cutpoints = find_cutpoints(sample, max_distance, cutoffs)
     return sample_cutpoints
 
 
@@ -212,7 +216,7 @@ class Cutpoints(pept.PointData):
 
     Compute the cutpoints for a single sample:
         >>> sample = line_data[0]
-        >>> cutpts_sample = peptml.Cutpoints.find_cutpoints_sample(sample) # no class instantiation
+        >>> cutpts_sample = peptml.find_cutpoints_sample(sample)
 
     '''
 
