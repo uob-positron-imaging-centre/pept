@@ -467,7 +467,7 @@ class VoxelData:
         return indices
 
 
-    def cube_trace(self, index, opacity = 0.4, color = None, colorscale = False):
+    def cube_trace(self, index, opacity = 0.4, color = None, colorbar = False):
         # For a small number of cubes
 
         index = np.asarray(index, dtype = int)
@@ -491,7 +491,7 @@ class VoxelData:
             color = color
         )
 
-        if colorscale:
+        if colorbar:
             cmap = matplotlib.cm.get_cmap("magma")
             c = cmap(self._voxel_data[tuple(index)] / (self._voxel_data.max() or 1))
             cube.update(
@@ -506,12 +506,12 @@ class VoxelData:
         condition = lambda voxel_data: voxel_data > 0,
         opacity = 0.4,
         color = None,
-        colorscale = False
+        colorbar = False
     ):
         # For a small number of cubes
 
         indices = np.argwhere(condition(self._voxel_data))
-        traces = [self.cube_trace(i, opacity = opacity, color = color, colorscale = colorscale) for i in indices]
+        traces = [self.cube_trace(i, opacity = opacity, color = color, colorbar = colorbar) for i in indices]
 
         return traces
 
@@ -522,7 +522,7 @@ class VoxelData:
         size = 4,
         opacity = 0.4,
         color = None,
-        colorscale = False
+        colorbar = False
     ):
         # For a large number of cubes
 
@@ -535,7 +535,7 @@ class VoxelData:
             symbol = "square"
         )
 
-        if colorscale:
+        if colorbar:
             cvalues = [self._voxel_data[tuple(t)] for t in filtered_indices]
             marker.update(colorscale = "Magma", color = cvalues)
 
