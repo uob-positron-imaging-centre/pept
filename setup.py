@@ -91,8 +91,8 @@ cy_extension_kw['extra_link_args'] = extra_link_args
 cy_extension_kw['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
-    Extension('pept.tracking.peptml.extensions.find_cutpoints_api',
-              ['pept/tracking/peptml/extensions/find_cutpoints_api.pyx'],
+    Extension('pept.utilities.find_cutpoints.find_cutpoints',
+              ['pept/utilities/find_cutpoints/find_cutpoints.pyx'],
               **cy_extension_kw),
     Extension('pept.scanners.modular_camera.extensions.get_pept_event',
               ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
@@ -108,13 +108,7 @@ cy_extensions = [
 extensions = cythonize(cy_extensions, **cythonize_kw)
 
 
-# The rest you shouldn't have to touch too much :)
-# ------------------------------------------------
-# Except, perhaps the License and Trove Classifiers!
-# If you do change the License, remember to change the Trove Classifier for that!
-
 here = os.path.abspath(os.path.dirname(__file__))
-
 
 # Import the README and use it as the long-description.
 # Note: this will only work if 'README.md' is present in your MANIFEST.in file!
