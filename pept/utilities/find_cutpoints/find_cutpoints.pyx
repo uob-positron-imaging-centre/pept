@@ -171,12 +171,13 @@ cpdef find_cutpoints(
 
 
     # Truncate the cutpoints which were not written
-    cutpoints = np.delete(cutpoints, slice(m, None, None), 0)
+    cutpoints_truncated = np.delete(cutpoints, slice(m, None, None), 0)
+    del(cutpoints)
 
     # Sort rows based on time (column 0)
-    cutpoints = cutpoints[cutpoints[:, 0].argsort()]
+    cutpoints_truncated = cutpoints_truncated[cutpoints_truncated[:, 0].argsort()]
 
-    return cutpoints
+    return cutpoints_truncated
 
 
 
