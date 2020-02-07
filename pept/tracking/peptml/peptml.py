@@ -69,12 +69,15 @@ Fluorine-18 tracers in air.
 
 import  time
 import  sys
+import  os
 
 import  numpy               as      np
 from    scipy.spatial       import  cKDTree
 
 from    joblib              import  Parallel, delayed
 from    tqdm                import  tqdm
+
+from    concurrent.futures  import  ThreadPoolExecutor, ProcessPoolExecutor
 
 # Fix a deprecation warning inside the sklearn library
 try:
@@ -225,6 +228,7 @@ class Cutpoints(pept.PointData):
         line_data,
         max_distance,
         cutoffs = None,
+        max_workers = None,
         verbose = True
     ):
 
@@ -234,6 +238,7 @@ class Cutpoints(pept.PointData):
             line_data,
             max_distance,
             cutoffs = cutoffs,
+            max_workers = max_workers,
             verbose = verbose
         )
 
@@ -402,6 +407,7 @@ class Cutpoints(pept.PointData):
         line_data,
         max_distance,
         cutoffs = None,
+        max_workers = None,
         verbose = False
     ):
         '''Find the cutpoints of the samples in a `LineData` instance.
@@ -447,7 +453,7 @@ class Cutpoints(pept.PointData):
             raise Exception('[ERROR]: line_data should be an instance of pept.LineData')
 
         self._line_data = line_data
-        self._max_distance = max_distance
+        self._max_distance = float(max_distance)
 
         # If cutoffs were not supplied, compute them
         if cutoffs is None:
@@ -460,12 +466,22 @@ class Cutpoints(pept.PointData):
 
         self._cutoffs = cutoffs
 
-        # Using joblib, collect the cutpoints from every sample in a list
-        # of arrays. If verbose, show progress bar using tqdm.
-        if verbose:
-            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in tqdm(line_data))
-        else:
-            cutpoints = Parallel(n_jobs = -1, prefer = 'threads')(delayed(find_cutpoints_sample)(sample, max_distance, cutoffs) for sample in line_data)
+        # Using ThreadPoolExecutor, asynchronously collect the cutpoints from
+        # every sample in a list of arrays. This is more efficient than using
+        # ProcessPoolExecutor because find_cutpoints is a Cython function that
+        # releases the GIL for most of its computation.
+        # If verbose, show progress bar using tqdm.
+        if max_workers is None:
+            max_workers = os.cpu_count()
+        with ThreadPoolExecutor(max_workers = max_workers) as executor:
+            futures = []
+            for sample in line_data:
+                futures.append(executor.submit(find_cutpoints, sample, max_distance, cutoffs))
+
+            if verbose:
+                futures = tqdm(futures)
+
+            cutpoints = [f.result() for f in futures]
 
         # cutpoints shape: (n, m, 4), where n is the number of samples, and
         # m is the number of cutpoints in the sample
@@ -571,19 +587,23 @@ class HDBSCANClusterer:
 
     '''
 
-    def __init__(self,
-                 min_cluster_size = 20,
-                 min_samples = None,
-                 allow_single_cluster = False):
+    def __init__(
+        self,
+        min_cluster_size = 20,
+        min_samples = None,
+        allow_single_cluster = False
+    ):
 
         if 0 < min_cluster_size < 2:
             print("\n[WARNING]: min_cluster_size was set to 2, as it was {} < 2\n".format(min_cluster_size))
             min_cluster_size = 2
 
-        self.clusterer = hdbscan.HDBSCAN(min_cluster_size = min_cluster_size,
-                                         min_samples = min_samples,
-                                         core_dist_n_jobs = -1,
-                                         allow_single_cluster = allow_single_cluster)
+        self.clusterer = hdbscan.HDBSCAN(
+            min_cluster_size = min_cluster_size,
+            min_samples = min_samples,
+            core_dist_n_jobs = -1,
+            allow_single_cluster = allow_single_cluster
+        )
 
 
     @property
@@ -616,12 +636,14 @@ class HDBSCANClusterer:
         self.clusterer.allow_single_cluster = option
 
 
-    def fit_sample(self,
-                   sample,
-                   store_labels = False,
-                   noise = False,
-                   as_array = True,
-                   verbose = False):
+    def fit_sample(
+        self,
+        sample,
+        store_labels = False,
+        noise = False,
+        as_array = True,
+        verbose = False
+    ):
         '''Fit one sample of cutpoints and return the cluster centres and
         (optionally) the labelled cutpoints.
 
@@ -699,10 +721,12 @@ class HDBSCANClusterer:
         centres = np.array(centres)
 
         if not as_array:
-            centres = pept.PointData(centres,
-                                     sample_size = 0,
-                                     overlap = 0,
-                                     verbose = False)
+            centres = pept.PointData(
+                centres,
+                sample_size = 0,
+                overlap = 0,
+                verbose = False
+            )
 
         # Return all cutpoints as a list of numpy arrays for every label
         # where the last column of an array is the label
@@ -721,10 +745,12 @@ class HDBSCANClusterer:
             clustered_cutpoints = np.vstack(np.array(clustered_cutpoints))
 
             if not as_array:
-                clustered_cutpoints = pept.PointData(clustered_cutpoints,
-                                                     sample_size = 0,
-                                                     overlap = 0,
-                                                     verbose = False)
+                clustered_cutpoints = pept.PointData(
+                    clustered_cutpoints,
+                    sample_size = 0,
+                    overlap = 0,
+                    verbose = False
+                )
 
         if verbose:
             end = time.time()
@@ -733,11 +759,14 @@ class HDBSCANClusterer:
         return [centres, clustered_cutpoints]
 
 
-    def fit_cutpoints(self,
-                      cutpoints,
-                      store_labels = False,
-                      noise = False,
-                      verbose = True):
+    def fit_cutpoints(
+        self,
+        cutpoints,
+        store_labels = False,
+        noise = False,
+        max_workers = None,
+        verbose = True
+    ):
         '''Fit cutpoints (an instance of `PointData`) and return the cluster
         centres and (optionally) the labelled cutpoints.
 
@@ -790,30 +819,36 @@ class HDBSCANClusterer:
         # Collect all outputs as a list. If verbose, show progress bar with
         # tqdm
         if verbose:
-            data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
-                                                store_labels = store_labels,
-                                                noise = noise,
-                                                as_array = True) for sample in tqdm(cutpoints))
-        else:
-            data_list = Parallel(n_jobs = -1)(delayed(self.fit_sample)(sample,
-                                                store_labels = store_labels,
-                                                noise = noise,
-                                                as_array = True) for sample in cutpoints)
+            cutpoints = tqdm(cutpoints)
+
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
+        data_list = Parallel(n_jobs = max_workers)(delayed(self.fit_sample)(
+            sample,
+            store_labels = store_labels,
+            noise = noise,
+            as_array = True) for sample in cutpoints
+        )
 
         # Access joblib.Parallel output as list comprehensions
         centres = np.array([row[0] for row in data_list if len(row[0]) != 0])
         if len(centres) != 0:
-            centres = pept.PointData(np.vstack(centres),
-                                     sample_size = 0,
-                                     overlap = 0,
-                                     verbose = False)
+            centres = pept.PointData(
+                np.vstack(centres),
+                sample_size = 0,
+                overlap = 0,
+                verbose = False
+            )
 
         if store_labels:
             clustered_cutpoints = np.array([row[1] for row in data_list if len(row[1]) != 0])
-            clustered_cutpoints = pept.PointData(np.vstack(np.array(clustered_cutpoints)),
-                                                 sample_size = 0,
-                                                 overlap = 0,
-                                                 verbose = False)
+            clustered_cutpoints = pept.PointData(
+                np.vstack(np.array(clustered_cutpoints)),
+                sample_size = 0,
+                overlap = 0,
+                verbose = False
+            )
 
         if verbose:
             end = time.time()
