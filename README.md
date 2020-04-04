@@ -23,4 +23,13 @@ pip install -e .
 
 3. Now you can add new stuff to the package. You can write scripts in another directory to test the new features you've added.
 
+4. If you're happy with your changes and want to merge them to this repo, you can run the 3-clause prayer:
+```
+git add <your changed/new files>
+git commit -m "<some description of your additions>"
+git push
+```
+
+That's it. Please recite "git add git commit git push" every evening to please the coding gods. Please be careful with your `git push`s. Love you all.
+
 
