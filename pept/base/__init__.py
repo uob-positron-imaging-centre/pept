@@ -7,12 +7,14 @@
 
 
 from    .line_data      import  LineData
+from    .line_data_tof  import  LineDataToF
 from    .point_data     import  PointData
 from    .voxel_data     import  VoxelData
 
 
 __all__ = [
     'LineData',
+    'LineDataTof'
     'PointData',
     'VoxelData'
 ]

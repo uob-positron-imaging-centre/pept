@@ -45,8 +45,10 @@ import  matplotlib.pyplot       as      plt
 from    matplotlib.colors       import  Normalize
 from    mpl_toolkits.mplot3d    import  Axes3D
 
+from    .iterable_samples       import  IterableSamples
 
-class LineData:
+
+class LineData(IterableSamples):
     '''A class for PEPT LoR data iteration, manipulation and visualisation.
 
     Generally, PEPT LoRs are lines in 3D space, each defined by two points,
@@ -59,69 +61,73 @@ class LineData:
     ----------
     line_data : (N, 7) numpy.ndarray
         An (N, 7) numpy array that stores the PEPT LoRs (or any generic set of
-        lines) as time and cartesian (3D) coordinates of two points defining each
-        line, **in mm**. A row is then [time, x1, y1, z1, x2, y2, z2].
+        lines) as time and cartesian (3D) coordinates of two points defining
+        each line, **in mm**. A row is then [time, x1, y1, z1, x2, y2, z2].
     sample_size : int, optional
-        An `int`` that defines the number of lines that should be
-        returned when iterating over `line_data`. A `sample_size` of 0
-        yields all the data as one single sample. (Default is 200)
+        An `int`` that defines the number of lines that should be returned when
+        iterating over `line_data`. A `sample_size` of 0 yields all the data as
+        one single sample. Default is 0.
     overlap : int, optional
-        An `int` that defines the overlap between two consecutive
-        samples that are returned when iterating over `line_data`.
-        An overlap of 0 means consecutive samples, while an overlap
-        of (`sample_size` - 1) means incrementing the samples by one.
-        A negative overlap means skipping values between samples. An
-        error is raised if `overlap` is larger than or equal to
-        `sample_size`. (Default is 0)
+        An `int` that defines the overlap between two consecutive samples that
+        are returned when iterating over `line_data`. An overlap of 0 means
+        consecutive samples, while an overlap of (`sample_size` - 1) means
+        incrementing the samples by one. A negative overlap means skipping
+        values between samples. An error is raised if `overlap` is larger than
+        or equal to `sample_size`. Default is 0.
     verbose : bool, optional
-        An option that enables printing the time taken for the
-        initialisation of an instance of the class. Useful when
-        reading large files (10gb files for PEPT data is not unheard
-        of). (Default is True)
+        An option that enables printing the time taken for the initialisation
+        of an instance of the class. Useful when reading large files (10gb
+        files for PEPT data is not unheard of). Default is False.
 
     Attributes
     ----------
     line_data : (N, 7) numpy.ndarray
-        An (N, 7) numpy array that stores the PEPT LoRs as time and
-        cartesian (3D) coordinates of two points defining a line, **in mm**.
-        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
+        An (N, 7) numpy array that stores the PEPT LoRs as time and cartesian
+        (3D) coordinates of two points defining a line, **in mm**. Each row is
+        then `[time, x1, y1, z1, x2, y2, z2]`.
     sample_size : int
-        An `int` that defines the number of lines that should be
-        returned when iterating over `line_data`. (Default is 200)
+        An `int` that defines the number of lines that should be returned when
+        iterating over `line_data`. Default is 0.
     overlap : int
-        An `int` that defines the overlap between two consecutive
-        samples that are returned when iterating over `line_data`.
-        An overlap of 0 means consecutive samples, while an overlap
-        of (`sample_size` - 1) means incrementing the samples by one.
-        A negative overlap means skipping values between samples. It
-        is required to be smaller than `sample_size`. (Default is 0)
+        An `int` that defines the overlap between two consecutive samples that
+        are returned when iterating over `line_data`. An overlap of 0 implies
+        consecutive samples, while an overlap of (`sample_size` - 1) implies
+        incrementing the samples by one. A negative overlap means skipping
+        values between samples. It is required to be smaller than
+        `sample_size`. Default is 0.
     number_of_lines : int
-        An `int` that corresponds to len(`line_data`), or the number of
-        LoRs stored by `line_data`.
+        An `int` that corresponds to len(`line_data`), or the number of LoRs
+        stored by `line_data`.
     number_of_samples : int
-        An `int` that corresponds to the number of samples that can be
-        accessed from the class. It takes `overlap` into consideration.
+        An `int` that corresponds to the number of samples that can be accessed
+        from the class. It takes `overlap` into consideration.
 
     Raises
     ------
     ValueError
         If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
-        has to be smaller than `sample_size`. Note that it can also be negative.
+        has to be smaller than `sample_size`. Note that it can also be
+        negative.
     ValueError
-        If `line_data` does not have (N, 7) shape.
+        If `line_data` has fewer than 7 columns.
 
     Notes
     -----
-    The class saves `line_data` as a **contiguous** numpy array for
-    efficient access in C functions. It should not be changed after
-    instantiating the class.
+    This class is made for LoRs that do not have Time of Flight data, such that
+    every row in `line_data` is comprised of a single timestamp and the points'
+    coordinates: [time, x1, y1, z1, x2, y2, z2]. If your PET / PEPT scanner
+    has Time of Flight data, use the `LineDataToF` class.
+
+    The class saves `line_data` as a **contiguous** numpy array for efficient
+    access in C / Cython functions. The inner data can be mutated, but do not
+    change the number of rows or columns after instantiating the class.
 
     '''
 
     def __init__(
         self,
         line_data,
-        sample_size = 200,
+        sample_size = 0,
         overlap = 0,
         verbose = False
     ):
@@ -129,30 +135,26 @@ class LineData:
         if verbose:
             start = time.time()
 
-        # If sample_size != 0 (in which case the class returns all data in one
-        # sample), check the `overlap` is not larger or equal to `sample_size`.
-        if sample_size < 0:
-            raise ValueError('\n[ERROR]: sample_size = {} must be positive (>= 0)'.format(sample_size))
-        if sample_size != 0 and overlap >= sample_size:
-            raise ValueError('\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n'.format(overlap, sample_size))
+        # If `line_data` is not Fortran-contiguous, create a Fortran-contiguous
+        # copy.
+        self._line_data = np.asarray(line_data, order = 'F', dtype = float)
 
-        # Initialise the inner parameters of the class
-        self._index = 0
-        self._sample_size = sample_size
-        self._overlap = overlap
-
-        # If `line_data` is not C-contiguous, create a C-contiguous copy
-        self._line_data = np.asarray(line_data, order = 'C', dtype = float)
-
-        # Check that line_data has shape (N, 7)
-        if self._line_data.ndim != 2 or self._line_data.shape[1] != 7:
-            raise ValueError('\n[ERROR]: line_data should have dimensions (N, 7). Received {}\n'.format(self._line_data.shape))
+        # Check that line_data has at least 7 columns.
+        if self._line_data.ndim != 2 or self._line_data.shape[1] < 7:
+            raise ValueError((
+                "\n[ERROR]: `line_data` should have dimensions (M, N), where "
+                f"N >= 7. Received {self._line_data.shape}.\n"
+            ))
 
         self._number_of_lines = len(self._line_data)
 
+        # Call the IterableSamples constructor to make the class iterable in
+        # samples with overlap.
+        IterableSamples.__init__(self, sample_size, overlap)
+
         if verbose:
             end = time.time()
-            print("Initialising the PEPT data took {} seconds\n".format(end - start))
+            print(f"Initialising the line data took {end - start} seconds.\n")
 
 
     @property
@@ -165,124 +167,26 @@ class LineData:
             A memory view of the lines stored in `line_data`.
 
         '''
+        return self._line_data
+
+
+    @property
+    def data_samples(self):
+        '''Implement property for the IterableSamples parent class. See its
+        documentation for more information.
+
+        '''
 
         return self._line_data
 
 
     @property
-    def sample_size(self):
-        '''Get the number of lines in one sample returned by the class.
-
-        Returns
-        -------
-        int
-            The sample size (number of lines) in one sample returned by
-            the class.
+    def data_length(self):
+        '''Implement property for the IterableSamples parent class. See its
+        documentation for more information.
 
         '''
-
-        return self._sample_size
-
-
-    @sample_size.setter
-    def sample_size(self, new_sample_size):
-        '''Change `sample_size` without instantiating a new object
-
-        It also resets the inner index of the class.
-
-        Parameters
-        ----------
-        new_sample_size : int
-            The new sample size. It has to be larger than `overlap`,
-            unless it is 0 (in which case all `line_data` will be returned
-            as one sample).
-
-        Raises
-        ------
-        ValueError
-            If `overlap` >= `new_sample_size`. Overlap has to be
-            smaller than `sample_size`, unless `sample_size` is 0.
-            Note that it can also be negative.
-
-        '''
-
-        if new_sample_size < 0:
-            raise ValueError('\n[ERROR]: sample_size = {} must be positive (>= 0)'.format(new_sample_size))
-        if new_sample_size != 0 and self._overlap >= new_sample_size:
-            raise ValueError('\n[ERROR]: overlap = {} must be smaller than new_sample_size = {}\n'.format(self._overlap, new_sample_size))
-
-        self._index = 0
-        self._sample_size = new_sample_size
-
-
-    @property
-    def overlap(self):
-        '''Get the overlap between every two samples returned by the class.
-
-        Returns
-        -------
-        int
-            The overlap (number of lines) between every two samples  returned by
-            the class.
-
-        '''
-
-        return self._overlap
-
-
-    @overlap.setter
-    def overlap(self, new_overlap):
-        '''Change `overlap` without instantiating a new object
-
-        It also resets the inner index of the class.
-
-        Parameters
-        ----------
-        new_overlap : int
-            The new overlap. It has to be smaller than `sample_size`, unless
-            `sample_size` is 0 (in which case all `line_data` will be returned
-            as one sample and so overlap does not play any role).
-
-        Raises
-        ------
-        ValueError
-            If `new_overlap` >= `sample_size`. `new_overlap` has to be
-            smaller than `sample_size`, unless `sample_size` is 0.
-            Note that it can also be negative.
-
-        '''
-
-        if self._sample_size != 0 and new_overlap >= self._sample_size:
-            raise ValueError('\n[ERROR]: new_overlap = {} must be smaller than sample_size = {}\n'.format(new_overlap, self._sample_size))
-
-        self._index = 0
-        self._overlap = new_overlap
-
-
-    @property
-    def number_of_samples(self):
-        '''Get number of samples, considering overlap.
-
-        If `sample_size == 0`, all data is returned as a single sample,
-        and so `number_of_samples` will be 1. Otherwise, it checks the
-        number of samples every time it is called, taking `overlap` into
-        consideration.
-
-        Returns
-        -------
-        int
-            The number of samples, taking `overlap` into consideration.
-
-        '''
-        # If self.sample_size == 0, all data is returned as a single sample
-        if self._sample_size == 0:
-            return 1
-
-        # If self.sample_size != 0, check there is at least one sample
-        if self._number_of_lines >= self._sample_size:
-            return (self._number_of_lines - self._sample_size) // (self.sample_size - self.overlap) + 1
-        else:
-            return 0
+        return self._number_of_lines
 
 
     @property
@@ -298,45 +202,6 @@ class LineData:
         return self._number_of_lines
 
 
-    def sample_n(self, n):
-        '''Get sample number n (indexed from 1, i.e. `n > 0`)
-
-        Returns the lines from `line_data` included in sample number
-        `n`. Samples are numbered starting from 1.
-
-        Parameters
-        ----------
-        n : int
-            The number of the sample required. Note that `1 <= n <=
-            number_of_samples`.
-
-        Returns
-        -------
-        (, 7) numpy.ndarray
-            A shallow copy of the lines from `line_data` included in
-            sample number n.
-
-        Raises
-        ------
-        IndexError
-            If `sample_size == 0`, all data is returned as one single
-            sample. Raised if `n` is not 1.
-        IndexError
-            If `n > number_of_samples` or `n <= 0`.
-
-        '''
-        if self._sample_size == 0:
-            if n == 1:
-                return self._line_data
-            else:
-                raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there is only 1 sample (sample_size == 0)\n".format(n))
-        elif (n > self.number_of_samples) or n <= 0:
-            raise IndexError("\n\n[ERROR]: Trying to access a non-existent sample (samples are indexed from 1): asked for sample number {}, when there are {} samples\n".format(n, self.number_of_samples))
-
-        start_index = (n - 1) * (self._sample_size - self._overlap)
-        return self._line_data[start_index:(start_index + self._sample_size)]
-
-
     def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
         '''Write `line_data` to a CSV file
 
@@ -349,19 +214,21 @@ class LineData:
                 to where python is called.
             delimiter : str, optional
                 The delimiter between values. The default is two spaces '  ',
-                such that numbers in the format '123,456.78' are well-understood.
+                such that numbers in the format '123,456.78' are
+                well-understood.
             newline : str, optional
-                The sequence of characters at the end of every line. The default
-                is a new line '\n'
+                The sequence of characters at the end of every line. The
+                default is a new line '\n'
 
         '''
         np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
 
 
     def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
-        '''Plot all lines using matplotlib
+        '''Plot all lines using Matplotlib.
 
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on it.
+        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
+        it.
 
         Parameters
         ----------
@@ -384,7 +251,6 @@ class LineData:
         individual samples using `plot_lines_sample_n` is recommended.
 
         '''
-
         if ax == None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
@@ -404,7 +270,7 @@ class LineData:
 
 
     def plot_all_lines_alt_axes(self, ax, color='r', alpha=1.0):
-        '''Plot all lines using matplotlib on PEPT-style axes
+        '''Plot all lines using matplotlib on PEPT-style axes.
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
         the PEPT-style convention: **x** is *parallel and horizontal* to the
@@ -433,7 +299,6 @@ class LineData:
         individual samples using `plot_lines_sample_n_alt_axes` is recommended.
 
         '''
-
         if ax == None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
@@ -454,7 +319,7 @@ class LineData:
 
 
     def plot_lines_sample_n(self, n, ax = None, color = 'r', alpha = 1.0):
-        '''Plot lines from sample `n` using matplotlib
+        '''Plot lines from sample `n` using Matplotlib.
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines
         from sample number `n`.
@@ -477,7 +342,6 @@ class LineData:
         fig, ax : matplotlib figure and axes objects
 
         '''
-
         if ax == None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
@@ -495,7 +359,7 @@ class LineData:
 
 
     def plot_lines_sample_n_alt_axes(self, n, ax=None, color='r', alpha=1.0):
-        '''Plot lines from sample `n` using matplotlib on PEPT-style axes
+        '''Plot lines from sample `n` using matplotlib on PEPT-style axes.
 
         Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines from
         sample number sampleN on the PEPT-style coordinates convention:
@@ -521,7 +385,6 @@ class LineData:
         fig, ax : matplotlib figure and axes objects
 
         '''
-
         if ax == None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
@@ -564,21 +427,23 @@ class LineData:
         width : float
             The width of the lines. The default is 2.
         color : str or list-like
-            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a colorbar list.
-            Is ignored if `colorbar` is set to True. For more information, check the Plotly
-            documentation. The default is None.
+            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
+            colorbar list. Is ignored if `colorbar` is set to True. For more
+            information, check the Plotly documentation. The default is None.
         opacity : float
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque. The default is 0.6.
         colorbar : bool
-            If set to True, will color-code the data in the sample column `colorbar_col`.
-            Overrides `color` if set to True. The default is True, so that every line has
-            a different color.
+            If set to True, will color-code the data in the sample column
+            `colorbar_col`. Overrides `color` if set to True. The default is
+            True, so that every line has a different color.
         colorbar_col : int
-            The column in the data samples that will be used to color the points. Only has
-            an effect if `colorbar` is set to True. The default is 0 (the first column - time).
+            The column in the data samples that will be used to color the
+            points. Only has an effect if `colorbar` is set to True. The
+            default is 0 (the first column - time).
         colorbar_title : str
-            If set, the colorbar will have this title above. The default is None.
+            If set, the colorbar will have this title above. The default is
+            None.
 
         Returns
         -------
@@ -586,7 +451,6 @@ class LineData:
             A Plotly trace of the LoRs.
 
         '''
-
         # Check if sample_indices is an iterable collection (list-like)
         # otherwise just "iterate" over the single number
         if not hasattr(sample_indices, "__iter__"):
@@ -632,12 +496,6 @@ class LineData:
         return trace
 
 
-    def __len__(self):
-        # Defined so that len(class_instance) returns the number of samples.
-
-        return self.number_of_samples
-
-
     def __str__(self):
         # Shown when calling print(class)
         docstr = ""
@@ -655,63 +513,14 @@ class LineData:
     def __repr__(self):
         # Shown when writing the class on a REPR
 
-        docstr = "Class instance that inherits from `pept.LineData`.\n\n" + self.__str__() + "\n\n"
+        docstr = "Class instance that inherits from `pept.LineData`.\n\n" + \
+            self.__str__() + "\n\n"
         docstr += "Particular cases:\n"
-        docstr += " > If sample_size == 0, all line_data is returned as one single sample.\n"
+        docstr += (" > If sample_size == 0, all line_data is returned as one"
+                   "single sample.\n")
         docstr += " > If overlap >= sample_size, an error is raised.\n"
         docstr += " > If overlap < 0, lines are skipped between samples.\n"
 
         return docstr
-
-
-    def __getitem__(self, key):
-        # Defined so that samples can be accessed as class_instance[0]
-
-        if self.number_of_samples == 0:
-            raise IndexError("Tried to access sample {} (indexed from 0), when there are {} samples".format(key, self.number_of_samples))
-
-        if key >= self.number_of_samples:
-            raise IndexError("Tried to access sample {} (indexed from 0), when there are {} samples".format(key, self.number_of_samples))
-
-
-        while key < 0:
-            key += self.number_of_samples
-
-        return self.sample_n(key + 1)
-
-
-    def __iter__(self):
-        # Defined so the class can be iterated as `for sample in class_instance: ...`
-        return self
-
-
-    def __next__(self):
-        # sample_size = 0 => return all data
-        if self._sample_size == 0:
-            self._sample_size = -1
-            return self._line_data
-        # Use -1 as a flag
-        if self._sample_size == -1:
-            self._sample_size = 0
-            raise StopIteration
-
-        # sample_size > 0 => return slices
-        if self._index != 0:
-            self._index = self._index + self._sample_size - self.overlap
-        else:
-            self._index = self._index + self.sample_size
-
-
-        if self._index > self.number_of_lines:
-            self._index = 0
-            raise StopIteration
-
-        return self._line_data[(self._index - self._sample_size):self._index]
-
-
-
-
-
-
 
 

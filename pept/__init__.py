@@ -139,6 +139,7 @@ Copyright (C) 2020 Andrei Leonard Nicusan.
 
 # Import base data structures
 from    .base.line_data     import  LineData
+from    .base.line_data_tof import  LineDataToF
 from    .base.point_data    import  PointData
 from    .base.voxel_data    import  VoxelData
 
@@ -156,6 +157,7 @@ from    .__version__        import  __version__
 
 __all__ = [
     'LineData',
+    'LineDataToF',
     'PointData',
     'VoxelData',
     'scanners',
