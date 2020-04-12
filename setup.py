@@ -82,7 +82,7 @@ EXTRAS = {
 cythonize_kw = dict(language_level = 3)
 cy_extension_kw = dict()
 
-extra_compile_args = ['-O3', '-ffast-math', '-march=native']
+extra_compile_args = ['-Ofast']
 cy_extension_kw['extra_compile_args'] = extra_compile_args
 
 extra_link_args = []
@@ -91,8 +91,11 @@ cy_extension_kw['extra_link_args'] = extra_link_args
 cy_extension_kw['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
-    Extension('pept.utilities.find_cutpoints.find_cutpoints',
-              ['pept/utilities/find_cutpoints/find_cutpoints.pyx'],
+    Extension('pept.utilities.cutpoints.find_cutpoints',
+              ['pept/utilities/cutpoints/find_cutpoints.pyx'],
+              **cy_extension_kw),
+    Extension('pept.utilities.cutpoints.find_weighted_cutpoints',
+              ['pept/utilities/cutpoints/find_weighted_cutpoints.pyx'],
               **cy_extension_kw),
     Extension('pept.scanners.modular_camera.extensions.get_pept_event',
               ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
