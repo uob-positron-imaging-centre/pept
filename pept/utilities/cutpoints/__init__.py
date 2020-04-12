@@ -6,9 +6,13 @@
 # Date   : 14.01.2020
 
 
-from    .cutpoints  import  *
-from    .traverse   import  *
-from    .parallel   import  *
+from    .find_cutpoints             import  find_cutpoints
+from    .find_weighted_cutpoints    import  find_weighted_cutpoints
+
+__all__ = [
+    "find_cutpoints",
+    "find_weighted_cutpoints"
+]
 
 
 __author__ =        "Andrei Leonard Nicusan"
