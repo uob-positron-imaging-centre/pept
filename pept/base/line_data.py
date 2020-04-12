@@ -135,9 +135,8 @@ class LineData(IterableSamples):
         if verbose:
             start = time.time()
 
-        # If `line_data` is not Fortran-contiguous, create a Fortran-contiguous
-        # copy.
-        self._line_data = np.asarray(line_data, order = 'F', dtype = float)
+        # If `line_data` is not C-contiguous, create a C-contiguous copy
+        self._line_data = np.asarray(line_data, order = 'C', dtype = float)
 
         # Check that line_data has at least 7 columns.
         if self._line_data.ndim != 2 or self._line_data.shape[1] < 7:

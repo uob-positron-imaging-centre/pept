@@ -130,9 +130,8 @@ class PointData(IterableSamples):
         if verbose:
             start = time.time()
 
-        # If `point_data` is not Fortran-contiguous, create a
-        # Fortran-contiguous copy.
-        self._point_data = np.asarray(point_data, order = 'F', dtype = float)
+        # If `point_data` is not C-contiguous, create a C-contiguous copy.
+        self._point_data = np.asarray(point_data, order = 'C', dtype = float)
 
         # Check that point_data has at least 4 columns.
         if self._point_data.ndim != 2 or self._point_data.shape[1] < 4:

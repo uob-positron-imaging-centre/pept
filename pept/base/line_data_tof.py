@@ -45,6 +45,7 @@ from    matplotlib.colors       import  Normalize
 from    mpl_toolkits.mplot3d    import  Axes3D
 
 from    .iterable_samples       import  IterableSamples
+import  pept
 
 
 class LineDataToF(IterableSamples):
@@ -56,11 +57,16 @@ class LineDataToF(IterableSamples):
     `line_data` of an adaptive `sample_size` and `overlap`, without requiring
     additional storage.
 
+    Note that the spatial and temporal data must have self-consistent units
+    (i.e. millimetres and milliseconds OR metres and seconds). Also, besides
+    the expected [time1, x1, y1, z1, time2, x2, y2, z2] columns, any extra
+    information can be appended after the two points.
+
     Parameters
     ----------
-    line_data : (N, 8) numpy.ndarray
-        An (N, 8) numpy array that stores the PEPT LoRs with Time of Flight
-        (ToF) data (or any generic set of lines with two timestamps) as
+    line_data : (N, M >= 8) numpy.ndarray
+        An (N, M >= 8) numpy array that stores the PEPT LoRs with Time of
+        Flight (ToF) data (or any generic set of lines with two timestamps) as
         individual time and cartesian (3D) coordinates of two points defining
         each line, **in mm**. A row is then [t1, x1, y1, z1, t2, x2, y2, z2].
     sample_size : int, optional
@@ -81,10 +87,11 @@ class LineDataToF(IterableSamples):
 
     Attributes
     ----------
-    line_data : (N, 8) numpy.ndarray
-        An (N, 7) numpy array that stores the PEPT LoRs as individual times and
-        cartesian (3D) coordinates of two points defining a line, **in mm**.
-        Each row is then `[time1, x1, y1, z1, time2, x2, y2, z2]`.
+    line_data : (N, M >= 8) numpy.ndarray
+        An (N, M >= 8) numpy array that stores the PEPT LoRs as individual
+        times (**in ms**) and cartesian (3D) coordinates of two points defining
+        a line, **in mm**. Each row is then
+        `[time1, x1, y1, z1, time2, x2, y2, z2]`.
     sample_size : int
         An `int` that defines the number of lines that should be returned when
         iterating over `line_data`. Default is 0.
@@ -130,15 +137,15 @@ class LineDataToF(IterableSamples):
         line_data,
         sample_size = 0,
         overlap = 0,
+        append_tofpoints = True,
         verbose = False
     ):
 
         if verbose:
             start = time.time()
 
-        # If `line_data` is not Fortran-contiguous, create a Fortran-contiguous
-        # copy.
-        self._line_data = np.asarray(line_data, order = 'F', dtype = float)
+        # If `line_data` is not C-contiguous, create a C-contiguous copy.
+        self._line_data = np.asarray(line_data, order = 'C', dtype = float)
 
         # Check that line_data has at least 8 columns.
         if self._line_data.ndim != 2 or self._line_data.shape[1] < 8:
@@ -152,6 +159,10 @@ class LineDataToF(IterableSamples):
         # Call the IterableSamples constructor to make the class iterable in
         # samples with overlap.
         IterableSamples.__init__(self, sample_size, overlap)
+
+        # If set, calculate and append the ToF data to the LoR data
+        if append_tofpoints:
+            self.append_tofpoints()
 
         if verbose:
             end = time.time()
@@ -201,6 +212,75 @@ class LineDataToF(IterableSamples):
 
         '''
         return self._number_of_lines
+
+
+    def get_tofpoints(self, as_array = False):
+        '''Calculate and return the tofpoints calculated from the ToF data.
+
+        The tofpoints include both the time and locations calculated from the
+        Time of Flight (ToF) data. They can be returned either as a simple
+        numpy array (`as_array = True`) or wrapped in a pept.PointData
+        (default) for ease of plotting iteration.
+
+        Parameters
+        ----------
+        as_array : bool, optional
+            If set to `True`, the calculated tofpoints will be returned as a
+            numpy.ndarray. Otherwise, return an instance of `pept.PointData`.
+
+        Returns
+        -------
+        pept.PointData or numpy.ndarray
+            If `as_array` is set to `True`, the tofpoints are returned as a
+            numpy.ndarray. Otherwise (the default option), they are wrapped in
+            a `pept.PointData` instance.
+
+        '''
+        # The two points defining the LoR
+        t1 = self._line_data[:, 0]
+        p1 = self._line_data[:, 1:4]
+
+        t2 = self._line_data[:, 4]
+        p2 = self._line_data[:, 5:8]
+
+        # Speed of light (mm / ms)
+        c = 299792458
+
+        # The ratio (P1 - tofpoint) / (P1 - P2) for all rows
+        distance_ratio = 0.5 - 0.5 / np.linalg.norm(p2 - p1, axis = 1) * \
+                         c * (t2 - t1)
+
+        # [:, np.newaxis] = transform row vector to column vector (i.e. 2D
+        # array with one column)
+        tof_locations = p1 + (p2 - p1) * distance_ratio[:, np.newaxis]
+        tof_time = t1 - np.linalg.norm(tof_locations - p1, axis = 1) / c
+
+        tofpoints = np.hstack((tof_time[:, np.newaxis], tof_locations))
+
+        if not as_array:
+            tofpoints = pept.PointData(tofpoints)
+
+        return tofpoints
+
+
+    def append_tofpoints(self):
+        '''Calculate and append the tofpoints to the LoR data.
+
+        The tofpoints are appended to the LoR data stored in this class.
+        Therefore, if the initial `self.line_data` has a row [t1, x1, y1, z1,
+        t2, x2, y2, z2], then after calling this function the `self.line_data`
+        row will be [t1, x1, y1, z1, t2, x2, y2, z2, t_tof, x_tof, y_tof,
+        z_tof].
+
+        Note that if any extra columns are included in `self.line_data`, they
+        will not be affected; the tofpoints will simply be appended after them.
+
+        '''
+
+        tofpoints = self.get_tofpoints(as_array = True)
+
+        # Append the ToF data to the LoR data
+        self._line_data = np.hstack((self._line_data, tofpoints))
 
 
     def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
