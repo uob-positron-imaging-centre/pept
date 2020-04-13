@@ -398,11 +398,11 @@ class PointData(IterableSamples):
 
     def points_trace(
         self,
-        sample_indices = 0,
+        sample_indices = ...,
         size = 2,
         color = None,
         opacity = 0.8,
-        colorbar = False,
+        colorbar = True,
         colorbar_col = -1,
         colorbar_title = None
     ):
@@ -411,30 +411,32 @@ class PointData(IterableSamples):
 
         Returns a `plotly.graph_objects.Scatter3d` trace containing all points
         included in in the samples selected by `sample_indices`.
-        `sample_indices` can be a single sample index (e.g. 0) or an iterable
-        of indices (e.g. [1,5,6]).
+        `sample_indices` may be a single sample index (e.g. 0), an iterable
+        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
 
         Can then be passed to the `plotly.graph_objects.figure.add_trace`
         function or a `PlotlyGrapher` instance using the `add_trace` method.
 
         Parameters
         ----------
-        sample_indices : int or iterable
-            The index or indices of the samples of LoRs. The default is 0
-            (the first sample).
+        sample_indices : int or iterable or Ellipsis
+            The index or indices of the samples of points. An `int` signifies
+            the sample index, an iterable (list-like) signifies multiple sample
+            indices, while an Ellipsis (`...`) signifies all samples. The
+            default is `...` (all points).
         size : float
             The marker size of the points. The default is 2.
         color : str or list-like
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
-            colorbar list. Is ignored if `colorbar` is set to True. For more
-            information, check the Plotly documentation. The default is None.
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
         opacity : float
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque. The default is 0.8.
         colorbar : bool
             If set to True, will color-code the data in the sample column
-            `colorbar_col`. Overrides `color` if set to True. The default is
-            False.
+            `colorbar_col`. Is overridden if `color` is set. The default is
+            True.
         colorbar_col : int
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
@@ -450,7 +452,7 @@ class PointData(IterableSamples):
 
         '''
         # Check if sample_indices is an iterable collection (list-like)
-        # otherwise just "iterate" over the single number
+        # otherwise just "iterate" over the single number or Ellipsis
         if not hasattr(sample_indices, "__iter__"):
             sample_indices = [sample_indices]
 
@@ -465,22 +467,32 @@ class PointData(IterableSamples):
         )
 
         if colorbar:
-            marker['color'] = []
-            marker.update(colorscale = "Magma")
+            if color is None:
+                marker['color'] = []
 
+            marker.update(colorscale = "Magma")
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
-        # For each selected sample include all the needed coordinates
-        for n in sample_indices:
-            sample = self[n]
+        # If an Ellipsis was received, include all points
+        if sample_indices[0] is Ellipsis:
+            coords_x = self.point_data[:, 1]
+            coords_y = self.point_data[:, 2]
+            coords_z = self.point_data[:, 3]
 
-            coords_x.extend(sample[:, 1])
-            coords_y.extend(sample[:, 2])
-            coords_z.extend(sample[:, 3])
+            if colorbar and color is None:
+                marker['color'] = self.point_data[:, colorbar_col]
+        else:
+            # For each selected sample include all the needed coordinates
+            for n in sample_indices:
+                sample = self[n]
 
-            if colorbar == True:
-                marker['color'].extend(sample[:, colorbar_col])
+                coords_x.extend(sample[:, 1])
+                coords_y.extend(sample[:, 2])
+                coords_z.extend(sample[:, 3])
+
+                if colorbar and color is None:
+                    marker['color'].extend(sample[:, colorbar_col])
 
         trace = go.Scatter3d(
             x = coords_x,

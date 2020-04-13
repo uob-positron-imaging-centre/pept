@@ -402,7 +402,7 @@ class LineData(IterableSamples):
 
     def lines_trace(
         self,
-        sample_indices = 0,
+        sample_indices = ...,
         width = 2,
         color = None,
         opacity = 0.6,
@@ -414,27 +414,31 @@ class LineData(IterableSamples):
 
         Creates a `plotly.graph_objects.Scatter3d` object for all the lines
         included in the samples selected by `sample_indices`. `sample_indices`
-        can be a single sample index (e.g. 0) or an iterable of indices (e.g.
-        [1,5,6]).
+        may be a single sample index (e.g. 0), an iterable of indices (e.g.
+        [1,5,6]) or an Ellipsis (`...`) for all samples.
+
         Can then be passed to the `plotly.graph_objects.figure.add_trace`
         function or a `PlotlyGrapher` instance using the `add_trace` method.
 
         Parameters
         ----------
-        sample_indices : int or iterable
-            The index or indices of the samples of LoRs.
+        sample_indices : int or iterable or Ellipsis
+            The index or indices of the samples of LoRs. An `int` signifies the
+            sample index, an iterable (list-like) signifies multiple sample
+            indices, while an Ellipsis (`...`) signifies all samples. The
+            default is `...` (all lines).
         width : float
             The width of the lines. The default is 2.
         color : str or list-like
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
-            colorbar list. Is ignored if `colorbar` is set to True. For more
-            information, check the Plotly documentation. The default is None.
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
         opacity : float
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque. The default is 0.6.
         colorbar : bool
             If set to True, will color-code the data in the sample column
-            `colorbar_col`. Overrides `color` if set to True. The default is
+            `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that every line has a different color.
         colorbar_col : int
             The column in the data samples that will be used to color the
@@ -451,7 +455,7 @@ class LineData(IterableSamples):
 
         '''
         # Check if sample_indices is an iterable collection (list-like)
-        # otherwise just "iterate" over the single number
+        # otherwise just "iterate" over the single number or Ellipsis.
         if not hasattr(sample_indices, "__iter__"):
             sample_indices = [sample_indices]
 
@@ -461,7 +465,8 @@ class LineData(IterableSamples):
         )
 
         if colorbar:
-            marker['color'] = []
+            if color is None:
+                marker['color'] = []
             marker.update(colorscale = "Magma")
 
             if colorbar_title is not None:
@@ -473,14 +478,18 @@ class LineData(IterableSamples):
 
         # For each selected sample include all the lines' coordinates
         for n in sample_indices:
-            sample = self[n]
+            # If an Ellipsis was received, then include all lines.
+            if n is Ellipsis:
+                sample = self.line_data
+            else:
+                sample = self[n]
 
             for line in sample:
                 coords_x.extend([line[1], line[4], None])
                 coords_y.extend([line[2], line[5], None])
                 coords_z.extend([line[3], line[6], None])
 
-                if colorbar:
+                if colorbar and color is None:
                     marker['color'].extend(3 * [line[colorbar_col]])
 
         trace = go.Scatter3d(
