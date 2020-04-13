@@ -524,7 +524,7 @@ class LineData(IterableSamples):
         docstr = "Class instance that inherits from `pept.LineData`.\n\n" + \
             self.__str__() + "\n\n"
         docstr += "Particular cases:\n"
-        docstr += (" > If sample_size == 0, all line_data is returned as one"
+        docstr += (" > If sample_size == 0, all line_data is returned as a "
                    "single sample.\n")
         docstr += " > If overlap >= sample_size, an error is raised.\n"
         docstr += " > If overlap < 0, lines are skipped between samples.\n"
