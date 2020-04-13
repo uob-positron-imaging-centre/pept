@@ -603,7 +603,7 @@ class LineDataToF(IterableSamples):
     def __repr__(self):
         # Shown when writing the class on a REPR
 
-        docstr = "Class instance that inherits from `pept.LineData`.\n\n" + \
+        docstr = "Class instance that inherits from `pept.LineDataToF`.\n\n" + \
             self.__str__() + "\n\n"
         docstr += "Particular cases:\n"
         docstr += (" > If sample_size == 0, all line_data is returned as one"
