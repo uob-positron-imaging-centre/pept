@@ -478,7 +478,7 @@ class PlotlyGrapher:
         size = 2,
         color = None,
         opacity = 0.8,
-        colorbar = False,
+        colorbar = True,
         colorbar_col = -1,
         colorbar_title = None
     ):
@@ -503,15 +503,15 @@ class PlotlyGrapher:
             The marker size of the points. The default is 2.
         color : str or list-like
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
-            colorbar list. Is ignored if `colorbar` is set to True. For more
-            information, check the Plotly documentation. The default is None.
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
         opacity : float
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque. The default is 0.8.
         colorbar : bool
             If set to True, will color-code the data in the `points` column
-            `colorbar_col`. Overrides `color` if set to True. The default is
-            False.
+            `colorbar_col`. Is overridden by `color` if set. The default is
+            True.
         colorbar_col : int
             The column in `points` that will be used to color the points. Only
             has an effect if `colorbar` is set to True. The default is -1 (the
@@ -522,7 +522,7 @@ class PlotlyGrapher:
 
         Raises
         ------
-        TypeError
+        ValueError
             If `points` is not a numpy.ndarray with shape (M, N), where N >= 4.
 
         '''
@@ -547,13 +547,14 @@ class PlotlyGrapher:
         )
 
         if colorbar:
-            marker['color'] = []
-            marker.update(colorscale = "Magma")
+            if color is None:
+                marker['color'] = []
 
+            marker.update(colorscale = "Magma")
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
-        if colorbar == True:
+        if colorbar and color is None:
             marker['color'].extend(points[:, colorbar_col])
 
         trace = go.Scatter3d(
@@ -565,8 +566,6 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
-
-
 
 
     def add_lines(
@@ -602,14 +601,14 @@ class PlotlyGrapher:
             The width of the lines. The default is 2.
         color : str or list-like
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
-            colorbar list. Is ignored if `colorbar` is set to True. For more
-            information, check the Plotly documentation. The default is None.
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
         opacity : float
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque. The default is 0.6.
         colorbar : bool
             If set to True, will color-code the data in the `lines` column
-            `colorbar_col`. Overrides `color` if set to True. The default is
+            `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that every line has a different color.
         colorbar_col : int
             The column in the data samples that will be used to color the
@@ -621,7 +620,7 @@ class PlotlyGrapher:
 
         Raises
         ------
-        TypeError
+        ValueError
             If `lines` is not a numpy.ndarray with shape (M, N), where N >= 7.
 
         '''
@@ -641,9 +640,10 @@ class PlotlyGrapher:
         )
 
         if colorbar:
-            marker['color'] = []
-            marker.update(colorscale = "Magma")
+            if color is None:
+                marker['color'] = []
 
+            marker.update(colorscale = "Magma")
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
@@ -656,7 +656,7 @@ class PlotlyGrapher:
             coords_y.extend([line[2], line[5], None])
             coords_z.extend([line[3], line[6], None])
 
-            if colorbar:
+            if colorbar and color is None:
                 marker['color'].extend(3 * [line[colorbar_col]])
 
         trace = go.Scatter3d(
@@ -706,14 +706,14 @@ class PlotlyGrapher:
             The width of the lines. The default is 2.
         color : str or list-like
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
-            colorbar list. Is ignored if `colorbar` is set to True. For more
-            information, check the Plotly documentation. The default is None.
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
         opacity : float
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque. The default is 0.6.
         colorbar : bool
             If set to True, will color-code the data in the `lines` column
-            `colorbar_col`. Overrides `color` if set to True. The default is
+            `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that each line has a different color.
         colorbar_col : int
             The column in the data samples that will be used to color the
@@ -725,7 +725,7 @@ class PlotlyGrapher:
 
         Raises
         ------
-        TypeError
+        ValueError
             If `lines` is not a numpy.ndarray with shape (M, N), where N >= 8.
 
         '''
@@ -745,9 +745,10 @@ class PlotlyGrapher:
         )
 
         if colorbar:
-            marker['color'] = []
-            marker.update(colorscale = "Magma")
+            if color is None:
+                marker['color'] = []
 
+            marker.update(colorscale = "Magma")
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
@@ -760,7 +761,7 @@ class PlotlyGrapher:
             coords_y.extend([line[2], line[6], None])
             coords_z.extend([line[3], line[7], None])
 
-            if colorbar:
+            if colorbar and color is None:
                 marker['color'].extend(3 * [line[colorbar_col]])
 
         trace = go.Scatter3d(
