@@ -532,8 +532,8 @@ class PlotlyGrapher:
         # Check that lines has shape (M, 4)
         if points.ndim != 2 or points.shape[1] < 4:
             raise ValueError((
-                "\n[ERROR]: line_data should have dimensions (M, N), where "
-                "N >= 4. Received {}\n".format(lines.shape)
+                "\n[ERROR]: `points` should have dimensions (M, N), where "
+                "N >= 4. Received {}\n".format(points.shape)
             ))
 
         coords_x = points[:, 1]
@@ -630,7 +630,7 @@ class PlotlyGrapher:
         # Check that lines has shape (N, 7)
         if lines.ndim != 2 or lines.shape[1] < 7:
             raise ValueError((
-                "\n[ERROR]: line_data should have dimensions (M, N), where "
+                "\n[ERROR]: `lines` should have dimensions (M, N), where "
                 "N >= 7. Received {}\n".format(lines.shape)
             ))
 
@@ -735,7 +735,7 @@ class PlotlyGrapher:
         # Check that lines has shape (N, 8)
         if lines.ndim != 2 or lines.shape[1] < 8:
             raise ValueError((
-                "\n[ERROR]: line_data should have dimensions (M, N), where "
+                "\n[ERROR]: `lines` should have dimensions (M, N), where "
                 "N >= 8. Received {}\n".format(lines.shape)
             ))
 
