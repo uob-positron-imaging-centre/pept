@@ -7,10 +7,12 @@
 
 
 from    .find_cutpoints             import  find_cutpoints
+from    .find_cutpoints_tof         import  find_cutpoints_tof
 from    .find_weighted_cutpoints    import  find_weighted_cutpoints
 
 __all__ = [
     "find_cutpoints",
+    "find_cutpoints_tof",
     "find_weighted_cutpoints"
 ]
 
