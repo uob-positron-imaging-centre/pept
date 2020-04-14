@@ -244,7 +244,7 @@ class LineDataToF(IterableSamples):
         p2 = self._line_data[:, 5:8]
 
         # Speed of light (mm / ms)
-        c = 299792458
+        c = 299_792_458
 
         # The ratio (P1 - tofpoint) / (P1 - P2) for all rows
         distance_ratio = 0.5 - 0.5 / np.linalg.norm(p2 - p1, axis = 1) * \
