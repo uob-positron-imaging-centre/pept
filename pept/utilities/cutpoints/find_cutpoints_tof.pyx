@@ -31,10 +31,10 @@
 #    and visualisation tools
 
 
-# File              : find_cutpoints.pyx
+# File              : find_cutpoints_tof.pyx
 # License           : License: GNU v3.0
 # Author            : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
-# Date              : 03.02.2019
+# Date              : 13.04.2020
 
 
 # cython: language_level=3
@@ -49,13 +49,14 @@
 import numpy as np
 
 
-cpdef find_cutpoints(
+cpdef find_cutpoints_tof(
     double[:, :] sample_lines,  # LoRs in sample
     double max_distance,        # Max allowed distance between two LoRs
     double[:] cutoffs,          # Spatial cutoff for cutpoints
     bint append_indices = 0     # Append LoR indices used for each cutpoint
 ):
-    '''Compute the cutpoints from a given array of lines.
+    '''Compute the cutpoints from a given array of lines that have two
+    timestamps (but no Time of Flight data!).
 
     Function signature:
         find_cutpoints(
@@ -67,10 +68,10 @@ cpdef find_cutpoints(
 
     This is a low-level Cython function that does not do any checks on the
     input data - it is meant to be used in other modules / libraries. For a
-    normal user, the `pept.tracking.peptml` function `find_cutpoints` and
-    class `Cutpoints` are recommended as higher-level APIs. They do check the
-    input data and are easier to use (for example, they automatically compute
-    the cutoffs).
+    normal user, the `pept.tracking.peptml` function `find_cutpoints_tof` and
+    class `CutpointsToF` are recommended as higher-level APIs. They do check
+    the input data and are easier to use (for example, they automatically
+    compute the cutoffs).
 
     A cutpoint is the point in 3D space that minimises the distance between any
     two lines. For any two non-parallel 3D lines, this point corresponds to the
@@ -81,11 +82,19 @@ cpdef find_cutpoints(
         1. The distance between the two lines is smaller than `max_distance`.
         2. The cutpoints are within the `cutoffs`.
 
+    Note that this function is just an extension to the classic
+    `find_cutpoints` procedure, made to use LoRs that have two individual
+    timestamps (e.g. PEPT data with Time of Flight data or GATE simulations).
+    However, it does NOT use Time of Flight data when computing the cutpoints.
+    If your PEPT data does have ToF data, you can use `find_weighted_cutpoints`
+    for much better results.
+
     Parameters
     ----------
-    sample_lines : (N, M >= 7) numpy.ndarray
-        The sample of lines, where each row is [time, x1, y1, z1, x2, y2, z2],
-        containing two points [x1, y1, z1] and [x2, y2, z2] defining an LoR.
+    sample_lines : (N, M >= 8) numpy.ndarray
+        The sample of lines, where each row is [time1, x1, y1, z1, time2, x2,
+        y2, z2], containing two points [time1, x1, y1, z1] and [time2, x2, y2,
+        z2] with individual timestamps defining an LoR.
     max_distance : float
         The maximum distance between two LoRs for their cutpoint to be
         considered.
@@ -120,8 +129,8 @@ cpdef find_cutpoints(
     >>> cutpoints = find_cutpoints(lines, max_distance, cutoffs)
 
     '''
-    # Lines for a single sample => n x 7 array
-    # sample_lines row: [time X1 Y1 Z1 X2 Y2 Z2]
+    # Lines for a single sample => n x 8 array
+    # sample_lines row: [time1 X1 Y1 Z1 time2 X2 Y2 Z2]
     cdef Py_ssize_t n = sample_lines.shape[0]
 
     # Pre-allocate enough memory
@@ -152,9 +161,9 @@ cpdef find_cutpoints(
                 # L2 : C(t) = Q + t R
                 for k in range(3):
                     P[k] = sample_lines[i, 1 + k]
-                    U[k] = sample_lines[i, 4 + k] - P[k]
+                    U[k] = sample_lines[i, 5 + k] - P[k]
                     Q[k] = sample_lines[j, 1 + k]
-                    R[k] = sample_lines[j, 4 + k] - Q[k]
+                    R[k] = sample_lines[j, 5 + k] - Q[k]
                     QP[k] = Q[k] - P[k]
 
                 a = U[0] * U[0] + U[1] * U[1] + U[2] * U[2]
@@ -186,7 +195,8 @@ cpdef find_cutpoints(
                             mz > cutoffs[4] and mz < cutoffs[5]):
                             # Average the times of the two lines
                             cutpoints_mv[ic, 0] = (sample_lines[i, 0] + \
-                                                   sample_lines[j, 0]) / 2
+                                sample_lines[i, 4] + sample_lines[j, 0] + \
+                                sample_lines[j, 4]) / 4
                             cutpoints_mv[ic, 1] = mx
                             cutpoints_mv[ic, 2] = my
                             cutpoints_mv[ic, 3] = mz

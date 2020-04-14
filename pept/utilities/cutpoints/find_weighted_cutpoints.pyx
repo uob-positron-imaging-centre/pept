@@ -175,7 +175,7 @@ cpdef find_weighted_cutpoints(
     cdef double[3] PC1, PC2                     # points of closest approach - PoCAs
     cdef double[3] PT1, PT2                     # tofpoints
     cdef double wc1, wc2, wt1, wt2              # weights for the four points
-    cdef double dpoca                           # distance between PoCAs
+    cdef double d_pocas                         # distance between PoCAs
 
     # The accepted spatial error on the ToF data. The ToF point distribution is
     # Gaussian; therefore define an error based on a multiple of the standard
@@ -300,7 +300,7 @@ cpdef find_weighted_cutpoints(
                 for k in range(3):
                     diff3[k] = PC1[k] - PC2[k]
 
-                dpoca = norm(diff3)
+                d_pocas = norm(diff3)
 
                 # So PC1 and PC2 are within the error spheres. Now calculate the
                 # weighted point based on all four points: PT1, PT2, PC1, PC2
@@ -339,7 +339,7 @@ cpdef find_weighted_cutpoints(
                 #print()
                 #print("Error sphere diameter ^2: ", err2)
                 #print("Error sphere diameter   : ", err)
-                #print("Distance between PoCAs  : ", dpoca)
+                #print("Distance between PoCAs  : ", d_pocas)
                 #print("----\n")
                 #print("----Weights:")
                 #print("PoCA 1 weight:     ", wc1)
@@ -348,7 +348,7 @@ cpdef find_weighted_cutpoints(
                 #print("tofpoint 2 weight: ", wt2)
                 #print()
                 #print("Spatial error of ToF (also weight):   ", tof_err)
-                #print("Distance between PoCAs (also weight): ", dpoca)
+                #print("Distance between PoCAs (also weight): ", d_pocas)
                 #print("----\n\n")
 
 
@@ -356,8 +356,8 @@ cpdef find_weighted_cutpoints(
                 wpts[iw, 0] = (sample_lines[i, 8] + sample_lines[j, 8]) / 2
                 for k in range(3):
                     wpts[iw, 1 + k] = (tof_err * (wc1 * PC1[k] + wc2 * PC2[k]) + \
-                                       dpoca *   (wt1 * PT1[k] + wt2 * PT2[k])) / \
-                                      (tof_err * (wc1 + wc2) + dpoca * (wt1 + wt2))
+                                       d_pocas * (wt1 * PT1[k] + wt2 * PT2[k])) / \
+                                      (tof_err * (wc1 + wc2) + d_pocas * (wt1 + wt2))
 
                 if append_indices:
                     wpts[iw, 4] = <double>i
