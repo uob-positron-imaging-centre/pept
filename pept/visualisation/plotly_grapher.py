@@ -13,7 +13,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2019 Andrei Leonard Nicusan
+#    Copyright (C) 2020 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -123,7 +123,7 @@ class PlotlyGrapher:
     Raises
     ------
     ValueError
-        If `rows` < 1 or `cols` < 1
+        If `rows` < 1 or `cols` < 1.
     TypeError
         If `xlim`, `ylim` or `zlim` are not lists of length 2.
 
@@ -250,9 +250,9 @@ class PlotlyGrapher:
                     scene = "scene{}".format(i * self._cols + j + 1)
 
                 # Justify subplot title on the left
-                self._fig.layout.annotations[i * self._cols + j].update(
-                    x = (j + 0.15) / self._cols
-                )
+                # self._fig.layout.annotations[i * self._cols + j].update(
+                #     x = (j + 0.15) / self._cols
+                # )
 
                 self._fig["layout"][scene].update(
                     xaxis = dict(
@@ -475,11 +475,12 @@ class PlotlyGrapher:
         points,
         row = 1,
         col = 1,
-        size = 2,
+        size = 2.0,
         color = None,
         opacity = 0.8,
         colorbar = True,
         colorbar_col = -1,
+        colorscale = "Magma",
         colorbar_title = None
     ):
         '''Create and plot a trace for all points in a numpy array, with
@@ -495,67 +496,108 @@ class PlotlyGrapher:
         ----------
         points : (M, N >= 4) numpy.ndarray
             The expected data row: [time, x1, y1, z1, etc.]
-        row : int, optional
-            The row of the subplot to add a trace to. The default is 1.
-        col : int, optional
-            The column of the subplot to add a trace to. The default is 1.
-        size : float
-            The marker size of the points. The default is 2.
-        color : str or list-like
+        row : int, default 1
+            The row of the subplot to add a trace to.
+        col : int, default 1
+            The column of the subplot to add a trace to.
+        size : float, default 2.0
+            The marker size of the points.
+        color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation. The default is None.
-        opacity : float
+        opacity : float, default 0.8
             The opacity of the lines, where 0 is transparent and 1 is fully
-            opaque. The default is 0.8.
-        colorbar : bool
+            opaque.
+        colorbar : bool, default True
             If set to True, will color-code the data in the `points` column
-            `colorbar_col`. Is overridden by `color` if set. The default is
-            True.
-        colorbar_col : int
+            `colorbar_col`. Is overridden by `color` if set.
+        colorbar_col : int, default -1
             The column in `points` that will be used to color the points. Only
             has an effect if `colorbar` is set to True. The default is -1 (the
             last column).
-        colorbar_title : str
-            If set, the colorbar will have this title above. The default is
-            None.
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the `colorbar_col` column in the
+            input data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above it.
 
         Raises
         ------
         ValueError
             If `points` is not a numpy.ndarray with shape (M, N), where N >= 4.
 
+        Note
+        ----
+        If a colorbar is to be used (i.e. `colorbar = True` and `color = None`)
+        and there are fewer than 10 unique values in the `colorbar_col` column
+        in `points`, then the points for each unique label will be added as
+        separate traces.
+
+        This is helpful for cases such as when plotting points with labelled
+        trajectories, as when there are fewer than 10 trajectories, the
+        distinct colours automatically used by Plotly when adding multiple
+        traces allow the points to be better distinguished.
+
         '''
 
         points = np.asarray(points, dtype = float)
 
-        # Check that lines has shape (M, 4)
+        # Check that points has shape (M, 4)
         if points.ndim != 2 or points.shape[1] < 4:
             raise ValueError((
                 "\n[ERROR]: `points` should have dimensions (M, N), where "
                 "N >= 4. Received {}\n".format(points.shape)
             ))
 
-        coords_x = points[:, 1]
-        coords_y = points[:, 2]
-        coords_z = points[:, 3]
+        # No need to type-check the other parameters as Plotly will do that
+        # anyway...
 
+        # Create the dictionary of marker properties
         marker = dict(
             size = size,
             color = color,
             opacity = opacity
         )
 
-        if colorbar:
-            if color is None:
-                marker['color'] = []
-
-            marker.update(colorscale = "Magma")
-            if colorbar_title is not None:
-                marker.update(colorbar = dict(title = colorbar_title))
-
+        # Update `marker` if a colorbar is requested AND color is None.
         if colorbar and color is None:
-            marker['color'].extend(points[:, colorbar_col])
+            marker.update(colorscale = colorscale)
+            if colorbar_title is not None:
+                marker["colorbar"] = dict(title = colorbar_title)
+
+            # Special case: if there are less than 10 values in the colorbar
+            # column, add them as separate traces for better distinction
+            # between colours.
+            labels = np.unique(points[:, colorbar_col])
+
+            if len(labels) <= 10:
+                for label in labels:
+                    selected = points[points[:, colorbar_col] == label]
+
+                    self._fig.add_trace(
+                        go.Scatter3d(
+                            x = selected[:, 1],
+                            y = selected[:, 2],
+                            z = selected[:, 3],
+                            mode = "markers",
+                            marker = marker
+                        ),
+                        row = row,
+                        col = col
+                    )
+                return
+
+            # Otherwise just use a typical continuous colorbar for all the
+            # values in colorbar_col.
+            else:
+                marker['color'] = points[:, colorbar_col]
+
+        coords_x = points[:, 1]
+        coords_y = points[:, 2]
+        coords_z = points[:, 3]
 
         trace = go.Scatter3d(
             x = coords_x,
@@ -573,11 +615,12 @@ class PlotlyGrapher:
         lines,
         row = 1,
         col = 1,
-        width = 2,
+        width = 2.0,
         color = None,
         opacity = 0.6,
         colorbar = True,
         colorbar_col = 0,
+        colorscale = "Magma",
         colorbar_title = None
     ):
         '''Create and plot a trace for individual lines in a numpy array.
@@ -593,30 +636,34 @@ class PlotlyGrapher:
         ----------
         lines : (M, N >= 7) numpy.ndarray
             The expected data row: [time, x1, y1, z1, x2, y2, z2, etc.]
-        row : int, optional
-            The row of the subplot to add a trace to. The default is 1.
-        col : int, optional
-            The column of the subplot to add a trace to. The default is 1.
-        width : float
-            The width of the lines. The default is 2.
-        color : str or list-like
+        row : int, default 1
+            The row of the subplot to add a trace to.
+        col : int, default 1
+            The column of the subplot to add a trace to.
+        width : float, default 2.0
+            The width of the lines.
+        color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation. The default is None.
-        opacity : float
+        opacity : float, default 0.6
             The opacity of the lines, where 0 is transparent and 1 is fully
-            opaque. The default is 0.6.
-        colorbar : bool
+            opaque.
+        colorbar : bool, default True
             If set to True, will color-code the data in the `lines` column
             `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that every line has a different color.
-        colorbar_col : int
+        colorbar_col : int, default 0
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is 0 (the first column - time).
-        colorbar_title : str
-            If set, the colorbar will have this title above. The default is
-            None.
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the `colorbar_col` column in the
+            input data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above it.
 
         Raises
         ------
@@ -643,7 +690,7 @@ class PlotlyGrapher:
             if color is None:
                 marker['color'] = []
 
-            marker.update(colorscale = "Magma")
+            marker.update(colorscale = colorscale)
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
@@ -676,11 +723,12 @@ class PlotlyGrapher:
         lines,
         row = 1,
         col = 1,
-        width = 2,
+        width = 2.0,
         color = None,
         opacity = 0.6,
         colorbar = True,
         colorbar_col = 0,
+        colorscale = "Magma",
         colorbar_title = None
     ):
         '''Create and plot a trace for individual lines with ToF data in a
@@ -698,30 +746,34 @@ class PlotlyGrapher:
         ----------
         lines : (M, N >= 8) numpy.ndarray
             The expected data row: [time1, x1, y1, z1, time2, x2, y2, z2, etc.]
-        row : int, optional
-            The row of the subplot to add a trace to. The default is 1.
-        col : int, optional
-            The column of the subplot to add a trace to. The default is 1.
-        width : float
-            The width of the lines. The default is 2.
-        color : str or list-like
+        row : int, default 1
+            The row of the subplot to add a trace to.
+        col : int, default 1
+            The column of the subplot to add a trace to.
+        width : float, default 2.0
+            The width of the lines.
+        color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
-            check the Plotly documentation. The default is None.
-        opacity : float
+            check the Plotly documentation.
+        opacity : float, default 0.6
             The opacity of the lines, where 0 is transparent and 1 is fully
-            opaque. The default is 0.6.
-        colorbar : bool
+            opaque.
+        colorbar : bool, default True
             If set to True, will color-code the data in the `lines` column
             `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that each line has a different color.
-        colorbar_col : int
+        colorbar_col : int, default 0
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is 0 (the first column - time1).
-        colorbar_title : str
-            If set, the colorbar will have this title above. The default is
-            None.
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the `colorbar_col` column in the
+            input data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above it.
 
         Raises
         ------
@@ -748,7 +800,7 @@ class PlotlyGrapher:
             if color is None:
                 marker['color'] = []
 
-            marker.update(colorscale = "Magma")
+            marker.update(colorscale = colorscale)
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
@@ -785,10 +837,10 @@ class PlotlyGrapher:
         ----------
         trace : Plotly trace (Scatter3d)
             A precomputed Plotly trace
-        row : int, optional
-            The row of the subplot to add a trace to. The default is 1.
-        col : int, optional
-            The column of the subplot to add a trace to. The default is 1.
+        row : int, default 1
+            The row of the subplot to add a trace to.
+        col : int, default 1
+            The column of the subplot to add a trace to.
 
         '''
 
@@ -805,10 +857,10 @@ class PlotlyGrapher:
         ----------
         traces : list [ Plotly trace (Scatter3d) ]
             A list of precomputed Plotly traces
-        row : int, optional
-            The row of the subplot to add the traces to. The default is 1.
-        col : int, optional
-            The column of the subplot to add the traces to. The default is 1.
+        row : int, default 1
+            The row of the subplot to add the traces to.
+        col : int, default 1
+            The column of the subplot to add the traces to.
 
         '''
 
