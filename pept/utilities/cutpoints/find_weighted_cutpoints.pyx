@@ -61,28 +61,28 @@ cdef inline double norm(double[3] arr) nogil:
 
 
 cpdef find_weighted_cutpoints(
-    double[:, :] sample_lines,  # LoRs in sample
-    double d_tracer,            # Tracer diameter
-    double sigma_tof,           # Std deviation of ToF *spatial* distribution
-    double d_annihilation,      # (Mean) positron annihilation range
-    bint append_indices = 0,    # Append LoR indices used for each cutpoint
-    double sigma_tof_factor = 2 * sqrt(2 * log(2)),
-    double wccw = 1,            # control weight for cutlines
-    double wtcw = 1             # control weight for tofpoints
+    double[:, :] sample_lines,
+    double tracer_diameter,
+    double tof_spatial_std,
+    double positron_range,
+    bint append_indices = 0,
+    double tof_std_factor = 2 * sqrt(2 * log(2)),
+    double wccw = 1.0,
+    double wtcw = 1.0
 ):
     '''Compute the weighted cutpoints from a given sample of LoRs with Time of
     Flight (ToF) data.
 
     Function signature:
         find_weighted_cutpoints(
-            double[:, :] sample_lines,      # LoRs in sample
-            double d_tracer,                # Tracer diameter
-            double sigma_tof,               # Std deviation of ToF *spatial* distribution
-            double d_annihilation,          # (Mean) positron annihilation range
-            bint append_indices = False,    # Append LoR indices used for each cutpoint
-            double sigma_tof_factor = 2 * sqrt(2 * log(2)),
-            double wccw = 1,                # control weight for cutlines
-            double wtcw = 1                 # control weight for tofpoints
+            double[:, :] sample_lines,
+            double tracer_diameter,
+            double tof_spatial_std,
+            double positron_range,
+            bint append_indices = False,
+            double tof_std_factor = 2 * sqrt(2 * log(2)),
+            double wccw = 1.0,
+            double wtcw = 1.0
         )
 
     This function uses both cutpoints and tofpoints to compute a weighted
@@ -107,41 +107,41 @@ cpdef find_weighted_cutpoints(
         time2,  x2, y2, z2, timeToF, xToF, yToF, zToF, ...], containing two
         points [time1, x1, y1, z1] and [time2, x2, y2, z2] with individual
         timestamps defining an LoR, along with the Time of Flight (ToF) data
-        [timeToF, xToF, yToF, zToF] as calculated from the two points..
-    d_tracer : float
-        The tracer diameter.
-    sigma_tof : float
+        [timeToF, xToF, yToF, zToF] as calculated from the two points.
+    tracer_diameter : float
+        The tracer diameter. Take care to use self-consistent units (metres and
+        seconds OR millimetres and milliseconds, but not a mix).
+    tof_spatial_std : float
         The standard deviation of the *spatial* distribution of the tofpoint.
         Note that the tofpoint distribution is Gaussian.
-    d_annihilation : float
+    positron_range : float
         The mean positron range - the distance that the positron travels
         before hitting an electron and annihilating. For example, the mean
         positron range of F-18 in water is 0.6 mm. This parameter can also be
         used as a fitting parameter for increasing the error sphere diameter.
-    append_indices : bool, optional
+    append_indices : bool, default False
         If set to `True`, the indices of the individual LoRs that were used
         to compute each cutpoint is also appended to the returned array.
-        Default is `False`.
-    sigma_tof_factor : float, optional
+    tof_std_factor : float, default 2 * sqrt(2 * log(2))
         The accepted spatial error on the ToF data. Only pairs of LoRs whose
         tofpoints' error spheres touch are considered. The error sphere
-        diameter is defined as (d_tracer + d_annihilation + sigma_tof *
-        sigma_tof_factor). By default, sigma_tof * sigma_tof_factor is defined
-        as the Full Width at Half Maximum (FWHM) of the spatial distribution
-        of the tofpoints, corresponding to 2 * sqrt(2 * log(2)) * sigma_tof.
-        The default is 2 * sqrt(2 * log(2)).
-    wccw : float, optional
+        diameter is defined as (tracer_diameter + positron_range +
+        tof_spatial_std * tof_std_factor). By default, tof_spatial_std *
+        tof_std_factor is defined as the Full Width at Half Maximum (FWHM) of
+        the spatial distribution of the tofpoints, corresponding to
+        2 * sqrt(2 * log(2)) * tof_spatial_std.
+    wccw : float, default 1.0
         The cutpoints control weight (ccw) - a parameter between 0 and 1 for
         setting the influence of the cutpoints on the final average. This
-        exists mainly for testing purposes. The default is 1.
-    wtcw : float, optional
+        exists mainly for testing purposes.
+    wtcw : float, default 1.0
         The tofpoint control weight (tcw) - a parameter between 0 and 1 for
         setting the influence of the tofpoints on the final average. This
-        exists mainly for testing purposes. The default is 1.
+        exists mainly for testing purposes.
 
     Returns
     -------
-    cutpoints : (M, 4) or (M, 6) numpy.ndarray
+    (M, 4) or (M, 6) numpy.ndarray
         A numpy array of the calculated weighted cutpoints. If `append_indices`
         is `False`, then the columns are [time, x, y, z]. If `append_indices`
         is `True`, then the columns are [time, x, y, z, i, j], where `i` and
@@ -152,7 +152,8 @@ cpdef find_weighted_cutpoints(
 
     '''
     # Lines for a single sample => n x 12 array
-    # sample_lines cols: [time1, X1, Y1, Z1, time2, X2, Y2, Z2, timeToF, XToF, YToF, ZToF]
+    # sample_lines cols:
+    # [time1, X1, Y1, Z1, time2, X2, Y2, Z2, timeToF, XToF, YToF, ZToF]
     cdef Py_ssize_t n = sample_lines.shape[0]
 
     # Pre-allocate enough memory
@@ -164,29 +165,29 @@ cpdef find_weighted_cutpoints(
 
     cdef double[:, :] wpts = weighted_cutpoints # memoryview of weighted_points
 
-    cdef Py_ssize_t i, j, k                     # iterators
-    cdef Py_ssize_t iw                          # wpts index
-    cdef double[3] diff1, diff2, diff3          # difference between two 3D vectors
-    cdef double dist1, dist2                    # distance between two 3D vectors
-    cdef double[3] P, U, Q, R, QP               # position, direction vectors
-    cdef double a, b, c, d, e                   # collected terms
-    cdef double denom, s0, t0                   # parameters for lines
+    cdef Py_ssize_t i, j, k                 # iterators
+    cdef Py_ssize_t iw                      # wpts index
+    cdef double[3] diff1, diff2, diff3      # difference between two 3D vectors
+    cdef double dist1, dist2                # distance between two 3D vectors
+    cdef double[3] P, U, Q, R, QP           # position, direction vectors
+    cdef double a, b, c, d, e               # collected terms
+    cdef double denom, s0, t0               # parameters for lines
 
-    cdef double[3] PC1, PC2                     # points of closest approach - PoCAs
-    cdef double[3] PT1, PT2                     # tofpoints
-    cdef double wc1, wc2, wt1, wt2              # weights for the four points
-    cdef double d_pocas                         # distance between PoCAs
+    cdef double[3] PC1, PC2                 # points of closest approach- PoCAs
+    cdef double[3] PT1, PT2                 # tofpoints
+    cdef double wc1, wc2, wt1, wt2          # weights for the four points
+    cdef double d_pocas                     # distance between PoCAs
 
     # The accepted spatial error on the ToF data. The ToF point distribution is
     # Gaussian; therefore define an error based on a multiple of the standard
     # deviation. By default we define it to be the Full Width at Half-Maximum
-    # (FWHM) which is (2 * sqrt(2 * log(2))) * sigma_tof.
-    cdef double tof_err = sigma_tof_factor * sigma_tof
-    cdef double sigma_tof2 = sigma_tof * sigma_tof
+    # (FWHM) which is (2 * sqrt(2 * log(2))) * tof_spatial_std.
+    cdef double tof_err = tof_std_factor * tof_spatial_std
+    cdef double tof_spatial_std2 = tof_spatial_std * tof_spatial_std
 
     # The diameter of the error sphere.
-    cdef double err = d_tracer + tof_err + d_annihilation
-    cdef double err2 = err * err
+    cdef double error_sphere = tracer_diameter + tof_err + positron_range
+    cdef double error_sphere2 = error_sphere * error_sphere
 
 
     with nogil:
@@ -200,14 +201,15 @@ cpdef find_weighted_cutpoints(
                     PT2[k] = sample_lines[j, 9 + k]
                     diff1[k] = PT1[k] - PT2[k]
 
-                # Equivalent to the distance between their tofpoints being smaller
-                # than the error sphere diameter
-                if not norm2(diff1) < err2:
+                # Equivalent to the distance between their tofpoints being
+                # smaller than the error sphere diameter
+                if not norm2(diff1) < error_sphere2:
                     continue
 
-                # Now find the cutpoint from the two lines. If the cutpoint is not
-                # defined (e.g. lines are parallel), then the weighted cutpoint will
-                # only be calculated in terms of the tofpoints PT1 and PT2.
+                # Now find the cutpoint from the two lines. If the cutpoint is
+                # not defined (e.g. lines are parallel), then the weighted
+                # cutpoint will only be calculated in terms of the tofpoints
+                # PT1 and PT2.
 
                 # Write each pair of lines in terms of a position vector and a
                 # direction vector:
@@ -227,9 +229,9 @@ cpdef find_weighted_cutpoints(
                 e = QP[0] * R[0] + QP[1] * R[1] + QP[2] * R[2]
 
                 denom = b * b - a * c
-                # If denom is 0, the two lines are parallel, so no cutpoint exists.
-                # Shortcut the loop and only calculate the weighted cutpoint based on
-                # the tofpoints.
+                # If denom is 0, the two lines are parallel, so no cutpoint
+                # exists. Shortcut the loop and only calculate the weighted
+                # cutpoint based on the tofpoints.
                 if not denom:
                     # The time of the weighted point is simply the average of
                     # the LoR times
@@ -249,18 +251,18 @@ cpdef find_weighted_cutpoints(
                     t0 = (a * e - b * d) / denom
 
                     for k in range(3):
-                        PC1[k] = P[k] + s0 * U[k]   # These are the PoCAs on LoR 1
+                        PC1[k] = P[k] + s0 * U[k]   # This is the PoCA on LoR 1
                         PC2[k] = Q[k] + t0 * R[k]   # and LoR 2
 
-                # Check that PC1 and PC2 are within the error spheres of PT1 and PT2,
-                # respectively. If they're not, shortcut the loop and only calculate
-                # the weighted point based on the ToFpoints.
+                # Check that PC1 and PC2 are within the error spheres of PT1
+                # and PT2, respectively. If they're not, shortcut the loop and
+                # only calculate the weighted point based on the ToFpoints.
                 for k in range(3):
                     diff1[k] = PC1[k] - PT1[k]
 
                 dist1 = norm2(diff1)
 
-                if not dist1 < err2:
+                if not dist1 < error_sphere2:
                     # The time of the weighted point is simply the average of
                     # the LoR times
                     wpts[iw, 0] = (sample_lines[i, 8] + sample_lines[j, 8]) / 2
@@ -281,7 +283,7 @@ cpdef find_weighted_cutpoints(
 
                 dist2 = norm2(diff2)
 
-                if not dist2 < err2:
+                if not dist2 < error_sphere2:
                     # The time of the weighted point is simply the average of
                     # the LoR times
                     wpts[iw, 0] = (sample_lines[i, 8] + sample_lines[j, 8]) / 2
@@ -296,16 +298,18 @@ cpdef find_weighted_cutpoints(
                     iw = iw + 1
                     continue
 
-                # Distance between points of closest approach (PoCAs) PC1 and PC2:
+                # Distance between points of closest approach (PoCAs) PC1 and
+                # PC2:
                 for k in range(3):
                     diff3[k] = PC1[k] - PC2[k]
 
                 d_pocas = norm(diff3)
 
-                # So PC1 and PC2 are within the error spheres. Now calculate the
+                # So PC1 and PC2 are within the error spheres. Now compute the
                 # weighted point based on all four points: PT1, PT2, PC1, PC2
-                wc1 = 1 / (sigma_tof * sqrt(2 * pi)) * exp(-0.5 * dist1 / sigma_tof2)
-                wt1 = 1 / (sigma_tof * sqrt(2 * pi)) - wc1
+                wc1 = 1 / (tof_spatial_std * sqrt(2 * pi)) * \
+                    exp(-0.5 * dist1 / tof_spatial_std2)
+                wt1 = 1 / (tof_spatial_std * sqrt(2 * pi)) - wc1
 
                 # Multiply by control weights (between 0 and 1) for setting the
                 # level of influence of the tofpoints and PoCAs on the final
@@ -313,18 +317,20 @@ cpdef find_weighted_cutpoints(
                 wc1 *= wccw
                 wt1 *= wtcw
 
-                wc2 = 1 / (sigma_tof * sqrt(2 * pi)) * exp(-0.5 * dist2 / sigma_tof2)
-                wt2 = 1 / (sigma_tof * sqrt(2 * pi)) - wc2
+                wc2 = 1 / (tof_spatial_std * sqrt(2 * pi)) * \
+                    exp(-0.5 * dist2 / tof_spatial_std2)
+                wt2 = 1 / (tof_spatial_std * sqrt(2 * pi)) - wc2
 
                 wc2 *= wccw
                 wt2 *= wtcw
 
 
                 # Print statements for debugging. They are deliberately left in
-                # this source file so that people can experiment with / test / see
-                # the weighting technique.
+                # this source file so that people can experiment with / test /
+                # see the weighting technique.
                 #
-                # Before uncommenting, remove the "with nogil:" before the for loops.
+                # Before uncommenting, remove the "with nogil:" before the for
+                # loops.
                 #
                 #print("\n----PoCAs and tofpoints:")
                 #print(sample_lines[i])
@@ -337,8 +343,8 @@ cpdef find_weighted_cutpoints(
                 #print("tofpoint 2: ", PT2)
                 #print("Distance^2 between PoCA2 and tofpoint 2: ", dist2)
                 #print()
-                #print("Error sphere diameter ^2: ", err2)
-                #print("Error sphere diameter   : ", err)
+                #print("Error sphere diameter ^2: ", error_sphere2)
+                #print("Error sphere diameter   : ", error_sphere)
                 #print("Distance between PoCAs  : ", d_pocas)
                 #print("----\n")
                 #print("----Weights:")
@@ -355,9 +361,10 @@ cpdef find_weighted_cutpoints(
                 # Finally, here's the calculated weighted point:
                 wpts[iw, 0] = (sample_lines[i, 8] + sample_lines[j, 8]) / 2
                 for k in range(3):
-                    wpts[iw, 1 + k] = (tof_err * (wc1 * PC1[k] + wc2 * PC2[k]) + \
-                                       d_pocas * (wt1 * PT1[k] + wt2 * PT2[k])) / \
-                                      (tof_err * (wc1 + wc2) + d_pocas * (wt1 + wt2))
+                    wpts[iw, 1 + k] = \
+                        (tof_err * (wc1 * PC1[k] + wc2 * PC2[k]) + \
+                         d_pocas * (wt1 * PT1[k] + wt2 * PT2[k])) / \
+                        (tof_err * (wc1 + wc2) + d_pocas * (wt1 + wt2))
 
                 if append_indices:
                     wpts[iw, 4] = <double>i
