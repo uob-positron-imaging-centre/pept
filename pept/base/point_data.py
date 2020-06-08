@@ -198,7 +198,8 @@ class PointData(IterableSamples):
     def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
         '''Write `point_data` to a CSV file
 
-        Write all points (and any extra data) stored in the class to a CSV file.
+        Write all points (and any extra data) stored in the class to a CSV
+        file.
 
         Parameters
         ----------
@@ -207,13 +208,15 @@ class PointData(IterableSamples):
                 to where python is called.
             delimiter : str, optional
                 The delimiter between values. The default is two spaces '  ',
-                such that numbers in the format '123,456.78' are well-understood.
+                such that numbers in the format '123,456.78' are
+                well-understood.
             newline : str, optional
-                The sequence of characters at the end of every line. The default
-                is a new line '\n'
+                The sequence of characters at the end of every line. The
+                default is a new line '\n'.
 
         '''
-        np.savetxt(filepath, self._point_data, delimiter = delimiter, newline = newline)
+        np.savetxt(filepath, self._point_data, delimiter = delimiter,
+                   newline = newline)
 
 
     def plot_all_points(self, ax = None):
@@ -404,6 +407,7 @@ class PointData(IterableSamples):
         opacity = 0.8,
         colorbar = True,
         colorbar_col = -1,
+        colorscale = "Magma",
         colorbar_title = None
     ):
         '''Get a Plotly trace for all points in selected samples, with possible
@@ -441,6 +445,11 @@ class PointData(IterableSamples):
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is -1 (the last column).
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the `colorbar_col` column in the
+            input data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
         colorbar_title : str
             If set, the colorbar will have this title above. The default is
             None.
@@ -470,7 +479,7 @@ class PointData(IterableSamples):
             if color is None:
                 marker['color'] = []
 
-            marker.update(colorscale = "Magma")
+            marker.update(colorscale = colorscale)
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 

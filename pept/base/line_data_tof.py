@@ -250,7 +250,7 @@ class LineDataToF(IterableSamples):
         distance_ratio = 0.5 - 0.5 / np.linalg.norm(p2 - p1, axis = 1) * \
                          c * (t2 - t1)
 
-        # [:, np.newaxis] = transform row vector to column vector (i.e. 2D
+        # [:, np.newaxis] = transform row vector into column vector (i.e. 2D
         # array with one column)
         tof_locations = p1 + (p2 - p1) * distance_ratio[:, np.newaxis]
         tof_time = t1 - np.linalg.norm(tof_locations - p1, axis = 1) / c

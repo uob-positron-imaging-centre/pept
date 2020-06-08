@@ -32,7 +32,6 @@
 # License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 09.04.2020
-# -*- coding: utf-8 -*-
 
 
 from abc import ABC, abstractmethod

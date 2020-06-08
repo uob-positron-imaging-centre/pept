@@ -220,7 +220,8 @@ class LineData(IterableSamples):
                 default is a new line '\n'
 
         '''
-        np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
+        np.savetxt(filepath, self._line_data, delimiter = delimiter,
+                   newline = newline)
 
 
     def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
