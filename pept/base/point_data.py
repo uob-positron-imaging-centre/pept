@@ -52,23 +52,23 @@ class PointData(IterableSamples):
     '''A class for generic PEPT data iteration, manipulation and visualisation.
 
     This class is used to encapsulate points. It can yield samples of the
-    `point_data` of an adaptive `sample_size` and `overlap`, without requiring
+    `points` of an adaptive `sample_size` and `overlap`, without requiring
     additional storage.
 
     Parameters
     ----------
-    point_data : (N, M) numpy.ndarray
+    points : (N, M) numpy.ndarray
         An (N, M >= 4) numpy array that stores points (or any generic 2D set of
         data). It expects that the first column is time, followed by cartesian
         (3D) coordinates of points **in mm**, followed by any extra information
         the user needs. A row is then [time, x, y, z, etc].
     sample_size : int, optional
         An `int`` that defines the number of points that should be returned
-        when iterating over `point_data`. A `sample_size` of 0 yields all the
+        when iterating over `points`. A `sample_size` of 0 yields all the
         data as one single sample. Default is 0.
     overlap : int, optional
         An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `point_data`. An overlap of 0 means
+        are returned when iterating over `points`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. An error is raised if `overlap` is larger than
@@ -80,23 +80,23 @@ class PointData(IterableSamples):
 
     Attributes
     ----------
-    point_data : (N, M) numpy.ndarray
+    points : (N, M) numpy.ndarray
         An (N, M >= 4) numpy array that stores the points as time, followed by
         cartesian (3D) coordinates of the point **in mm**, followed by any
         extra information. Each row is then `[time, x, y, z, etc]`.
     sample_size : int
         An `int` that defines the number of lines that should be returned when
-        iterating over `point_data`. Default is 0.
+        iterating over `points`. Default is 0.
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `point_data`. An overlap of 0 means
+        are returned when iterating over `points`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
         `sample_size`. Default is 0.
     number_of_points : int
-        An `int` that corresponds to len(`point_data`), or the number of points
-        stored by `point_data`.
+        An `int` that corresponds to len(`points`), or the number of points
+        stored by `points`.
     number_of_samples : int
         An `int` that corresponds to the number of samples that can be accessed
         from the class, taking the `overlap` into consideration.
@@ -112,7 +112,7 @@ class PointData(IterableSamples):
 
     Notes
     -----
-    The class saves `point_data` as a **contiguous** numpy array for efficient
+    The class saves `points` as a **contiguous** numpy array for efficient
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
 
@@ -121,7 +121,7 @@ class PointData(IterableSamples):
 
     def __init__(
         self,
-        point_data,
+        points,
         sample_size = 0,
         overlap = 0,
         verbose = False
@@ -130,17 +130,17 @@ class PointData(IterableSamples):
         if verbose:
             start = time.time()
 
-        # If `point_data` is not C-contiguous, create a C-contiguous copy.
-        self._point_data = np.asarray(point_data, order = 'C', dtype = float)
+        # If `points` is not C-contiguous, create a C-contiguous copy.
+        self._points = np.asarray(points, order = 'C', dtype = float)
 
-        # Check that point_data has at least 4 columns.
-        if self._point_data.ndim != 2 or self._point_data.shape[1] < 4:
+        # Check that points has at least 4 columns.
+        if self._points.ndim != 2 or self._points.shape[1] < 4:
             raise ValueError((
-                "\n[ERROR]: `point_data` should have dimensions (M, N), where "
-                f"N >= 4. Received {self._point_data.shape}.\n"
+                "\n[ERROR]: `points` should have dimensions (M, N), where "
+                f"N >= 4. Received {self._points.shape}.\n"
             ))
 
-        self._number_of_points = len(self._point_data)
+        self._number_of_points = len(self._points)
 
         # Call the IterableSamples constructor to make the class iterable in
         # samples with overlap.
@@ -152,25 +152,25 @@ class PointData(IterableSamples):
 
 
     @property
-    def point_data(self):
+    def points(self):
         '''Get the points stored in the class.
 
         Returns
         -------
         (M, N) numpy.ndarray
-            A memory view of the points stored in `point_data`.
+            A memory view of the points stored in `points`.
 
         '''
-        return self._point_data
+        return self._points
 
 
     @property
     def data_samples(self):
-        '''Implemented property for the IterableSamples parent class. See its
+        '''Implemented property for the `IterableSamples` parent class. See its
         documentation for more information.
 
         '''
-        return self._point_data
+        return self._points
 
 
     @property
@@ -189,14 +189,14 @@ class PointData(IterableSamples):
         Returns
         -------
         int
-            The number of points stored in `point_data`.
+            The number of points stored in `points`.
 
         '''
         return self._number_of_points
 
 
     def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
-        '''Write `point_data` to a CSV file
+        '''Write `points` to a CSV file
 
         Write all points (and any extra data) stored in the class to a CSV
         file.
@@ -215,7 +215,7 @@ class PointData(IterableSamples):
                 default is a new line '\n'.
 
         '''
-        np.savetxt(filepath, self._point_data, delimiter = delimiter,
+        np.savetxt(filepath, self._points, delimiter = delimiter,
                    newline = newline)
 
 
@@ -248,11 +248,11 @@ class PointData(IterableSamples):
 
         # Scatter x, y, z, [color]
 
-        x = self._point_data[:, 1],
-        y = self._point_data[:, 2],
-        z = self._point_data[:, 3],
+        x = self._points[:, 1],
+        y = self._points[:, 2],
+        z = self._points[:, 3],
 
-        color = self._point_data[:, -1],
+        color = self._points[:, -1],
 
         cmap = plt.cm.magma
         color_array = cmap(colour_data)
@@ -295,11 +295,11 @@ class PointData(IterableSamples):
 
         # Scatter x, y, z, [color]
 
-        x = self._point_data[:, 1]
-        y = self._point_data[:, 2]
-        z = self._point_data[:, 3]
+        x = self._points[:, 1]
+        y = self._points[:, 2]
+        z = self._points[:, 3]
 
-        color = self._point_data[:, -1]
+        color = self._points[:, -1]
 
         cmap = plt.cm.magma
         color_array = cmap(color)
@@ -485,12 +485,12 @@ class PointData(IterableSamples):
 
         # If an Ellipsis was received, include all points
         if sample_indices[0] is Ellipsis:
-            coords_x = self.point_data[:, 1]
-            coords_y = self.point_data[:, 2]
-            coords_z = self.point_data[:, 3]
+            coords_x = self.points[:, 1]
+            coords_y = self.points[:, 2]
+            coords_z = self.points[:, 3]
 
             if colorbar and color is None:
-                marker['color'] = self.point_data[:, colorbar_col]
+                marker['color'] = self.points[:, colorbar_col]
         else:
             # For each selected sample include all the needed coordinates
             for n in sample_indices:
@@ -516,26 +516,30 @@ class PointData(IterableSamples):
 
     def __str__(self):
         # Shown when calling print(class)
-        docstr = ""
-
-        docstr += "number_of_points =  {}\n\n".format(self.number_of_points)
-        docstr += "sample_size =       {}\n".format(self._sample_size)
-        docstr += "overlap =           {}\n".format(self._overlap)
-        docstr += "number_of_samples = {}\n\n".format(self.number_of_samples)
-        docstr += "point_data = \n"
-        docstr += self._point_data.__str__()
+        docstr = (
+            f"number_of_points =  {self.number_of_points}\n\n"
+            f"sample_size =       {self._sample_size}\n"
+            f"overlap =           {self._overlap}\n"
+            f"number_of_samples = {self.number_of_samples}\n\n"
+            "points = \n"
+        )
+        docstr += self._points.__str__()
 
         return docstr
 
 
     def __repr__(self):
-        # Shown when writing the class on a REPR
+        # Shown when writing the class on a REPL
 
-        docstr = "Class instance that inherits from `pept.PointData`.\n\n" + self.__str__() + "\n\n"
-        docstr += "Particular cases:\n"
-        docstr += " > If sample_size == 0, all point_data is returned as one single sample.\n"
-        docstr += " > If overlap >= sample_size, an error is raised.\n"
-        docstr += " > If overlap < 0, points are skipped between samples.\n"
+        docstr = "Class instance that inherits from `pept.PointData`.\n\n" + \
+                 self.__str__() + "\n\n"
+        docstr += (
+            "Particular cases:\n"
+            " > If sample_size == 0, all `points` are returned as a "
+               "single sample.\n"
+            " > If overlap >= sample_size, an error is raised.\n"
+            " > If overlap < 0, points are skipped between samples.\n"
+        )
 
         return docstr
 

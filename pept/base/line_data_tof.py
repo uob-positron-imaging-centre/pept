@@ -54,7 +54,7 @@ class LineDataToF(IterableSamples):
     Generally, PEPT LoRs are lines in 3D space, each defined by two points,
     irrespective of the geometry of the scanner used. This class is used
     for LoRs (or any lines!) encapsulation. It can yield samples of the
-    `line_data` of an adaptive `sample_size` and `overlap`, without requiring
+    `lines` of an adaptive `sample_size` and `overlap`, without requiring
     additional storage.
 
     Note that the spatial and temporal data must have self-consistent units
@@ -64,18 +64,18 @@ class LineDataToF(IterableSamples):
 
     Parameters
     ----------
-    line_data : (N, M >= 8) numpy.ndarray
+    lines : (N, M >= 8) numpy.ndarray
         An (N, M >= 8) numpy array that stores the PEPT LoRs with Time of
         Flight (ToF) data (or any generic set of lines with two timestamps) as
         individual time and cartesian (3D) coordinates of two points defining
         each line, **in mm**. A row is then [t1, x1, y1, z1, t2, x2, y2, z2].
     sample_size : int, optional
         An `int`` that defines the number of lines that should be returned when
-        iterating over `line_data`. A `sample_size` of 0 yields all the data as
+        iterating over `lines`. A `sample_size` of 0 yields all the data as
         one single sample. Default is 0.
     overlap : int, optional
         An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `line_data`. An overlap of 0 means
+        are returned when iterating over `lines`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. An error is raised if `overlap` is larger than
@@ -87,24 +87,24 @@ class LineDataToF(IterableSamples):
 
     Attributes
     ----------
-    line_data : (N, M >= 8) numpy.ndarray
+    lines : (N, M >= 8) numpy.ndarray
         An (N, M >= 8) numpy array that stores the PEPT LoRs as individual
         times (**in ms**) and cartesian (3D) coordinates of two points defining
         a line, **in mm**. Each row is then
         `[time1, x1, y1, z1, time2, x2, y2, z2]`.
     sample_size : int
         An `int` that defines the number of lines that should be returned when
-        iterating over `line_data`. Default is 0.
+        iterating over `lines`. Default is 0.
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `line_data`. An overlap of 0 implies
+        are returned when iterating over `lines`. An overlap of 0 implies
         consecutive samples, while an overlap of (`sample_size` - 1) implies
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
         `sample_size`. Default is 0.
     number_of_lines : int
-        An `int` that corresponds to len(`line_data`), or the number of LoRs
-        stored by `line_data`.
+        An `int` that corresponds to len(`lines`), or the number of LoRs
+        stored by `lines`.
     number_of_samples : int
         An `int` that corresponds to the number of samples that can be accessed
         from the class. It takes `overlap` into consideration.
@@ -116,17 +116,17 @@ class LineDataToF(IterableSamples):
         has to be smaller than `sample_size`. Note that it can also be
         negative.
     ValueError
-        If `line_data` has fewer than 8 columns.
+        If `lines` has fewer than 8 columns.
 
     Notes
     -----
     This class is made for LoRs that also have Time of Flight data, such that
-    every row in `line_data` is comprised of two points defining a line along
+    every row in `lines` is comprised of two points defining a line along
     with their individual timestamps: [time1, x1, y1, z1, time2, x2, y2, z2].
     If your PET / PEPT scanner does not have Time of Flight data, use the
     `LineData` class.
 
-    The class saves `line_data` as a **contiguous** numpy array for efficient
+    The class saves `lines` as a **contiguous** numpy array for efficient
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
 
@@ -134,7 +134,7 @@ class LineDataToF(IterableSamples):
 
     def __init__(
         self,
-        line_data,
+        lines,
         sample_size = 0,
         overlap = 0,
         append_tofpoints = True,
@@ -144,17 +144,17 @@ class LineDataToF(IterableSamples):
         if verbose:
             start = time.time()
 
-        # If `line_data` is not C-contiguous, create a C-contiguous copy.
-        self._line_data = np.asarray(line_data, order = 'C', dtype = float)
+        # If `lines` is not C-contiguous, create a C-contiguous copy.
+        self._lines = np.asarray(lines, order = 'C', dtype = float)
 
-        # Check that line_data has at least 8 columns.
-        if self._line_data.ndim != 2 or self._line_data.shape[1] < 8:
+        # Check that lines has at least 8 columns.
+        if self._lines.ndim != 2 or self._lines.shape[1] < 8:
             raise ValueError((
-                "\n[ERROR]: `line_data` should have dimensions (M, N), where "
-                f"N >= 8. Received {self._line_data.shape}.\n"
+                "\n[ERROR]: `lines` should have dimensions (M, N), where "
+                f"N >= 8. Received {self._lines.shape}.\n"
             ))
 
-        self._number_of_lines = len(self._line_data)
+        self._number_of_lines = len(self._lines)
 
         # Call the IterableSamples constructor to make the class iterable in
         # samples with overlap.
@@ -170,16 +170,16 @@ class LineDataToF(IterableSamples):
 
 
     @property
-    def line_data(self):
+    def lines(self):
         '''Get the lines stored in the class.
 
         Returns
         -------
         (, 7) numpy.ndarray
-            A memory view of the lines stored in `line_data`.
+            A memory view of the lines stored in `lines`.
 
         '''
-        return self._line_data
+        return self._lines
 
 
     @property
@@ -189,7 +189,7 @@ class LineDataToF(IterableSamples):
 
         '''
 
-        return self._line_data
+        return self._lines
 
 
     @property
@@ -208,7 +208,7 @@ class LineDataToF(IterableSamples):
         Returns
         -------
         int
-            The number of lines stored in `line_data`.
+            The number of lines stored in `lines`.
 
         '''
         return self._number_of_lines
@@ -220,7 +220,7 @@ class LineDataToF(IterableSamples):
         The tofpoints include both the time and locations calculated from the
         Time of Flight (ToF) data. They can be returned either as a simple
         numpy array (`as_array = True`) or wrapped in a pept.PointData
-        (default) for ease of plotting iteration.
+        (default) for ease of plotting and iteration.
 
         Parameters
         ----------
@@ -237,11 +237,11 @@ class LineDataToF(IterableSamples):
 
         '''
         # The two points defining the LoR
-        t1 = self._line_data[:, 0]
-        p1 = self._line_data[:, 1:4]
+        t1 = self._lines[:, 0]
+        p1 = self._lines[:, 1:4]
 
-        t2 = self._line_data[:, 4]
-        p2 = self._line_data[:, 5:8]
+        t2 = self._lines[:, 4]
+        p2 = self._lines[:, 5:8]
 
         # Speed of light (mm / ms)
         c = 299_792_458
@@ -267,12 +267,12 @@ class LineDataToF(IterableSamples):
         '''Calculate and append the tofpoints to the LoR data.
 
         The tofpoints are appended to the LoR data stored in this class.
-        Therefore, if the initial `self.line_data` has a row [t1, x1, y1, z1,
-        t2, x2, y2, z2], then after calling this function the `self.line_data`
+        Therefore, if the initial `self.lines` has a row [t1, x1, y1, z1,
+        t2, x2, y2, z2], then after calling this function the `self.lines`
         row will be [t1, x1, y1, z1, t2, x2, y2, z2, t_tof, x_tof, y_tof,
         z_tof].
 
-        Note that if any extra columns are included in `self.line_data`, they
+        Note that if any extra columns are included in `self.lines`, they
         will not be affected; the tofpoints will simply be appended after them.
 
         '''
@@ -280,11 +280,11 @@ class LineDataToF(IterableSamples):
         tofpoints = self.get_tofpoints(as_array = True)
 
         # Append the ToF data to the LoR data
-        self._line_data = np.hstack((self._line_data, tofpoints))
+        self._lines = np.hstack((self._lines, tofpoints))
 
 
     def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
-        '''Write `line_data` to a CSV file
+        '''Write `lines` to a CSV file
 
         Write all LoRs stored in the class to a CSV file.
 
@@ -302,7 +302,8 @@ class LineDataToF(IterableSamples):
                 default is a new line '\n'
 
         '''
-        np.savetxt(filepath, self._line_data, delimiter = delimiter, newline = newline)
+        np.savetxt(filepath, self._lines, delimiter = delimiter,
+                   newline = newline)
 
 
     def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
@@ -338,8 +339,8 @@ class LineDataToF(IterableSamples):
         else:
             fig = plt.gcf()
 
-        p1 = self._line_data[:, 1:4]
-        p2 = self._line_data[:, 5:8]
+        p1 = self._lines[:, 1:4]
+        p2 = self._lines[:, 5:8]
 
         for i in range(0, self._number_of_lines):
             ax.plot([ p1[i][0], p2[i][0] ],
@@ -387,8 +388,8 @@ class LineDataToF(IterableSamples):
             fig = plt.gcf()
 
 
-        p1 = self._line_data[:, 1:4]
-        p2 = self._line_data[:, 5:8]
+        p1 = self._lines[:, 1:4]
+        p2 = self._lines[:, 5:8]
 
         for i in range(0, self._number_of_lines):
             ax.plot([ p1[i][2], p2[i][2] ],
@@ -562,7 +563,7 @@ class LineDataToF(IterableSamples):
         for n in sample_indices:
             # If an Ellipsis was received, then include all lines.
             if n is Ellipsis:
-                sample = self.line_data
+                sample = self.lines
             else:
                 sample = self[n]
 
@@ -588,14 +589,14 @@ class LineDataToF(IterableSamples):
 
     def __str__(self):
         # Shown when calling print(class)
-        docstr = ""
-
-        docstr += "number_of_lines =   {}\n\n".format(self.number_of_lines)
-        docstr += "sample_size =       {}\n".format(self._sample_size)
-        docstr += "overlap =           {}\n".format(self._overlap)
-        docstr += "number_of_samples = {}\n\n".format(self.number_of_samples)
-        docstr += "line_data = \n"
-        docstr += self._line_data.__str__()
+        docstr = (
+            f"number_of_lines =   {self.number_of_lines}\n\n"
+            f"sample_size =       {self._sample_size}\n"
+            f"overlap =           {self._overlap}\n"
+            f"number_of_samples = {self.number_of_samples}\n\n"
+            "lines = \n"
+        )
+        docstr += self._lines.__str__()
 
         return docstr
 
@@ -603,13 +604,17 @@ class LineDataToF(IterableSamples):
     def __repr__(self):
         # Shown when writing the class on a REPR
 
-        docstr = "Class instance that inherits from `pept.LineDataToF`.\n\n" + \
+        docstr = (
+            "Class instance that inherits from `pept.LineDataToF`.\n\n" + \
             self.__str__() + "\n\n"
-        docstr += "Particular cases:\n"
-        docstr += (" > If sample_size == 0, all line_data is returned as a "
-                   "single sample.\n")
-        docstr += " > If overlap >= sample_size, an error is raised.\n"
-        docstr += " > If overlap < 0, lines are skipped between samples.\n"
+        )
+        docstr += (
+            "Particular cases:\n"
+            " > If sample_size == 0, all `lines` are returned as a "
+               "single sample.\n"
+            " > If overlap >= sample_size, an error is raised.\n"
+            " > If overlap < 0, lines are skipped between samples.\n"
+        )
 
         return docstr
 
