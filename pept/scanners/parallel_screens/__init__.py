@@ -8,19 +8,21 @@
 
 
 from    .parallel_screens   import  ParallelScreens
-from    .parallel_screens   import  ParallelScreensArray
 
 __all__ = [
     'ParallelScreens',
-    'ParallelScreensArray'
 ]
 
 
-__author__ =        "Andrei Leonard Nicusan"
-__credits__ =       ["Andrei Leonard Nicusan", "Kit Windows-Yule", "Sam Manger"]
-__license__ =       "GNU v3.0"
-__maintainer__ =    "Andrei Leonard Nicusan"
-__email__ =         "a.l.nicusan@bham.ac.uk"
-__status__ =        "Development"
+__author__ = "Andrei Leonard Nicusan"
+__credits__ = [
+    "Andrei Leonard Nicusan",
+    "Kit Windows-Yule",
+    "Sam Manger"
+]
+__license__ = "GNU v3.0"
+__maintainer__ = "Andrei Leonard Nicusan"
+__email__ = "a.l.nicusan@bham.ac.uk"
+__status__ = "Development"
 
 
