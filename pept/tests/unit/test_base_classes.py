@@ -12,6 +12,7 @@ from    nose.tools  import  raises
 import  pept
 import  numpy   as      np
 
+
 def setup_module(module):
     print ("") # this is to get a newline after the dots
     print ("setup_module before anything in this file")
@@ -51,12 +52,12 @@ class TestLineData:
         assert samples._index == 0, "_index was not set to 0"
         assert samples._overlap == 10, "_overlap was not set correctly"
         assert samples._sample_size == 200, "_sample_size was not set correctly"
-        assert np.array_equal(samples._line_data, self.good_data) == True
-        assert samples._line_data.flags['C_CONTIGUOUS'] == True, "_line_data is not C-contiguous"
-        assert samples._number_of_lines == len(samples._line_data), "_number_of_lines was not set correctly"
+        assert np.array_equal(samples._lines, self.good_data) == True
+        assert samples._lines.flags['C_CONTIGUOUS'] == True, "_lines is not C-contiguous"
+        assert samples._number_of_lines == len(samples._lines), "_number_of_lines was not set correctly"
 
         # Test properties
-        assert np.array_equal(samples.line_data, samples._line_data) == True
+        assert np.array_equal(samples.lines, samples._lines) == True
         assert samples.sample_size == samples._sample_size
         assert samples.overlap == samples._overlap
         assert samples.number_of_samples == 2, "number of samples was not calculated correctly"
@@ -90,14 +91,5 @@ class TestLineData:
 
     def test_sample_n(self):
         pass
-
-
-
-
-
-
-
-
-
 
 

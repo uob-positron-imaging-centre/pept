@@ -47,12 +47,12 @@ class ParallelScreens(LineData):
     detectors from an input data file or array.
 
     Provides the same functionality as the `LineData` class while initialising
-    `line_data` from  **PEPT scanners with two parallel screens**. That is,
+    `lines` from  **PEPT scanners with two parallel screens**. That is,
     each LoR is defined by two 2D points on two screens separated by a given
     distance.
 
     **The expected data columns in the file is `[time, x1, y1, x2, y2]`**. This
-    is automatically transformed into the standard `line_data` format with
+    is automatically transformed into the standard `lines` format with
     columns being `[time, x1, y1, z1, x2, y2, z2]`, where `z1 = 0` and
     `z2 = separation`.
 
@@ -69,16 +69,16 @@ class ParallelScreens(LineData):
     screen_separation : float
         The separation (in *mm*) between the two PEPT screens corresponding to
         the `z` coordinate of the second point defining each line. The
-        attribute `line_data`, with columns
+        attribute `lines`, with columns
         `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
         `z2 = separation`.
     sample_size : int, default 200
         An `int`` that defines the number of lines that should be returned when
-        iterating over `line_data`. A `sample_size` of 0 yields all the data as
+        iterating over `lines`. A `sample_size` of 0 yields all the data as
         one single sample.
     overlap : int, default 0
         An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `line_data`. An overlap of 0 implies
+        are returned when iterating over `lines`. An overlap of 0 implies
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. An error is raised if `overlap` is larger than
@@ -95,23 +95,23 @@ class ParallelScreens(LineData):
 
     Attributes
     ----------
-    line_data : (N, 7) numpy.ndarray
+    lines : (N, 7) numpy.ndarray
         An (N, 7) numpy array that stores the PEPT LoRs as time and
         cartesian (3D) coordinates of two points defining a line, **in mm**.
         Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
     sample_size : int
         An `int` that defines the number of lines that should be
-        returned when iterating over `line_data`.
+        returned when iterating over `lines`.
     overlap : int
         An `int` that defines the overlap between two consecutive
-        samples that are returned when iterating over `line_data`.
+        samples that are returned when iterating over `lines`.
         An overlap of 0 means consecutive samples, while an overlap
         of (`sample_size` - 1) means incrementing the samples by one.
         A negative overlap means skipping values between samples. It
         has to be smaller than `sample_size`.
     number_of_lines : int
-        An `int` that corresponds to len(`line_data`), or the number of
-        LoRs stored by `line_data`.
+        An `int` that corresponds to len(`lines`), or the number of
+        LoRs stored by `lines`.
 
     Raises
     ------
@@ -123,7 +123,7 @@ class ParallelScreens(LineData):
 
     Notes
     -----
-    The class saves `line_data` as a **contiguous** numpy array for efficient
+    The class saves `lines` as a **contiguous** numpy array for efficient
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
 
@@ -148,39 +148,39 @@ class ParallelScreens(LineData):
         try:
             # Try to read the LoR data from `filepath_or_array`.
             # Check if an error is raised when reading file lines using
-            line_data = read_csv(
+            lines = read_csv(
                 filepath_or_array,
                 skiprows = skiprows,
                 nrows = nrows
             )
         except ValueError:
             # Seems like it is an array!
-            line_data = np.asarray(
+            lines = np.asarray(
                 filepath_or_array,
                 order = "C",
                 dtype = float
             )
 
-        # line_data cols: [time, X1, Y1, X2, Y2]
-        # Verify that line_data has shape (N, M >= 5)
-        if line_data.ndim != 2 or line_data.shape[1] < 5:
+        # lines cols: [time, X1, Y1, X2, Y2]
+        # Verify that lines has shape (N, M >= 5)
+        if lines.ndim != 2 or lines.shape[1] < 5:
             raise ValueError((
-                "\n[ERROR]: line_data should have dimensions (N, M) where "
-                f"M >= 5. Received {line_data.shape}.\n"
+                "\n[ERROR]: lines should have dimensions (N, M) where "
+                f"M >= 5. Received {lines.shape}.\n"
             ))
 
         # Add Z1 and Z2 columns => [time, X1, Y1, Z1, X2, Y2, Z2]
         # Z1 = 0
-        line_data = np.insert(line_data, 3, 0.0, axis = 1)
+        lines = np.insert(lines, 3, 0.0, axis = 1)
 
         # Z2 = `separation`
-        line_data = np.insert(line_data, 6, screen_separation, axis = 1)
+        lines = np.insert(lines, 6, screen_separation, axis = 1)
 
         # Call the constructor of the superclass `LineData` to initialise all
         # the inner parameters of the class (_index, etc.)
         LineData.__init__(
             self,
-            line_data,
+            lines,
             sample_size = sample_size,
             overlap = overlap,
             verbose = False
@@ -189,7 +189,5 @@ class ParallelScreens(LineData):
         if verbose:
             end = time.time()
             print(f"Initialising the PEPT data took {end - start} seconds.\n")
-
-
 
 

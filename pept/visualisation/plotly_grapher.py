@@ -59,6 +59,8 @@ import  numpy                   as          np
 import  plotly.graph_objects    as          go
 from    plotly.subplots         import      make_subplots
 
+import  pept
+
 
 class PlotlyGrapher:
     '''A class for PEPT data visualisation using Plotly-based 3D graphs.
@@ -483,19 +485,22 @@ class PlotlyGrapher:
         colorscale = "Magma",
         colorbar_title = None
     ):
-        '''Create and plot a trace for all points in a numpy array, with
-        possible color-coding.
+        '''Create and plot a trace for all the points in a numpy array or
+        `pept.PointData`, with possible color-coding.
 
         Creates a `plotly.graph_objects.Scatter3d` object for all the points
-        included in the numpy array `points` and adds it to the subplot
-        determined by `row` and `col`.
+        included in the numpy array or `pept.PointData` instance (or subclass
+        thereof!) `points` and adds it to the subplot determined by `row` and
+        `col`.
 
         The expected data row is [time, x1, y1, z1, ...].
 
         Parameters
         ----------
-        points : (M, N >= 4) numpy.ndarray
-            The expected data row: [time, x1, y1, z1, etc.]
+        points : (M, N >= 4) numpy.ndarray or pept.PointData
+            The expected data columns are: [time, x1, y1, z1, etc.]. If a
+            `pept.PointData` instance (or subclass thereof) is received, the
+            inner `points` will be used.
         row : int, default 1
             The row of the subplot to add a trace to.
         col : int, default 1
@@ -543,7 +548,12 @@ class PlotlyGrapher:
 
         '''
 
-        points = np.asarray(points, dtype = float)
+        # If a pept.PointData instance (or subclass thereof!) is received, just
+        # take the inner `points`. Otherwise treat it as an array.
+        if isinstance(points, pept.PointData):
+            points = points.points
+        else:
+            points = np.asarray(points, dtype = float)
 
         # Check that points has shape (M, 4)
         if points.ndim != 2 or points.shape[1] < 4:
@@ -623,19 +633,26 @@ class PlotlyGrapher:
         colorscale = "Magma",
         colorbar_title = None
     ):
-        '''Create and plot a trace for individual lines in a numpy array.
+        '''Create and plot a trace for all the lines in a numpy array or
+        `pept.LineData`, with possible color-coding.
 
         Creates a `plotly.graph_objects.Scatter3d` object for all the lines
-        included in the numpy array `lines` and adds it to the subplot
-        determined by `row` and `col`.
+        included in the numpy array or `pept.LineData` instance (or subclass
+        thereof!) `lines` and adds it to the subplot determined by `row` and
+        `col`.
 
         It expects LoR-like data, where each line is defined by two points. The
-        expected data row is [time, x1, y1, z1, x2, y2, z2, ...].
+        expected data columns are [time, x1, y1, z1, x2, y2, z2, ...]. If the
+        two points defining the line have individual timestamps (i.e. the
+        PET/PEPT scanner has Time of Flight functionality), use the function
+        `add_lines_tof`.
 
         Parameters
         ----------
-        lines : (M, N >= 7) numpy.ndarray
-            The expected data row: [time, x1, y1, z1, x2, y2, z2, etc.]
+        lines : (M, N >= 7) numpy.ndarray or pept.LineData
+            The expected data columns: [time, x1, y1, z1, x2, y2, z2, etc.]. If
+            a `pept.LineData` instance (or subclass thereof) is received, the
+            inner `lines` will be used.
         row : int, default 1
             The row of the subplot to add a trace to.
         col : int, default 1
@@ -672,7 +689,12 @@ class PlotlyGrapher:
 
         '''
 
-        lines = np.asarray(lines, dtype = float)
+        # If a pept.LineData instance (or subclass thereof!) is received, just
+        # take the inner `lines`. Otherwise treat it as an array.
+        if isinstance(lines, pept.LineData):
+            lines = lines.lines
+        else:
+            lines = np.asarray(lines, dtype = float)
 
         # Check that lines has shape (N, 7)
         if lines.ndim != 2 or lines.shape[1] < 7:
@@ -731,8 +753,8 @@ class PlotlyGrapher:
         colorscale = "Magma",
         colorbar_title = None
     ):
-        '''Create and plot a trace for individual lines with ToF data in a
-        numpy array.
+        '''Create and plot a trace for all the lines with ToF data in a numpy
+        array or `pept.LineDataToF`, with possible color-coding.
 
         Creates a `plotly.graph_objects.Scatter3d` object for all the lines
         included in the numpy array `lines` and adds it to the subplot
@@ -740,12 +762,14 @@ class PlotlyGrapher:
 
         It expects LoR-like data with Time of Flight (ToF) data, where each
         line is defined by two points, each having individual timestamps. The
-        expected data row is [time1, x1, y1, z1, time2, x2, y2, z2, ...].
+        expected data columns are [time1, x1, y1, z1, time2, x2, y2, z2, ...].
 
         Parameters
         ----------
-        lines : (M, N >= 8) numpy.ndarray
-            The expected data row: [time1, x1, y1, z1, time2, x2, y2, z2, etc.]
+        lines : (M, N >= 8) numpy.ndarray or pept.LineDataToF
+            The expected data row [time1, x1, y1, z1, time2, x2, y2, z2, etc.].
+            If a `pept.LineData` instance (or subclass thereof) is received,
+            the inner `lines` will be used.
         row : int, default 1
             The row of the subplot to add a trace to.
         col : int, default 1
@@ -782,7 +806,12 @@ class PlotlyGrapher:
 
         '''
 
-        lines = np.asarray(lines, dtype = float)
+        # If a pept.LineDataToF instance (or subclass thereof!) is received,
+        # just take the inner `lines`. Otherwise treat it as an array.
+        if isinstance(lines, pept.LineDataToF):
+            lines = lines.lines
+        else:
+            lines = np.asarray(lines, dtype = float)
 
         # Check that lines has shape (N, 8)
         if lines.ndim != 2 or lines.shape[1] < 8:

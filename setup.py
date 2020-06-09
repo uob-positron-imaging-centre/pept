@@ -5,7 +5,7 @@
 #    Tracking (PEPT) research, including tracking, simulation, data analysis
 #    and visualisation tools
 #
-#    Copyright (C) 2019 Andrei Leonard Nicusan
+#    Copyright (C) 2020 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -44,11 +44,13 @@ try:
     from    Cython.Distutils    import  build_ext
 except ImportError as e:
     warnings.warn(e.args[0])
-    warnings.warn('The pept package requires Cython and Numpy to be pre-installed')
-    raise ImportError(
+    warnings.warn((
+        'The pept package requires Cython and Numpy to be pre-installed'
+    ))
+    raise ImportError((
         'Cython or Numpy not found! Please install Cython and Numpy (or run '
         '`pip install -r requirements.txt`) and try again.'
-    )
+    ))
 
 
 # Package meta-data.
@@ -180,10 +182,9 @@ setup(
     author_email = EMAIL,
     python_requires = REQUIRES_PYTHON,
     url = URL,
-    packages = find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    # entry_points = {
-    #     'console_scripts': ['mycli = mymodule:cli'],
-    # },
+    packages = find_packages(
+        exclude = ["tests", "*.tests", "*.tests.*", "tests.*"]
+    ),
     install_requires = REQUIRED,
     extras_require = EXTRAS,
     include_package_data = True,
@@ -200,6 +201,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Cython',
         'Programming Language :: C',
