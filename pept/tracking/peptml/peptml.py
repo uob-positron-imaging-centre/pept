@@ -631,7 +631,7 @@ class HDBSCANClusterer:
             f"min_samples =          {self.min_samples}\n\n"
             f"allow_single_cluster = {self.allow_single_cluster}\n"
             f"max_workers =          {self.max_workers}\n"
-            f"labels =               {self.labels}\n"
+            f"labels =               {self.labels}"
         )
 
         return docstr
@@ -640,10 +640,11 @@ class HDBSCANClusterer:
     def __repr__(self):
         # Shown when writing the class on a REPL
         docstr = (
-            "Class instance that inherits from peptml.HDBSCANClusterer.\n\n"
+            "Class instance that inherits from `peptml.HDBSCANClusterer`.\n"
+            f"Type:\n{type(self)}\n\n"
             "Attributes\n"
             "----------\n"
-            f"{self.__str__()}\n"
+            f"{self.__str__()}\n\n"
             "Methods\n-------\n"
             "fit_sample(...)\n"
             "fit(...)\n"

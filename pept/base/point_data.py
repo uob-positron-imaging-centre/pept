@@ -521,9 +521,8 @@ class PointData(IterableSamples):
             f"sample_size =       {self._sample_size}\n"
             f"overlap =           {self._overlap}\n"
             f"number_of_samples = {self.number_of_samples}\n\n"
-            "points = \n"
+            f"points = \n{self._points}"
         )
-        docstr += self._points.__str__()
 
         return docstr
 
@@ -531,10 +530,12 @@ class PointData(IterableSamples):
     def __repr__(self):
         # Shown when writing the class on a REPL
 
-        docstr = "Class instance that inherits from `pept.PointData`.\n\n" + \
-                 self.__str__() + "\n\n"
-        docstr += (
-            "Particular cases:\n"
+        docstr = (
+            "Class instance that inherits from `pept.PointData`.\n"
+            f"Type:\n{type(self)}\n\n"
+            "Attributes\n----------\n"
+            f"{self.__str__()}\n\n"
+            "Particular Cases\n----------------\n"
             " > If sample_size == 0, all `points` are returned as a "
                "single sample.\n"
             " > If overlap >= sample_size, an error is raised.\n"

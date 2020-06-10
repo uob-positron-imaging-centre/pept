@@ -512,20 +512,20 @@ class LineData(IterableSamples):
             f"sample_size =       {self._sample_size}\n"
             f"overlap =           {self._overlap}\n"
             f"number_of_samples = {self.number_of_samples}\n\n"
-            "lines = \n"
+            f"lines = \n{self._lines}"
         )
-        docstr += self._lines.__str__()
 
         return docstr
 
 
     def __repr__(self):
         # Shown when writing the class on a REPR
-
-        docstr = "Class instance that inherits from `pept.LineData`.\n\n" + \
-                 self.__str__() + "\n\n"
-        docstr += (
-            "Particular cases:\n"
+        docstr = (
+            "Class instance that inherits from `pept.LineData`.\n"
+            f"Type:\n{type(self)}\n\n"
+            "Attributes\n----------\n"
+            f"{self.__str__()}\n\n"
+            "Particular Cases\n----------------\n"
             " > If sample_size == 0, all `lines` are returned as a "
                "single sample.\n"
             " > If overlap >= sample_size, an error is raised.\n"
