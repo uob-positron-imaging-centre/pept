@@ -73,7 +73,7 @@ def find_cutpoints(
     This function considers every pair of lines in `sample_lines` and returns
     all the cutpoints that satisfy the following conditions:
         1. The distance between the two lines is smaller than `max_distance`.
-        2. The cutpoints is within the `cutoffs`.
+        2. The cutpoint is within the `cutoffs`.
 
     Note that this function uses LoRs that have a single timestamp. If the PEPT
     scanner has Time of Flight (ToF) functionality, such that every line
@@ -380,15 +380,12 @@ class Cutpoints(pept.PointData):
     '''A class that transforms LoRs (a pept.LineData instance) into *cutpoints*
     (a pept.PointData instance) for clustering.
 
-    The `Cutpoints` class transforms LoRs (encapsulated in a `pept.LineData`
-    instance) into cutpoints that can then be passed to `HDBSCANClusterer`. The
-    cutpoints are themselves encapsulated in a `pept.PointData` instance.
-
     Under typical usage, the `Cutpoints` class is initialised with a
-    `pept.LineData` instance, automatically calculating the cutpoints. The
-    `Cutpoints` class inherits from `pept.PointData`, such that once the
-    cutpoints have been computed, all the methods from the parent class
-    `pept.PointData` can be used on them (such as visualisation functionality).
+    `pept.LineData` instance, automatically calculating the cutpoints from the
+    samples of lines. The `Cutpoints` class inherits from `pept.PointData`,
+    such that once the cutpoints have been computed, all the methods from the
+    parent class `pept.PointData` can be used on them (such as visualisation
+    functionality).
 
     For more control over the operations, `pept.tracking.peptml.find_cutpoints`
     can be used - it receives a generic numpy array of LoRs (one 'sample') and
@@ -506,19 +503,6 @@ class Cutpoints(pept.PointData):
         return self._max_distance
 
 
-    @max_distance.setter
-    def max_distance(self, new_max_distance):
-        '''The maximum distance between any pair of lines for which their
-        cutpoint is considered.
-
-        max_distance : float
-            The maximum distance between any two lines for their cutpoint to be
-            considered.
-
-        '''
-        self._max_distance = new_max_distance
-
-
     @property
     def cutoffs(self):
         '''Only consider the cutpoints which fall within these cutoff distances.
@@ -531,39 +515,6 @@ class Cutpoints(pept.PointData):
         '''
 
         return self._cutoffs
-
-
-    @cutoffs.setter
-    def cutoffs(self, new_cutoffs):
-        '''Only consider the cutpoints which fall within these cutoff distances.
-
-        A list (or equivalent) of the cutoff distances for every axis,
-        formatted as [x_min, x_max, y_min, y_max, z_min, z_max].
-
-        Parameters
-        ----------
-        new_cutoffs : list-like of length 6, optional
-            A list (or equivalent) of the cutoff distances for every axis,
-            formatted as [x_min, x_max, y_min, y_max, z_min, z_max]. Only
-            consider the cutpoints which fall within these cutoff distances.
-
-        Raises
-        ------
-        ValueError
-            If `cutoffs` is not a one-dimensional array with values formatted
-            as `[min_x, max_x, min_y, max_y, min_z, max_z]`.
-
-        '''
-
-        cutoffs = np.asarray(new_cutoffs, order = 'C', dtype = float)
-        if cutoffs.ndim != 1 or len(cutoffs) != 6:
-            raise ValueError((
-                "\n[ERROR]: cutoffs should be a one-dimensional array "
-                "with values [min_x, max_x, min_y, max_y, min_z, max_z]. "
-                f"Received {cutoffs}.\n"
-            ))
-
-        self._cutoffs = cutoffs
 
 
     def find_cutpoints(
@@ -625,7 +576,8 @@ class Cutpoints(pept.PointData):
         if not isinstance(line_data, pept.LineData):
             raise TypeError((
                 "\n[ERROR]: line_data should be an instance (or subclass) of "
-                "`pept.LineData`.\n"
+                "`pept.LineData`. If it is an instance of `pept.LineDataToF`, "
+                "use `CutpointsToF`.\n"
             ))
 
         self._line_data = line_data
@@ -633,7 +585,7 @@ class Cutpoints(pept.PointData):
 
         # If cutoffs were not supplied, compute them
         if cutoffs is None:
-            cutoffs = get_cutoffs(line_data.line_data)
+            cutoffs = get_cutoffs(line_data.lines)
         # Otherwise make sure they are a C-contiguous numpy array
         else:
             cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
@@ -831,19 +783,6 @@ class CutpointsToF(pept.PointData):
         return self._max_distance
 
 
-    @max_distance.setter
-    def max_distance(self, new_max_distance):
-        '''The maximum distance between any pair of lines for which their
-        cutpoint is considered.
-
-        max_distance : float
-            The maximum distance between any two lines for their cutpoint to be
-            considered.
-
-        '''
-        self._max_distance = new_max_distance
-
-
     @property
     def cutoffs(self):
         '''Only consider the cutpoints which fall within these cutoff distances.
@@ -856,40 +795,6 @@ class CutpointsToF(pept.PointData):
         '''
 
         return self._cutoffs
-
-
-    @cutoffs.setter
-    def cutoffs(self, new_cutoffs):
-        '''Only consider the cutpoints which fall within these cutoff
-        distances.
-
-        A list (or equivalent) of the cutoff distances for every axis,
-        formatted as [x_min, x_max, y_min, y_max, z_min, z_max].
-
-        Parameters
-        ----------
-        new_cutoffs : list-like of length 6, optional
-            A list (or equivalent) of the cutoff distances for every axis,
-            formatted as [x_min, x_max, y_min, y_max, z_min, z_max]. Only
-            consider the cutpoints which fall within these cutoff distances.
-
-        Raises
-        ------
-        ValueError
-            If `cutoffs` is not a one-dimensional array with values formatted
-            as `[min_x, max_x, min_y, max_y, min_z, max_z]`.
-
-        '''
-
-        cutoffs = np.asarray(new_cutoffs, order = 'C', dtype = float)
-        if cutoffs.ndim != 1 or len(cutoffs) != 6:
-            raise ValueError((
-                "\n[ERROR]: cutoffs should be a one-dimensional array "
-                "with values [min_x, max_x, min_y, max_y, min_z, max_z]. "
-                f"Received {cutoffs}.\n"
-            ))
-
-        self._cutoffs = cutoffs
 
 
     def find_cutpoints(
@@ -959,7 +864,7 @@ class CutpointsToF(pept.PointData):
 
         # If cutoffs were not supplied, compute them
         if cutoffs is None:
-            cutoffs = get_cutoffs_tof(line_data.line_data)
+            cutoffs = get_cutoffs_tof(line_data.lines)
         # Otherwise make sure they are a C-contiguous numpy array
         else:
             cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)

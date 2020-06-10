@@ -104,9 +104,9 @@ cpdef find_cutpoints(
         is `False`, then the columns are [time, x, y, z]. If `append_indices`
         is `True`, then the columns are [time, x, y, z, i, j], where `i` and
         `j` are the LoR indices from `sample_lines` that were used to compute
-        the weighted cutpoints. The time is the average between the timestamps
-        of the two LoRs that were used to compute the cutpoint. The first
-        column (for time) is sorted.
+        the cutpoints. The time is the average between the timestamps of the
+        two LoRs that were used to compute the cutpoint. The first column (for
+        time) is sorted.
 
     Example usage
     -------------

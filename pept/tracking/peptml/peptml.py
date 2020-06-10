@@ -13,7 +13,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2019 Andrei Leonard Nicusan
+#    Copyright (C) 2020 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ Fluorine-18 tracers in air.
 import  time
 import  sys
 import  os
+import  warnings
 
 import  numpy               as      np
 from    scipy.spatial       import  cKDTree
@@ -91,46 +92,38 @@ import  pept
 from    pept.utilities      import  find_cutpoints
 
 
-def findMeanError(truePositions, foundPositions):
+def find_spatial_error(true_positions, found_positions):
 
-    tree = cKDTree(truePositions)
+    tree = cKDTree(true_positions)
 
-    meanError = 0
-    meanErrorX = 0
-    meanErrorY = 0
-    meanErrorZ = 0
-    n = 0
-    for centre in foundPositions:
+    n = len(found_positions)
+    spatial_error = np.empty((n, 3))
+
+    for i, centre in enumerate(found_positions):
         d, index = tree.query(centre, k = 1,  n_jobs = -1)
-        meanError += np.linalg.norm(centre - truePositions[index])
+        spatial_error[i] = np.abs(centre - true_positions[index])
 
-        meanErrorX += np.abs(centre[0] - truePositions[index][0])
-        meanErrorY += np.abs(centre[1] - truePositions[index][1])
-        meanErrorZ += np.abs(centre[2] - truePositions[index][2])
-
-        n += 1
-
-    meanError /= n
-
-    meanErrorX /= n
-    meanErrorY /= n
-    meanErrorZ /= n
-
-    return [meanError, meanErrorX, meanErrorY, meanErrorZ]
+    return spatial_error
 
 
 
 
 class HDBSCANClusterer:
-    '''HDBSCAN-based clustering for cutpoints from LoRs.
+    '''Efficient, optionally-parallel HDBSCAN-based clustering for cutpoints
+    computed from LoRs.
 
     This class is a wrapper around the `hdbscan` package, providing tools for
     parallel clustering of samples of cutpoints. It can return `PointData`
     classes which can be easily manipulated or visualised.
 
+    Two main methods are provided: `fit_sample` for clustering a single numpy
+    array of cutpoints (i.e. a single sample) and `fit` which clusters all the
+    samples encapsulated in a `pept.PointData` class (such as the one returned
+    by the `Cutpoints` class) *in parallel*.
+
     Parameters
     ----------
-        min_cluster_size : int, optional
+        min_cluster_size : int, default 20
             (Taken from hdbscan's documentation): The minimum size of clusters;
             single linkage splits that contain fewer points than this will be
             considered points “falling out” of a cluster rather than a cluster
@@ -139,13 +132,20 @@ class HDBSCANClusterer:
             (Taken from hdbscan's documentation): The number of samples in a
             neighbourhood for a point to be considered a core point. The default
             is None, being set automatically to the `min_cluster_size`.
-        allow_single_cluster : bool, optional
-            (Taken from hdbscan's documentation): By default HDBSCAN* will not
-            produce a single cluster, setting this to True will override this and
-            allow single cluster results in the case that you feel this is a valid
-            result for your dataset. For PEPT, set this to True if you only have
-            one tracer in the dataset. Otherwise, leave it to False, as it will
-            provide higher accuracy.
+        allow_single_cluster : bool or str, default "auto"
+            By default HDBSCAN will not produce a single cluster - this creates
+            "tighter" clusters (i.e. more accurate positions). Setting this to
+            `False` will discard datasets with a single tracer, but will
+            produce more accurate positions. Setting this to `True` will also
+            work for single tracers, at the expense of lower accuracy for cases
+            with more tracers. This class provides a third option, "auto", in
+            which case two clusterers will be used: one with
+            `allow_single_cluster` set to `False` and another with it set to
+            `True`; the latter will only be used if the first did not find any
+            clusters.
+        max_workers : int, optional
+            The maximum number of threads that will be used for asynchronously
+            clustering the samples in `cutpoints`.
 
     Attributes
     ----------
@@ -154,17 +154,30 @@ class HDBSCANClusterer:
             single linkage splits that contain fewer points than this will be
             considered points “falling out” of a cluster rather than a cluster
             splitting into two new clusters. The default is 20.
-        min_samples : int
+        min_samples : int, optional
             (Taken from hdbscan's documentation): The number of samples in a
-            neighbourhood for a point to be considered a core point. The default
-            is None, being set automatically to the `min_cluster_size`.
-        allow_single_cluster : bool
-            (Taken from hdbscan's documentation): By default HDBSCAN* will not
-            produce a single cluster, setting this to True will override this and
-            allow single cluster results in the case that you feel this is a valid
-            result for your dataset. For PEPT, set this to True if you only have
-            one tracer in the dataset. Otherwise, leave it to False, as it will
-            provide higher accuracy.
+            neighbourhood for a point to be considered a core point. The
+            default is None, being set automatically to the `min_cluster_size`.
+        allow_single_cluster : bool or str, default "auto"
+            By default HDBSCAN will not produce a single cluster - this creates
+            "tighter" clusters (i.e. more accurate positions). Setting this to
+            `False` will discard datasets with a single tracer, but will
+            produce more accurate positions. Setting this to `True` will also
+            work for single tracers, at the expense of lower accuracy for cases
+            with more tracers. This class provides a third option, "auto", in
+            which case two clusterers will be used: one with
+            `allow_single_cluster` set to `False` and another with it set to
+            `True`; the latter will only be used if the first did not find any
+            clusters.
+        max_workers : int, optional
+            The maximum number of threads that will be used for asynchronously
+            clustering the samples in `cutpoints`.
+        labels : (N,) numpy.ndarray, dtype = int
+            A 1D array of the cluster labels for cutpoints fitted using
+            `fit_sample` or `fit`. If `fit_sample` is used, `labels` correspond
+            to each row in the sample array fitted. If `fit` is used with the
+            setting `get_labels = True`, `labels` correpond to the stacked
+            labels for every sample in the given `pept.PointData` class.
 
     '''
 
@@ -172,19 +185,67 @@ class HDBSCANClusterer:
         self,
         min_cluster_size = 20,
         min_samples = None,
-        allow_single_cluster = False
+        allow_single_cluster = "auto",
+        max_workers = None
     ):
 
         if 0 < min_cluster_size < 2:
-            print("\n[WARNING]: min_cluster_size was set to 2, as it was {} < 2\n".format(min_cluster_size))
+            warnings.warn((
+                "\n[WARNING]: min_cluster_size was set to 2, as it was "
+                f"{min_cluster_size} < 2.\n"
+            ), RuntimeWarning)
             min_cluster_size = 2
+        else:
+            min_cluster_size = int(min_cluster_size)
 
-        self.clusterer = hdbscan.HDBSCAN(
-            min_cluster_size = min_cluster_size,
-            min_samples = min_samples,
-            core_dist_n_jobs = -1,
-            allow_single_cluster = allow_single_cluster
-        )
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
+        self._labels = None
+
+        if allow_single_cluster == True:
+            self._allow_single_cluster = allow_single_cluster
+            self.clusterer = hdbscan.HDBSCAN(
+                min_cluster_size = min_cluster_size,
+                min_samples = min_samples,
+                core_dist_n_jobs = max_workers,
+                allow_single_cluster = allow_single_cluster
+            )
+
+            self.clusterer_single = None
+
+        elif allow_single_cluster == False:
+            self._allow_single_cluster = allow_single_cluster
+            self.clusterer = hdbscan.HDBSCAN(
+                min_cluster_size = min_cluster_size,
+                min_samples = min_samples,
+                core_dist_n_jobs = max_workers,
+                allow_single_cluster = allow_single_cluster
+            )
+
+            self.clusterer_single = None
+
+        elif str(allow_single_cluster).lower() == "auto":
+            self._allow_single_cluster = "auto"
+            self.clusterer = hdbscan.HDBSCAN(
+                min_cluster_size = min_cluster_size,
+                min_samples = min_samples,
+                core_dist_n_jobs = max_workers,
+                allow_single_cluster = False
+            )
+
+            self.clusterer_single = hdbscan.HDBSCAN(
+                min_cluster_size = min_cluster_size,
+                min_samples = min_samples,
+                core_dist_n_jobs = max_workers,
+                allow_single_cluster = True
+            )
+
+        else:
+            raise ValueError((
+                "\n[ERROR]: `allow_single_cluster` should be either `True`, "
+                f"`False` or 'auto'. Received {allow_single_cluster}.\n"
+            ))
 
 
     @property
@@ -209,21 +270,69 @@ class HDBSCANClusterer:
 
     @property
     def allow_single_cluster(self):
-        return self.clusterer.allow_single_cluster
+        return self._allow_single_cluster
 
 
     @allow_single_cluster.setter
-    def allow_single_cluster(self, option):
-        self.clusterer.allow_single_cluster = option
+    def allow_single_cluster(self, allow_single_cluster):
+        if allow_single_cluster == True:
+            self._allow_single_cluster = allow_single_cluster
+            self.clusterer.allow_single_cluster = True
+            self.clusterer_single = None
+
+        elif allow_single_cluster == False:
+            self._allow_single_cluster = allow_single_cluster
+            self.clusterer.allow_single_cluster = False
+            self.clusterer_single = None
+
+        elif str(allow_single_cluster).lower() == "auto":
+            self._allow_single_cluster = "auto"
+            self.clusterer = hdbscan.HDBSCAN(
+                min_cluster_size = self.min_cluster_size,
+                min_samples = self.min_samples,
+                core_dist_n_jobs = self.max_workers,
+                allow_single_cluster = False
+            )
+
+            self.clusterer_single = hdbscan.HDBSCAN(
+                min_cluster_size = self.min_cluster_size,
+                min_samples = self.min_samples,
+                core_dist_n_jobs = self.max_workers,
+                allow_single_cluster = True
+            )
+
+        else:
+            raise ValueError((
+                "\n[ERROR]: `allow_single_cluster` should be either `True`, "
+                f"`False` or 'auto'. Received {allow_single_cluster}.\n"
+            ))
+
+
+    @property
+    def max_workers(self):
+        return self.clusterer.core_dist_n_jobs
+
+
+    @max_workers.setter
+    def max_workers(self, new_max_workers):
+        if new_max_workers is None:
+            self.clusterer.core_dist_n_jobs = os.cpu_count()
+        else:
+            self.clusterer.core_dist_n_jobs = new_max_workers
+
+
+    @property
+    def labels(self):
+        return self._labels
 
 
     def fit_sample(
         self,
         sample,
-        store_labels = False,
-        noise = False,
+        get_labels = False,
         as_array = True,
-        verbose = False
+        verbose = False,
+        _set_labels = True
     ):
         '''Fit one sample of cutpoints and return the cluster centres and
         (optionally) the labelled cutpoints.
@@ -231,77 +340,103 @@ class HDBSCANClusterer:
         Parameters
         ----------
         sample : (N, M >= 4) numpy.ndarray
-            The sample of points that will be clustered. Every point corresponds to
-            a row and is formatted as `[time, x, y, z, etc]`. Only columns `[1, 2, 3]`
-            are used for clustering.
-        store_labels : bool, optional
-            If set to True, the clustered cutpoints are returned along with the centres
-            of the clusters. Setting it to False speeds up the clustering. The default
-            is False.
-        noise : bool, optional
-            If set to True, the clustered cutpoints also include the points classified
-            as noise. Only has an effect if `store_labels` is set to True. The default
-            is False.
-        as_array : bool, optional
-            If set to True, the centres of the clusters and the clustered cutpoints are
-            returned as numpy arrays. If set to False, they are returned inside
-            instances of `pept.PointData`.
-        verbose : bool, optional
-            Provide extra information when computing the cutpoints: time the operation
-            and show a progress bar. The default is `False`.
+            The sample of points that will be clustered. The expected columns
+            are `[time, x, y, z, etc]`. Only columns `[1, 2, 3]` are used for
+            clustering.
+        get_labels : bool, default False
+            If set to True, the input `sample` is also returned with an extra
+            column representing the label of the cluster that each point is
+            associated with. This label is an `int`, numbering clusters
+            starting from 0; noise is represented with the value -1.
+        as_array : bool, default True
+            If set to True, the centres of the clusters and the labelled
+            cutpoints are returned as numpy arrays. If set to False, they are
+            returned inside instances of `pept.PointData`.
+        verbose : bool, default False
+            Provide extra information when computing the cutpoints: time the
+            operation and show a progress bar.
+        _set_labels : bool, default True
+            This is an internal setting that an end-user should not normally
+            care about. If `True`, the class property `labels` will be set
+            after fitting. Setting this to `False` is helpful for multithreaded
+            contexts - when calling `fit_sample` in parallel, it makes sure
+            no internal attributes are mutated at the same time.
 
         Returns
         -------
         centres : numpy.ndarray or pept.PointData
-            The centroids of every cluster found. They are computed as the average
-            of every column of `[time, x, y, z, etc]` of the clustered points. Another
-            column is added to the initial data in `sample`, signifying the cluster
-            size - the number of points included in the cluster. If `as_array` is
-            set to True, it is a numpy array, otherwise the centres are stored
-            in a pept.PointData instance.
-        clustered_cutpoints : numpy.ndarray or pept.PointData
-            The points in `sample` that fall in every cluster. A new column is added
-            to the points in `sample` that signifies the label of cluster that the
-            point was associated with: all points in cluster number 3 will have the
-            number 3 as the last element in their row. The points classified as noise
-            have the number -1 associated. If `as_array` is set to True, it is a numpy
-            array, otherwise the clustered cutpoints are stored in a pept.PointData
-            instance.
+            The centroids of every cluster found with columns
+            `[time, x, y, z, ..., cluster_size]`. They are computed as the
+            column-wise average of the points included in each cluster (i.e.
+            for each label). Another column is added to the initial data in
+            `sample`, signifying the cluster size - that is, the number of
+            points included in the cluster. If `as_array` is set to True, it is
+            a numpy array, otherwise the centres are stored in a
+            `pept.PointData` instance.
+        sample_labelled : optional, numpy.ndarray or pept.PointData
+            Returned if `get_labels` is `True`. It is the input `sample` with
+            an appended column representing the label of the cluster that the
+            point was associated with. The labels are integers starting from 0.
+            The points classified as noise have the number -1 associated. If
+            `as_array` is set to True, it is a numpy array, otherwise the
+            labelled points are stored in a `pept.PointData` instance.
 
         Raises
         ------
-        TypeError
+        ValueError
             If `sample` is not a numpy array of shape (N, M), where M >= 4.
+
+        Note
+        ----
+        If no clusters were found (i.e. all labels are -1), the returned values
+        are empty numpy arrays.
 
         '''
 
         if verbose:
             start = time.time()
 
-        # sample row: [time, x, y, z]
+        # sample columns: [time, x, y, z, ...]
+        sample = np.asarray(sample, dtype = float, order = "C")
         if sample.ndim != 2 or sample.shape[1] < 4:
-            raise TypeError('\n[ERROR]: sample should have two dimensions (M, N), where N >= 4. Received {}\n'.format(sample.shape))
+            raise ValueError((
+                "\n[ERROR]: `sample` should have two dimensions (M, N), where "
+                f"N >= 4. Received {sample.shape}.\n"
+            ))
 
-        # Only cluster based on [x, y, z]
-        labels = self.clusterer.fit_predict(sample[:, 1:4])
+        # Only cluster based on [x, y, z]. Make a C-contiguous copy to improve
+        # cache-locality, then delete it.
+        sample_xyz = np.asarray(sample[:, 1:4], dtype = float, order = "C")
+
+        labels = self.clusterer.fit_predict(sample_xyz)
         max_label = labels.max()
 
-        centres = []
-        clustered_cutpoints = []
+        # If `allow_single_cluster` is "auto", check if no clusters were found
+        # and try again using the hdbscan option allow_single_cluster = True.
+        if max_label == -1 and self._allow_single_cluster == "auto":
+            labels = self.clusterer_single.fit_predict(sample_xyz)
+            max_label = labels.max()
+
+        del sample_xyz
+
+        if _set_labels:
+            self._labels = labels
 
         # the centre of a cluster is the average of the time, x, y, z columns
-        # and the number of points of that cluster
-        # centres row: [time, x, y, z, ..etc.., cluster_size]
+        # + the number of points of that cluster (i.e. cluster size)
+        # centres columns: [time, x, y, z, ..etc.., cluster_size]
+        centres = []
         for i in range(0, max_label + 1):
             # Average time, x, y, z of cluster of label i
             centres_row = np.mean(sample[labels == i], axis = 0)
+
             # Append the number of points of label i => cluster_size
             centres_row = np.append(centres_row, (labels == i).sum())
             centres.append(centres_row)
 
         centres = np.array(centres)
 
-        if not as_array:
+        if not as_array and len(centres) != 0:
             centres = pept.PointData(
                 centres,
                 sample_size = 0,
@@ -309,84 +444,99 @@ class HDBSCANClusterer:
                 verbose = False
             )
 
-        # Return all cutpoints as a list of numpy arrays for every label
-        # where the last column of an array is the label
-        if store_labels:
-            # Create a list of numpy arrays with rows: [t, x, y, z, ..etc.., label]
-            if noise:
-                cutpoints = sample[labels == -1]
-                cutpoints = np.insert(cutpoints, cutpoints.shape[1], -1, axis = 1)
-                clustered_cutpoints.append(cutpoints)
-
-            for i in range(0, max_label + 1):
-                cutpoints = sample[labels == i]
-                cutpoints = np.insert(cutpoints, cutpoints.shape[1], i, axis = 1)
-                clustered_cutpoints.append(cutpoints)
-
-            clustered_cutpoints = np.vstack(np.array(clustered_cutpoints))
-
-            if not as_array:
-                clustered_cutpoints = pept.PointData(
-                    clustered_cutpoints,
-                    sample_size = 0,
-                    overlap = 0,
-                    verbose = False
-                )
-
         if verbose:
             end = time.time()
             print("Fitting one sample took {} seconds".format(end - start))
 
-        return [centres, clustered_cutpoints]
+        # If labels are requested, also return the initial sample with appended
+        # labels. Labels go from 0 to max_label; -1 represents noise.
+        if get_labels:
+            sample_labelled = np.append(
+                sample, labels[:, np.newaxis], axis = 1
+            )
+            if not as_array and len(samples_labelled) != 0:
+                sample_labelled = pept.PointData(
+                    samples_labelled,
+                    sample_size = 0,
+                    overlap = 0,
+                    verbose = False
+                )
+            return centres, sample_labelled
+
+        # Otherwise just return the found centres
+        return centres
 
 
-    def fit_cutpoints(
+    def fit(
         self,
         cutpoints,
-        store_labels = False,
-        noise = False,
+        get_labels = False,
         max_workers = None,
         verbose = True
     ):
         '''Fit cutpoints (an instance of `PointData`) and return the cluster
         centres and (optionally) the labelled cutpoints.
 
+        This is a convenience function that clusters each sample in an instance
+        of `pept.PointData` *in parallel*, using joblib. For more fine-grained
+        control over the clustering, the `fit_sample` can be used for each
+        individual sample.
+
         Parameters
         ----------
         cutpoints : an instance of `pept.PointData`
-            The samples of points that will be clustered. In every sample, every point
-            corresponds to a row and is formatted as `[time, x, y, z, etc]`. Only
-            columns `[1, 2, 3]` are used for clustering.
-        store_labels : bool, optional
-            If set to True, the clustered cutpoints are returned along with the centres
-            of the clusters. Setting it to False speeds up the clustering. The default
-            is False.
-        noise : bool, optional
-            If set to True, the clustered cutpoints also include the points classified
-            as noise. Only has an effect if `store_labels` is set to True. The default
-            is False.
-        verbose : bool, optional
-            Provide extra information when computing the cutpoints: time the operation
-            and show a progress bar. The default is `False`.
+            The samples of points that will be clustered. Be careful to set the
+            appropriate `sample_size` and `overlap` for good results. If the
+            `sample_size` is too low, the less radioactive tracers might not be
+            found; if it is too high, temporal resolution is decreased. If the
+            `overlap` is too small, the tracked points might be very "sparse".
+            Note: when transforming LoRs into cutpoints using the `Cutpoints`
+            class, the `sample_size` is automatically set based on the average
+            number of cutpoints found per sample of LoRs.
+        get_labels : bool, default False
+            If set to True, the labelled cutpoints are returned along with the
+            centres of the clusters. The labelled cutpoints are a list of
+            `pept.PointData` for each sample of cutpoints, with an appended
+            column representing the cluster labels (starting from 0; noise is
+            encoded as -1).
+        max_workers : int, optional
+            The maximum number of threads that will be used for asynchronously
+            clustering the samples in `cutpoints`.
+        verbose : bool, default True
+            Provide extra information when computing the cutpoints: time the
+            operation and show a progress bar.
 
         Returns
         -------
         centres : pept.PointData
-            The centroids of every cluster found. They are computed as the average
-            of every column of `[time, x, y, z, etc]` of the clustered points. Another
-            column is added to the initial data in `sample`, signifying the cluster
-            size - the number of points included in the cluster.
-        clustered_cutpoints : numpy.ndarray or pept.PointData
-            The points in `sample` that fall in every cluster. A new column is added
-            to the points in `sample` that signifies the label of cluster that the
-            point was associated with: all points in cluster number 3 will have the
-            number 3 as the last element in their row. The points classified as noise
-            have the number -1 associated.
+            The centroids of every cluster found with columns
+            `[time, x, y, z, ..., cluster_size]`. They are computed as the
+            column-wise average of the points included in each cluster (i.e.
+            for each label). Another column is added to the initial data in
+            `sample`, signifying the cluster size - that is, the number of
+            points included in the cluster.
+        labelled_cutpoints : optional, pept.PointData
+            Returned if `get_labels` is `True`. It is a `pept.PointData`
+            instance in which every sample is the corresponding sample in
+            `cutpoints`, but with an appended column representing the label of
+            the cluster that the point was associated with. The labels are
+            integers starting from 0. The points classified as noise have the
+            number -1 associated. Note that the labels are only consistent
+            within the same sample; that is, for tracers A and B, if in one
+            sample A gets the label 0 and B the label 1, in another sample
+            their order might be inversed. The trajectory separation module
+            might be used to separate them out.
 
         Raises
         ------
-        Exception
-            If `cutpoints` is not an instance (or a subclass) of `pept.PointData`.
+        TypeError
+            If `cutpoints` is not an instance (or a subclass) of
+            `pept.PointData`.
+
+        Note
+        ----
+        If no clusters were found (i.e. all labels are -1), the returned values
+        are empty numpy arrays.
 
         '''
 
@@ -394,7 +544,13 @@ class HDBSCANClusterer:
             start = time.time()
 
         if not isinstance(cutpoints, pept.PointData):
-            raise Exception('[ERROR]: cutpoints should be an instance of pept.PointData (or any class inheriting from it)')
+            raise TypeError((
+                "\n[ERROR]: cutpoints should be an instance of "
+                "`pept.PointData` (or any class inheriting from it). Received "
+                f"{type(cutpoints)}.\n"
+            ))
+
+        get_labels = bool(get_labels)
 
         # Fit all samples in `cutpoints` in parallel using joblib
         # Collect all outputs as a list. If verbose, show progress bar with
@@ -405,15 +561,26 @@ class HDBSCANClusterer:
         if max_workers is None:
             max_workers = os.cpu_count()
 
-        data_list = Parallel(n_jobs = max_workers)(delayed(self.fit_sample)(
-            sample,
-            store_labels = store_labels,
-            noise = noise,
-            as_array = True) for sample in cutpoints
+        data_list = Parallel(n_jobs = max_workers)(
+            delayed(self.fit_sample)(
+                sample,
+                get_labels = get_labels,
+                as_array = True,
+                verbose = False,
+                _set_labels = False
+            ) for sample in cutpoints
         )
 
-        # Access joblib.Parallel output as list comprehensions
-        centres = np.array([row[0] for row in data_list if len(row[0]) != 0])
+        if not get_labels:
+            # data_list is a list of arrays. Only choose the arrays with at
+            # least one row.
+            centres = np.array([r for r in data_list if len(r) != 0])
+        else:
+            # data_list is a list of tuples, in which the first element is an
+            # array of the centres, and the second element is an array of the
+            # labelled cutpoints.
+            centres = np.array([r[0] for r in data_list if len(r[0]) != 0])
+
         if len(centres) != 0:
             centres = pept.PointData(
                 np.vstack(centres),
@@ -422,23 +589,67 @@ class HDBSCANClusterer:
                 verbose = False
             )
 
-        if store_labels:
-            clustered_cutpoints = np.array([row[1] for row in data_list if len(row[1]) != 0])
-            clustered_cutpoints = pept.PointData(
-                np.vstack(np.array(clustered_cutpoints)),
-                sample_size = 0,
-                overlap = 0,
-                verbose = False
-            )
-
         if verbose:
             end = time.time()
-            print("\nFitting cutpoints took {} seconds\n".format(end - start))
+            print("\nFitting cutpoints took {} seconds.\n".format(end - start))
 
-        if store_labels:
-            return [centres, clustered_cutpoints]
-        else:
-            return [centres, []]
+        if get_labels:
+            # data_list is a list of tuples, in which the first element is an
+            # array of the centres, and the second element is an array of the
+            # labelled cutpoints.
+            labelled_cutpoints = [r[1] for r in data_list if len(r[1]) != 0]
+            if len(labelled_cutpoints) != 0:
+                # Encapsulate `labelled_cutpoints` in a `pept.PointData`
+                # instance in which every sample is the corresponding sample in
+                # `cutpoints`, but with an appended column representing the
+                # labels. Therefore, the `sample_size` is the same as for
+                # `cutpoints`, which is equal to the length of every array in
+                # `labelled_cutpoints`
+                labelled_cutpoints = pept.PointData(
+                    np.vstack(np.array(labelled_cutpoints)),
+                    sample_size = len(labelled_cutpoints[0]),
+                    overlap = 0,
+                    verbose = False
+                )
+
+            # Set the attribute `labels` to the stacked labels of all the
+            # labelled cutpoints; that is, the last column in the
+            # labelled_cutpoints internal data:
+            self._labels = labelled_cutpoints.points[:, -1]
+
+            return centres, labelled_cutpoints
+
+        return centres
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = (
+            f"clusterer:\n{self.clusterer}\n\n"
+            f"clusterer_single:\n{self.clusterer_single}\n\n"
+            f"min_cluster_size =     {self.min_cluster_size}\n"
+            f"min_samples =          {self.min_samples}\n\n"
+            f"allow_single_cluster = {self.allow_single_cluster}\n"
+            f"max_workers =          {self.max_workers}\n"
+            f"labels =               {self.labels}\n"
+        )
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPL
+        docstr = (
+            "Class instance that inherits from peptml.HDBSCANClusterer.\n\n"
+            "Attributes\n"
+            "----------\n"
+            f"{self.__str__()}\n"
+            "Methods\n-------\n"
+            "fit_sample(...)\n"
+            "fit(...)\n"
+        )
+
+        return docstr
 
 
 
