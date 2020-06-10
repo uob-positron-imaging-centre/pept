@@ -611,7 +611,7 @@ class LineDataToF(IterableSamples):
             " > If sample_size == 0, all `lines` are returned as a "
                "single sample.\n"
             " > If overlap >= sample_size, an error is raised.\n"
-            " > If overlap < 0, lines are skipped between samples.\n"
+            " > If overlap < 0, lines are skipped between samples."
         )
 
         return docstr

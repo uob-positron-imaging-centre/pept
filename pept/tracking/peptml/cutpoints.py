@@ -447,6 +447,12 @@ class Cutpoints(pept.PointData):
         If `cutoffs` is not a one-dimensional array with values formatted as
         `[min_x, max_x, min_y, max_y, min_z, max_z]`.
 
+    Note
+    ----
+    Once instantiated with a `LineData`, the class computes the cutpoints and
+    *automatically sets the sample_size* to the average number of cutpoints
+    found per sample of LoRs.
+
     Example usage
     -------------
     Compute the cutpoints for a `LineData` instance:
@@ -648,6 +654,19 @@ class Cutpoints(pept.PointData):
             print(f"\nFinding the cutpoints took {end - start} seconds.\n")
 
         return self
+
+
+    def __repr__(self):
+        # Called when writing the class on a REPL. Add another line to the
+        # standard description given in the parent class, pept.PointData.
+        docstr = pept.PointData.__repr__(self) + (
+            "\n\nNote\n----\n"
+            "Once instantiated with a `LineData`, the class computes the \n"
+            "cutpoints and *automatically sets the sample_size* to the \n"
+            "average number of cutpoints found per sample of LoRs."
+        )
+
+        return docstr
 
 
 
