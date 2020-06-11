@@ -6,21 +6,27 @@
 # Date   : 22.08.2019
 
 
-from    .trajectory_separation      import  TrajectorySeparation
+from    .trajectory_separation      import  segregate_trajectories
+from    .trajectory_separation      import  connect_trajectories
+from    .trajectory_separation      import  trajectory_errors
+
 
 __all__ = [
-    "TrajectorySeparation"
+    "segregate_trajectories",
+    "connect_trajectories",
+    "trajectory_errors"
 ]
 
 
-__author__ =        "Andrei Leonard Nicusan"
-__credits__ =       ["Andrei Leonard Nicusan", "Kit Windows-Yule", "Sam Manger"]
-__license__ =       "GNU v3.0"
-__version__ =       "0.1"
-__maintainer__ =    "Andrei Leonard Nicusan"
-__email__ =         "a.l.nicusan@bham.ac.uk"
-__status__ =        "Development"
-
-
+__author__ = "Andrei Leonard Nicusan"
+__credits__ = [
+    "Andrei Leonard Nicusan",
+    "Kit Windows-Yule",
+    "Sam Manger"
+]
+__license__ = "GNU v3.0"
+__maintainer__ = "Andrei Leonard Nicusan"
+__email__ = "a.l.nicusan@bham.ac.uk"
+__status__ = "Development"
 
 

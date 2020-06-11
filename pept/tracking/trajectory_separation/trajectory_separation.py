@@ -1,306 +1,506 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools.
+#
+#    If you used this codebase or any software making use of it in a scientific
+#    publication, you must cite the following paper:
+#        Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
+#        using machine learning. Review of Scientific Instruments.
+#        2020 Jan 1;91(1):013329.
+#        https://doi.org/10.1063/1.5129251
+#
+#    Copyright (C) 2020 Andrei Leonard Nicusan
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 # File   : trajectory_separation.py
 # License: License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 23.08.2019
 
 
-'''The *peptml* module implements a hierarchical density-based clustering
-algorithm for general Positron Emission Particle Tracking (PEPT)
-
-The module aims to provide general classes which can
-then be used in a script file as the user sees fit. For example scripts,
-look at the base of the pept library.
-
-The peptml subpackage accepts any instace of the LineData base class
-and can create matplotlib- or plotly-based figures.
-
-PEPTanalysis requires the following packages:
-
-* **numpy**
-* **math**
-* **matplotlib.pyplot** and **mpl_toolkits.mplot3d** for 3D matplotlib-based plotting
-* **joblib** for multithreaded operations (such as midpoints-finding)
-* **tqdm** for showing progress bars
-* **plotly.subplots** and **plotly.graph_objects** for plotly-based plotting
-* **hdbscan** for clustering midpoints and centres
-* **time** for verbose timing of operations
-
-It was successfuly used at the University of Birmingham to analyse real
-Fluorine-18 tracers in air.
-
-If you use this package, you should cite
-the following paper: [TODO: paper signature].
-
-'''
-
-
-import  math
+import  os
 import  time
-import  numpy                                   as          np
 
-from    scipy.spatial                           import      cKDTree
-from    joblib                                  import      Parallel,       delayed
-from    tqdm                                    import      tqdm
+import  numpy                       as      np
+from    scipy.spatial               import  cKDTree
+from    scipy.sparse                import  csr_matrix
+from    scipy.sparse.csgraph        import  minimum_spanning_tree
+
+from    tqdm                        import  tqdm
 
 import  pept
-
-
-
-
-def findMeanError(truePositions, foundPositions):
-
-    tree = cKDTree(truePositions)
-
-    meanError = 0
-    meanErrorX = 0
-    meanErrorY = 0
-    meanErrorZ = 0
-    n = 0
-    for centre in foundPositions:
-        d, index = tree.query(centre, k = 1,  n_jobs = -1)
-        meanError += np.linalg.norm(centre - truePositions[index])
-
-        meanErrorX += np.abs(centre[0] - truePositions[index][0])
-        meanErrorY += np.abs(centre[1] - truePositions[index][1])
-        meanErrorZ += np.abs(centre[2] - truePositions[index][2])
-
-        n += 1
-
-    meanError /= n
-
-    meanErrorX /= n
-    meanErrorY /= n
-    meanErrorZ /= n
-
-    return [meanError, meanErrorX, meanErrorY, meanErrorZ]
-
-
-
-
-class TrajectorySeparation:
-
-    def __init__(self,
-                 centres,
-                 points_to_check = 25,
-                 max_distance = 20,
-                 max_cluster_size_diff = 500,
-                 points_cluster_size = 50):
-
-        # centres row: [time, x, y, z, clusterSize]
-        # Make sure the trajectory is memory-contiguous for efficient
-        # KDTree partitioning
-        self.centres = np.ascontiguousarray(centres)
-        self.points_to_check = points_to_check
-        self.max_distance = max_distance
-        self.max_cluster_size_diff = max_cluster_size_diff
-        self.points_cluster_size = points_cluster_size
-
-        # For every point in centres, save a set of the trajectory
-        # indices of the trajectories that they are part of
-        #   eg. centres[2] is part of trajectories 0 and 1 =>
-        #   trajectory_indices[2] = {0, 1}
-        # Initialise a vector of empty sets of size len(centres)
-        self.trajectory_indices = np.array([ set() for i in range(len(self.centres)) ])
-
-        # For every trajectory found, save a list of the indices of
-        # the centres that are part of that trajectory
-        #   eg. trajectory 1 is comprised of centres 3, 5 and 8 =>
-        #   centresIndices[1] = [3, 5, 8]
-        self.centres_indices = [[]]
-
-        # Maximum trajectory index
-        self.max_index = 0
-
-
-    def find_trajectories(self):
-
-        for i, current_point in enumerate(self.centres):
-
-            if i == 0:
-                # Add the first point to trajectory 0
-                self.trajectory_indices[0].add(self.max_index)
-                self.centres_indices[self.max_index].append(0)
-                self.max_index += 1
-                continue
-
-            # Search for the closest previous pointsToCheck points
-            # within a given maxDistance
-            start_index = i - self.points_to_check
-            end_index = i
-
-            if start_index < 0:
-                start_index = 0
-
-            # Construct a KDTree from the x, y, z (1:4) of the
-            # selected points. Get the indices for all the points within
-            # maxDistance of the currentPoint
-            tree = cKDTree(self.centres[start_index:end_index, 1:4])
-            closest_indices = tree.query_ball_point(current_point[1:4],
-                                                    self.max_distance,
-                                                    n_jobs = -1)
-            closest_indices = np.array(closest_indices) + start_index
-
-            # If no point was found, it is a new trajectory. Continue
-            if len(closest_indices) == 0:
-                self.trajectory_indices[i].add(self.max_index)
-                self.centres_indices.append([i])
-                self.max_index += 1
-                continue
-
-            # For every close point found, search for all the trajectory indices
-            #   - If all trajectory indices sets are equal and of a single value
-            #   then currentPoint is part of the same trajectory
-            #   - If all trajectory indices sets are equal, but of more values,
-            #   then currentPoint diverged from an intersection of trajectories
-            #   and is part of a single trajectory => separate it
-            #
-            #   - If every pair of trajectory indices sets is not disjoint, then
-            #   currentPoint is only one of them
-            #   - If there exists a pair of trajectory indices sets that is
-            #   disjoint, then currentPoint is part of all of them
-
-            # Select the trajectories of all the points that were found
-            # to be the closest
-            closest_trajectories = self.trajectory_indices[closest_indices]
-            #print("closestTrajectories:")
-            #print(closestTrajectories)
-
-            # If all the closest points are part of the same trajectory
-            # (just one!), then the currentPoint is part of it too
-            if (np.all(closest_trajectories == closest_trajectories[0]) and
-                len(closest_trajectories[0]) == 1):
-
-                self.trajectory_indices[i] = closest_trajectories[0]
-                self.centres_indices[ next(iter(closest_trajectories[0])) ].append(i)
-                continue
-
-            # Otherwise, check the points based on their cluster size
-            else:
-                # Create a list of all the trajectories that were found to
-                # intersect
-                #print('\nIntersection:')
-                closest_traj_indices = list( set().union(*closest_trajectories) )
-
-                #print("ClosestTrajIndices:")
-                #print(closestTrajIndices)
-
-                # For each close trajectory, calculate the mean cluster size
-                # of the last points_cluster_size points
-
-                # Keep track of the mean cluster size that is the closest to
-                # the currentPoint's clusterSize
-                current_cluster_size = current_point[4]
-                #print("currentClusterSize = {}".format(currentClusterSize))
-                closest_traj_index = -1
-                cluster_size_diff = self.max_cluster_size_diff
-
-                for traj_index in closest_traj_indices:
-                    #print("trajIndex = {}".format(trajIndex))
-
-                    traj_centres = self.centres[ self.centres_indices[traj_index] ]
-                    #print("trajCentres:")
-                    #print(trajCentres)
-                    mean_cluster_size = traj_centres[-self.points_cluster_size:][:, 4].mean()
-                    #print("meanClusterSize = {}".format(meanClusterSize))
-                    #print("clusterSizeDiff = {}".format(clusterSizeDiff))
-                    #print("abs diff = {}".format(np.abs( currentClusterSize - meanClusterSize )))
-                    if np.abs( current_cluster_size - mean_cluster_size ) < cluster_size_diff:
-                        closest_traj_index = traj_index
-                        cluster_size_diff = np.abs( current_cluster_size - mean_cluster_size )
-
-                if closest_traj_index == -1:
-                    #self.trajectoryIndices[i] = set(closestTrajIndices)
-                    #for trajIndex in closestTrajIndices:
-                    #    self.centresIndices[trajIndex].append(i)
-
-                    print("\n**** -1 ****\n")
-                    break
-                else:
-                    #print("ClosestTrajIndex found = {}".format(closestTrajIndex))
-                    self.trajectory_indices[i] = set([closest_traj_index])
-                    self.centres_indices[closest_traj_index].append(i)
-
-        individual_trajectories = []
-        for traj_centres in self.centres_indices:
-            individual_traj = pept.PointData(self.centres[traj_centres],
-                                             sample_size = 0,
-                                             overlap = 0,
-                                             verbose = False)
-            individual_trajectories.append(individual_traj)
-
-        return individual_trajectories
-
-
-
-        '''
-            # If the current point is not part of any trajectory, assign it
-            # the maxIndex and increment it
-            if len(self.trajectoryIndices[i]) == 0:
-                self.trajectoryIndices[i].append(self.maxIndex)
-                self.maxIndex += 1
-
-            print(self.trajectoryIndices[i])
-            print(self.maxIndex)
-
-            # Construct a KDTree from the numberOfPoints in front of
-            # the current point
-            tree = cKDTree(self.trajectory[(i + 1):(i + self.numberOfPoints + 2)][1:4])
-
-            # For every trajectory that the current point is part of,
-            # find the closest points in front of it
-            numberOfIntersections = len(self.trajectoryIndices[i])
-            dist, nextPointsIndices = tree.query(currentPoint, k=numberOfIntersections, distance_upper_bound=self.maxDistance, n_jobs=-1)
-
-            print(nextPointsIndices)
-
-            # If the current point is part of more trajectories,
-            # an intersection happened. Call subroutine to part
-            # the trajectories
-            if numberOfIntersections > 1:
-                for j in range(0, len(self.trajectoryIndices[i])):
-                    trajIndex = self.trajectoryIndices[i][j]
-                    self.trajectoryIndices[i + 1 + nextPointsIndices[j]].append(trajIndex)
-
-            else:
-                self.trajectoryIndices[i + 1 + nextPointsIndices].append(self.trajectoryIndices[i][0])
-
-            print(self.trajectoryIndices)
-        '''
-
-
-    def getTrajectories(self):
-
-        self.individualTrajectories = []
-        for trajCentres in self.centresIndices:
-            self.individualTrajectories.append(self.centres[trajCentres])
-
-        self.individualTrajectories = np.array(self.individualTrajectories)
-        return self.individualTrajectories
-
-        '''
-        self.individualTrajectories = [ [] for i in range(0, self.maxIndex + 1) ]
-        for i in range(0, len(self.trajectoryIndices)):
-            for trajIndex in self.trajectoryIndices[i]:
-                self.individualTrajectories[trajIndex].append(self.centres[i])
-
-        self.individualTrajectories = np.array(self.individualTrajectories)
-        for i in range(len(self.individualTrajectories)):
-            if len(self.individualTrajectories[i]) > 0:
-                self.individualTrajectories[i] = np.vstack(self.individualTrajectories[i])
-        return self.individualTrajectories
-        '''
-
-
-    def plotTrajectoriesAltAxes(self, ax):
-        trajectories = self.getTrajectories()
-        for traj in trajectories:
-            if len(traj) > 0:
-                ax.scatter(traj[:, 3], traj[:, 1], traj[:, 2], marker='D', s=10)
-
-
-
-
+import  hdbscan
+
+from    .tco                        import  with_continuations
+from    .distance_matrix_reachable  import  distance_matrix_reachable
+
+
+
+
+def trajectory_errors(
+    true_positions,
+    tracked_positions,
+    averages = True,
+    stds = False,
+    errors = False,
+    max_workers = None
+):
+
+    # true_positions, tracked_positions cols: [t, x, y, z, ...]
+    true_positions = np.asarray(true_positions, dtype = float)
+    tracked_positions = np.asarray(tracked_positions, dtype = float)
+
+    # Construct k-d tree for fast nearest neighbour lookup.
+    tree = cKDTree(true_positions[:, 1:4])
+
+    # errors cols: [err, err_x, err_y, err_z]
+    errors = np.zeros((len(tracked_positions), 4))
+
+    if max_workers is None:
+        max_workers = os.cpu_count()
+
+    # Find closest true point to each tracked point.
+    for i, pos in enumerate(tracked_positions[:, 1:4]):
+        dist, index = tree.query(pos, k = 1,  n_jobs = max_workers)
+
+        errors[i, 0] = np.linalg.norm(pos - true_positions[index])
+        errors[i, 1:4] = np.abs(pos - true_positions[index, 0:3])
+        # errors[i, 1] = np.abs(pos[0] - true_positions[index, 0])
+        # errors[i, 2] = np.abs(pos[1] - true_positions[index, 1])
+        # errors[i, 3] = np.abs(pos[2] - true_positions[index, 2])
+
+    # Append and return the results that were asked for.
+    results = []
+
+    if averages:
+        results.append(np.average(errors, axis = 0))
+    if stds:
+        results.append(np.std(errors, axis = 0))
+    if errors:
+        results.append(errors)
+
+    # If a single result was asked for, return it directly; otherwise, use a
+    # tuple.
+    if len(results) == 1:
+        return results[0]
+    else:
+        return tuple(results)
+
+
+
+
+def segregate_trajectories(
+    point_data,
+    points_window,
+    trajectory_cut_distance,
+    min_trajectory_size = 5,
+    as_list = False,
+    return_mst = False
+):
+    '''Segregate the intertwined points from multiple trajectories into
+    individual paths.
+
+    The points in `point_data` (a numpy array or `pept.PointData`) are used to
+    construct a minimum spanning tree in which every point can only be
+    connected to `points_window` points around it - this "window" refers to the
+    points in the initial data array, sorted based on the time column;
+    therefore, only points within a certain timeframe can be connected. All
+    edges (or "connections") in the minimum spanning tree that are larger than
+    `trajectory_cut_distance` are removed (or "cut") and the remaining
+    connected "clusters" are deemed individual trajectories if they contain
+    more than `min_trajectory_size` points.
+
+    The trajectory indices (or labels) are appended to `point_data`. That is,
+    for each data point (i.e. row) in `point_data`, a label will be appended
+    starting from 0 for the corresponding trajectory; a label of -1 represents
+    noise. If `point_data` is a numpy array, a new one is returned; if it is a
+    `pept.PointData` instance, the inner `points` are changed in-place.
+
+    This function uses single linkage clustering with a custom metric for
+    spatio-temporal data to segregate trajectory points. The single linkage
+    clustering was optimised for this use-case: points are only connected if
+    they are within a certain `points_window` in the time-sorted input array.
+    Sparse matrices are also used for minimising the memory footprint.
+
+    Parameters
+    ----------
+    point_data : (M, N>=4) numpy.ndarray or pept.PointData
+        The points from multiple trajectories. Each row in `point_data` will
+        have a timestamp and the 3 spatial coordinates, such that the data
+        columns are [time, x_coord, y_coord, z_coord]. Note that `point_data`
+        can have more data columns and they will simply be ignored.
+    points_window : int
+        Two points are "reachable" (i.e. they can be connected) if and only if
+        they are within `points_window` in the time-sorted input `point_data`.
+        As the points from different trajectories are intertwined (e.g. for two
+        tracers A and B, the `point_data` array might have two entries for A,
+        followed by three entries for B, then one entry for A, etc.), this
+        should optimally be the largest number of points in the input array
+        between two consecutive points on the same trajectory. If
+        `points_window` is too small, all points in the dataset will be
+        unreachable. Naturally, a larger `time_window` correponds to more pairs
+        needing to be checked (and the function will take a longer to
+        complete).
+    trajectory_cut_distance : float
+        Once all the closest points are connected (i.e. the minimum spanning
+        tree is constructed), separate all trajectories that are further
+        apart than `trajectory_cut_distance`.
+    min_trajectory_size : float, default 5
+        After the trajectories have been cut, declare all trajectories with
+        fewer points than `min_trajectory_size` as noise.
+    as_list : bool, default False
+        If True, return a list of arrays, where each array contains the points
+        in a single trajectory. In other words, return separate, single
+        trajectories in a list. If False, return a single array of all points
+        (if `point_data` was a `numpy.ndarray`) or a `pept.PointData`
+        (if `point_data` was a `pept.PointData` instance).
+    return_mst : bool, default False
+        If `True`, the function will also return the minimum spanning tree
+        constructed using the input `point_data`. This is a numpy array with
+        columns [vertex1, vertex2, edge_length], where vertex1 and vertex2 are
+        the indices in `point_data` of the connected points, and edge_length is
+        the euclidian distance between them.
+
+    Returns
+    -------
+    point_data: numpy.ndarray or pept.PointData or list of numpy.ndarray
+        If `as_list` is `False`, this is the `point_data` array or
+        `pept.PointData` instance with an extra column for the trajectory index
+        (i.e. label) - the return type is similar to the input type. If
+        `as_list` is `True`, this is a list of arrays, in which each array
+        contains the points in a single_trajectory; these still include the
+        trajectory label. A label value of `-1` indicates noise; the found
+        trajectories are then labelled starting from 0.
+    mst: numpy.ndarray, optional
+        If `return_mst` is `True`, another numpy array is returned as a second
+        variable containing the columns [vertex1, vertex2, edge_length], where
+        vertex1 and vertex2 are the indices in `point_data` of the connected
+        points, and edge_length is the euclidian distance between them.
+
+    Raises
+    ------
+    ValueError
+        If `point_data` is a numpy array with fewer than 4 columns.
+    ValueError
+        If `points_window` is smaller than 1.
+
+    '''
+    # Check `point_data` is a numpy array or pept.PointData
+    if isinstance(point_data, pept.PointData):
+        pts = point_data.points
+    else:
+        pts = np.asarray(point_data)
+        if pts.ndim != 2 or pts.shape[1] < 4:
+            raise ValueError((
+                "\n[ERROR]: `point_data` should have dimensions (M, N), where "
+                f"N >= 4. Received {pts.shape}.\n"
+            ))
+
+    # Sort pts based on the time column (col 0) and create a C-ordered copy to
+    # send to Cython.
+    pts = np.asarray(pts[pts[:, 0].argsort()], dtype = float, order = "C")
+
+    # Type-check the input parameters
+    points_window = int(points_window)
+    if points_window < 1:
+        raise ValueError((
+            "\n[ERROR]: `points_window` should be larger than 1! Received "
+            f"{points_window}.\n"
+        ))
+
+    trajectory_cut_distance = float(trajectory_cut_distance)
+    min_trajectory_size = int(min_trajectory_size)
+    return_mst = bool(return_mst)
+
+    # Calculate the sparse distance matrix between reachable points. This is an
+    # optimised Cython function returning a sparse CSR matrix.
+    distance_matrix = distance_matrix_reachable(pts, points_window)
+
+    # Construct the minimum spanning tree from the sparse distance matrix. Note
+    # that `mst` is also a sparse CSR matrix.
+    mst = minimum_spanning_tree(distance_matrix)
+
+    # Get the minimum spanning tree edges into the [vertex 1, vertex 2,
+    # edge distance] format, then sort it based on the edge distance.
+    mst = mst.tocoo()
+    mst_edges = np.vstack((mst.row, mst.col, mst.data)).T
+    mst_edges = mst_edges[mst_edges[:, 2].argsort()]
+
+    # Create the single linkage tree from the minimum spanning tree edges using
+    # internal hdbscan methods (because they're damn fast). This should be a
+    # fairly quick step.
+    single_linkage_tree = hdbscan._hdbscan_linkage.label(mst_edges)
+    single_linkage_tree = hdbscan.plots.SingleLinkageTree(single_linkage_tree)
+
+    # Cut the single linkage tree at `trajectory_cut_distance` and get the
+    # cluster labels, setting clusters smaller than `min_trajectory_size` to
+    # -1 (i.e. noise).
+    labels = single_linkage_tree.get_clusters(
+        trajectory_cut_distance,
+        min_trajectory_size
+    )
+
+    # Append the labels to `pts`.
+    pts = np.append(pts, labels[:, np.newaxis], axis = 1)
+
+    # Returns based on as_list, return_mst and input data type
+    if as_list:
+        # Get a list of arrays for each trajectory
+        separate_pts = pept.utilities.group_by_column(pts, -1)
+        if return_mst:
+            return separate_pts, mst_edges
+        return separate_pts
+
+    # If `point_data` was a `pept.PointData` instance, overwrite the inner
+    # `points` data (with just the new label column).
+    if isinstance(point_data, pept.PointData):
+        point_data._points = pts
+        if return_mst:
+            return point_data, mst_edges
+        else:
+            return point_data
+    elif return_mst:
+        return pts, mst_edges
+    return pts
+
+
+
+
+def connect_trajectories(
+    trajectories_points,
+    max_time_difference,
+    max_signature_difference,
+    points_to_check = 50,
+    signature_col = 4,
+    label_col = -1,
+    as_list = False
+):
+    '''Connect segregated trajectories based on tracer signatures.
+
+    A pair of trajectories in `trajectories_points` will be connected if their
+    ends have a timestamp difference that is smaller than `max_time_difference`
+    and the difference between the signature averages of the closest
+    `points_to_check` points is smaller than `max_signature_difference`.
+
+    The `trajectories_points` are distinguished based on the trajectory
+    indices in the data column `label_col`. Note that the
+    `segregate_trajectories` function appends the labels to the data points.
+
+    Because the tracer signature (e.g. cluster size in PEPT-ML) varies with the
+    tracer position in the system, an average of `points_to_check` points
+    is used for connecting pairs of trajectories.
+
+    Parameters
+    ----------
+    trajectories_points : (M, N>=6) numpy.ndarray or pept.PointData
+        A numpy array of points that have a timestamp, spatial coordinates,
+        a tracer signature (such as cluster size in PEPT-ML) and a trajectory
+        index (or label). The data columns in `trajectories_points` are then
+        [time, x, y, z, ..., signature, ..., label, ...]. Note that the
+        timestamps and spatial coordinates must be the first 4 columns, while
+        the signature and label columns may be anywhere and are pointed at
+        by `signature_col` and `label_col`.
+    max_time_difference : float
+        Only try to connect trajectories whose ends have a timestamp difference
+        smaller than `max_time_difference`.
+    max_signature_difference : float
+        Connect two trajectories if the difference between the signature
+        averages of the closest `points_to_check` is smaller than this.
+    points_to_check : int, default 50
+        The number of points used when computing the average tracer signature
+        in one trajectory.
+    signature_col : int, default 4
+        The column in `trajectories_points` that contains the tracer
+        signatures. The default is 4 (i.e. the signature comes right after
+        the spatial coordinates).
+    label_col : int, default -1
+        The column in `trajectories_points` that contains the trajectory
+        indices (labels). The default is -1 (i.e. the last column).
+    as_list : bool, default False
+        If True, return a list of arrays, where each array contains the points
+        in a single trajectory. In other words, return separate, single
+        trajectories in a list. If False, return a single array of all points
+        (if `trajectories_points` was a `numpy.ndarray`) or a `pept.PointData`
+        (if `trajectories_points` was a `pept.PointData` instance), but with
+        labels changed to reflect the connected trajectories.
+
+    Returns
+    -------
+    list or numpy.ndarray or pept.PointData
+        If `as_list` is True, return separate, single trajectories in a list.
+        If `as_list` is False, return a single array of all points
+        (if `trajectories_points` was a `numpy.ndarray`) or a `pept.PointData`
+        (if `trajectories_points` was a `pept.PointData` instance), but with
+        labels changed to reflect the connected trajectories.
+
+    Raises
+    ------
+    ValueError
+        If `point_data` is a numpy array with fewer than 6 columns.
+
+    Note
+    ----
+    The labels are changed in-place to reflect the connected trajectories. For
+    example, if there are 3 trajectories with labels 0, 1, 2 and the first two
+    are connected, then all points which previously had the label 1 will be
+    changed to label 0; the last trajectory's label remains unchanged, 2.
+
+    '''
+    # Check `point_data` is a numpy array or pept.PointData
+    if isinstance(trajectories_points, pept.PointData):
+        trajs = trajectories_points.point_data
+    else:
+        trajs = np.asarray(trajectories_points, dtype = float, order = "C")
+        if trajs.ndim != 2 or trajs.shape[1] < 6:
+            raise ValueError((
+                "\n[ERROR]: `trajectories_points` should have dimensions "
+                f"(M, N), where N >= 6. Received {trajs.shape}.\n"
+            ))
+
+    # Type-check the input parameters
+    max_time_difference = float(max_time_difference)
+    max_signature_difference = float(max_signature_difference)
+    points_to_check = int(points_to_check)
+    signature_col = int(signature_col)
+    label_col = int(label_col)
+    as_list = bool(as_list)
+
+    # Separate the trajs array into a list of individual trajectories based on
+    # the `label_col`.
+    trajectory_list = pept.utilities.group_by_column(trajs, label_col)
+
+    trajectory_list = _connect_trajectories(
+        trajectory_list,
+        max_time_difference,
+        max_signature_difference,
+        points_to_check,
+        signature_col,
+        label_col
+    )
+
+    if as_list:
+        return trajectory_list
+    elif isinstance(trajectories_points, pept.PointData):
+        trajectories_points._points = np.vstack(np.array(trajectory_list))
+        return trajectories_points
+    else:
+        return np.vstack(np.array(trajectory_list))
+
+
+
+
+# Use tail-call optimisation from tco.py
+@with_continuations()
+def _connect_trajectories(
+    trajectory_list,
+    max_time_difference,
+    max_signature_difference,
+    points_to_check,
+    signature_col = 4,
+    label_col = -1,
+    self = None
+):
+    number_of_trajectories = len(trajectory_list)
+
+    # Check all pairs of trajectories. Each trajectory has two ends:
+    # Traj1: [End11, End12]
+    # Traj2: [End21, End22]
+    for i in range(number_of_trajectories - 1):
+        for j in range(i + 1, number_of_trajectories):
+
+            t1 = trajectory_list[i]     # Traj1
+            t2 = trajectory_list[j]     # Traj2
+
+            # Try to connect End11 with End22
+            # Check the time difference between End11 and End22 is small enough
+            if time_difference(t1, t2) < max_time_difference:
+
+                # Check the signature difference of the last `points_to_check`
+                # points is small enough
+                if signature_difference(t1, t2, points_to_check,
+                    signature_col) < max_signature_difference:
+
+                    # Assimilate the column labels
+                    t1[:, label_col] = t2[0, label_col]
+
+                    # Merge the two trajectories
+                    connected_trajectory = np.append(t2, t1, axis = 0)
+
+                    # Delete the individual trajectories and append the merged
+                    # trajectories to `trajectory_list`
+                    del trajectory_list[i], trajectory_list[j - 1]
+                    trajectory_list.append(connected_trajectory)
+
+                    # Call the function again (to reinitialise
+                    # `number_of_trajectories`) using tail call optimisation
+                    # from tco.py
+                    return self(
+                        trajectory_list,
+                        max_time_difference,
+                        max_signature_difference,
+                        points_to_check,
+                        signature_col,
+                        label_col
+                    )
+
+            # Try to connect End12 with End21
+            elif time_difference(t2, t1) < max_time_difference:
+
+                if signature_difference(t2, t1, points_to_check,
+                    signature_col) < max_signature_difference:
+
+                    t2[:, label_col] = t1[0, label_col]
+                    connected_trajectory = np.append(t1, t2, axis = 0)
+
+                    del trajectory_list[i], trajectory_list[j - 1]
+                    trajectory_list.append(connected_trajectory)
+
+                    return self(
+                        trajectory_list,
+                        max_time_difference,
+                        max_signature_difference,
+                        points_to_check,
+                        signature_col,
+                        label_col
+                    )
+
+    return trajectory_list
+
+
+
+
+def signature_difference(
+    traj1,
+    traj2,
+    points_to_check,
+    signature_col
+):
+    return np.abs(
+        np.average(traj1[:points_to_check, signature_col]) - \
+        np.average(traj2[-points_to_check:, signature_col])
+    )
+
+
+
+
+def time_difference(traj1, traj2):
+    return np.abs(traj1[0, 0] - traj2[-1, 0])
 
 
