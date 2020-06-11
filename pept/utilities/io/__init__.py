@@ -20,15 +20,15 @@ __all__ = [
 ]
 
 
-__author__ =        "Andrei Leonard Nicusan"
-__credits__ =       [
+__author__ = "Andrei Leonard Nicusan"
+__credits__ = [
     "Andrei Leonard Nicusan",
     "Dr. Kit Windows-Yule",
     "Dr. Sam Manger"
 ]
-__license__ =       "GNU v3.0"
-__maintainer__ =    "Andrei Leonard Nicusan"
-__email__ =         "a.l.nicusan@bham.ac.uk"
-__status__ =        "Development"
+__license__ = "GNU v3.0"
+__maintainer__ = "Andrei Leonard Nicusan"
+__email__ = "a.l.nicusan@bham.ac.uk"
+__status__ = "Development"
 
 
