@@ -948,3 +948,16 @@ class CutpointsToF(pept.PointData):
         return self
 
 
+    def __repr__(self):
+        # Called when writing the class on a REPL. Add another line to the
+        # standard description given in the parent class, pept.PointData.
+        docstr = pept.PointData.__repr__(self) + (
+            "\n\nNote\n----\n"
+            "Once instantiated with a `LineData`, the class computes the \n"
+            "cutpoints and *automatically sets the sample_size* to the \n"
+            "average number of cutpoints found per sample of LoRs."
+        )
+
+        return docstr
+
+
