@@ -111,6 +111,9 @@ cy_extensions = [
     Extension('pept.utilities.traverse.traverse2d',
               ['pept/utilities/traverse/traverse2d.pyx'],
               **cy_extension_kw),
+    Extension('pept.tracking.trajectory_separation.distance_matrix_reachable',
+              ['pept/tracking/trajectory_separation/distance_matrix_reachable.pyx'],
+              **cy_extension_kw)
 ]
 
 extensions = cythonize(cy_extensions, **cythonize_kw)
