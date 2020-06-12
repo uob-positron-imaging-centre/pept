@@ -130,8 +130,8 @@ def segregate_trajectories(
     The trajectory indices (or labels) are appended to `point_data`. That is,
     for each data point (i.e. row) in `point_data`, a label will be appended
     starting from 0 for the corresponding trajectory; a label of -1 represents
-    noise. If `point_data` is a numpy array, a new one is returned; if it is a
-    `pept.PointData` instance, the inner `points` are changed in-place.
+    noise. If `point_data` is a numpy array, a new numpy array is returned; if
+    it is a `pept.PointData` instance, a new instance is returned.
 
     This function uses single linkage clustering with a custom metric for
     spatio-temporal data to segregate trajectory points. The single linkage
@@ -180,7 +180,7 @@ def segregate_trajectories(
 
     Returns
     -------
-    point_data: numpy.ndarray or pept.PointData or list of numpy.ndarray
+    points_labelled: numpy.ndarray or pept.PointData or list of numpy.ndarray
         If `as_list` is `False`, this is the `point_data` array or
         `pept.PointData` instance with an extra column for the trajectory index
         (i.e. label) - the return type is similar to the input type. If
@@ -268,14 +268,19 @@ def segregate_trajectories(
             return separate_pts, mst_edges
         return separate_pts
 
-    # If `point_data` was a `pept.PointData` instance, overwrite the inner
-    # `points` data (with just the new label column).
+    # If `point_data` was a `pept.PointData` instance, return a new
+    # `pept.PointData` with the new label column.
     if isinstance(point_data, pept.PointData):
-        point_data._points = pts
+        point_data_labelled = pept.PointData(
+            pts,
+            sample_size = point_data.sample_size,
+            overlap = point_data.overlap,
+            verbose = False
+        )
         if return_mst:
-            return point_data, mst_edges
+            return point_data_labelled, mst_edges
         else:
-            return point_data
+            return point_data_labelled
     elif return_mst:
         return pts, mst_edges
     return pts
@@ -300,8 +305,9 @@ def connect_trajectories(
     `points_to_check` points is smaller than `max_signature_difference`.
 
     The `trajectories_points` are distinguished based on the trajectory
-    indices in the data column `label_col`. Note that the
-    `segregate_trajectories` function appends the labels to the data points.
+    indices in the data column `label_col`. This can be achieved using the
+    `segregate_trajectories` function, which appends the labels to the data
+    points.
 
     Because the tracer signature (e.g. cluster size in PEPT-ML) varies with the
     tracer position in the system, an average of `points_to_check` points
@@ -343,7 +349,7 @@ def connect_trajectories(
 
     Returns
     -------
-    list or numpy.ndarray or pept.PointData
+    numpy.ndarray or pept.PointData or list of numpy.ndarray
         If `as_list` is True, return separate, single trajectories in a list.
         If `as_list` is False, return a single array of all points
         (if `trajectories_points` was a `numpy.ndarray`) or a `pept.PointData`
@@ -365,7 +371,7 @@ def connect_trajectories(
     '''
     # Check `point_data` is a numpy array or pept.PointData
     if isinstance(trajectories_points, pept.PointData):
-        trajs = trajectories_points.point_data
+        trajs = trajectories_points.points
     else:
         trajs = np.asarray(trajectories_points, dtype = float, order = "C")
         if trajs.ndim != 2 or trajs.shape[1] < 6:
@@ -384,7 +390,7 @@ def connect_trajectories(
 
     # Separate the trajs array into a list of individual trajectories based on
     # the `label_col`.
-    trajectory_list = pept.utilities.group_by_column(trajs, label_col)
+    trajectory_list = pept.utilities.group_by_column(trajs.copy(), label_col)
 
     trajectory_list = _connect_trajectories(
         trajectory_list,
@@ -398,8 +404,13 @@ def connect_trajectories(
     if as_list:
         return trajectory_list
     elif isinstance(trajectories_points, pept.PointData):
-        trajectories_points._points = np.vstack(np.array(trajectory_list))
-        return trajectories_points
+        trajectories_points_connected = pept.PointData(
+            np.vstack(np.array(trajectory_list)),
+            sample_size = trajectories_points.sample_size,
+            overlap = trajectories_points.overlap,
+            verbose = False
+        )
+        return trajectories_points_connected
     else:
         return np.vstack(np.array(trajectory_list))
 
