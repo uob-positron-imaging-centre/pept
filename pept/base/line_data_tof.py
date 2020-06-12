@@ -69,21 +69,27 @@ class LineDataToF(IterableSamples):
         Flight (ToF) data (or any generic set of lines with two timestamps) as
         individual time and cartesian (3D) coordinates of two points defining
         each line, **in mm**. A row is then [t1, x1, y1, z1, t2, x2, y2, z2].
-    sample_size : int, optional
-        An `int`` that defines the number of lines that should be returned when
+    sample_size : int, default 0
+        An `int` that defines the number of lines that should be returned when
         iterating over `lines`. A `sample_size` of 0 yields all the data as
-        one single sample. Default is 0.
-    overlap : int, optional
+        one single sample.
+    overlap : int, default 0
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `lines`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. An error is raised if `overlap` is larger than
-        or equal to `sample_size`. Default is 0.
-    verbose : bool, optional
+        or equal to `sample_size`.
+    append_tofpoints : bool, default False
+        Calculate the tofpoints from the ToF data and append them to the input
+        `lines`. The tofpoints include both the time and location of the tracer
+        as calculated from the Time of Flight (ToF) data, for every point (i.e.
+        row) in `lines`. Therefore, 3 new columns are appended to the input
+        LoRs array.
+    verbose : bool, default False
         An option that enables printing the time taken for the initialisation
         of an instance of the class. Useful when reading large files (10gb
-        files for PEPT data is not unheard of). Default is False.
+        files for PEPT data is not unheard of).
 
     Attributes
     ----------
@@ -94,14 +100,14 @@ class LineDataToF(IterableSamples):
         `[time1, x1, y1, z1, time2, x2, y2, z2]`.
     sample_size : int
         An `int` that defines the number of lines that should be returned when
-        iterating over `lines`. Default is 0.
+        iterating over `lines`.
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `lines`. An overlap of 0 implies
         consecutive samples, while an overlap of (`sample_size` - 1) implies
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
-        `sample_size`. Default is 0.
+        `sample_size`.
     number_of_lines : int
         An `int` that corresponds to len(`lines`), or the number of LoRs
         stored by `lines`.
@@ -137,7 +143,7 @@ class LineDataToF(IterableSamples):
         lines,
         sample_size = 0,
         overlap = 0,
-        append_tofpoints = True,
+        append_tofpoints = False,
         verbose = False
     ):
 
@@ -276,7 +282,6 @@ class LineDataToF(IterableSamples):
         will not be affected; the tofpoints will simply be appended after them.
 
         '''
-
         tofpoints = self.get_tofpoints(as_array = True)
 
         # Append the ToF data to the LoR data
@@ -585,6 +590,26 @@ class LineDataToF(IterableSamples):
         )
 
         return trace
+
+
+    def copy(self):
+        '''Create a deep copy of an instance of this class, including a new
+        inner numpy array `lines`.
+
+        Returns
+        -------
+        pept.LineDataToF
+            A new instance of the `pept.LineDataToF` class with the same
+            attributes as this instance, deep-copied.
+
+        '''
+        return pept.LineDataToF(
+            self._lines.copy(order = "C"),
+            sample_size = self._sample_size,
+            overlap = self._overlap,
+            append_tofpoints = False,
+            verbose = False
+        )
 
 
     def __str__(self):

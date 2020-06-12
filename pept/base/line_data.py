@@ -46,6 +46,7 @@ from    matplotlib.colors       import  Normalize
 from    mpl_toolkits.mplot3d    import  Axes3D
 
 from    .iterable_samples       import  IterableSamples
+import  pept
 
 
 class LineData(IterableSamples):
@@ -63,21 +64,21 @@ class LineData(IterableSamples):
         An (N, 7) numpy array that stores the PEPT LoRs (or any generic set of
         lines) as time and cartesian (3D) coordinates of two points defining
         each line, **in mm**. A row is then [time, x1, y1, z1, x2, y2, z2].
-    sample_size : int, optional
+    sample_size : int, default 0
         An `int`` that defines the number of lines that should be returned when
         iterating over `lines`. A `sample_size` of 0 yields all the data as
-        one single sample. Default is 0.
-    overlap : int, optional
+        one single sample.
+    overlap : int, default 0
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `lines`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. An error is raised if `overlap` is larger than
-        or equal to `sample_size`. Default is 0.
-    verbose : bool, optional
+        or equal to `sample_size`.
+    verbose : bool, default False
         An option that enables printing the time taken for the initialisation
         of an instance of the class. Useful when reading large files (10gb
-        files for PEPT data is not unheard of). Default is False.
+        files for PEPT data is not unheard of).
 
     Attributes
     ----------
@@ -211,11 +212,11 @@ class LineData(IterableSamples):
             filepath : filename or file handle
                 If filepath is a path (rather than file handle), it is relative
                 to where python is called.
-            delimiter : str, optional
+            delimiter : str, default '  '
                 The delimiter between values. The default is two spaces '  ',
                 such that numbers in the format '123,456.78' are
                 well-understood.
-            newline : str, optional
+            newline : str, default '\n'
                 The sequence of characters at the end of every line. The
                 default is a new line '\n'
 
@@ -423,31 +424,30 @@ class LineData(IterableSamples):
 
         Parameters
         ----------
-        sample_indices : int or iterable or Ellipsis
+        sample_indices : int or iterable or Ellipsis, default Ellipsis
             The index or indices of the samples of LoRs. An `int` signifies the
             sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all lines).
-        width : float
-            The width of the lines. The default is 2.
-        color : str or list-like
+        width : float, default 2
+            The width of the lines.
+        color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation. The default is None.
-        opacity : float
+        opacity : float, default 0.6
             The opacity of the lines, where 0 is transparent and 1 is fully
-            opaque. The default is 0.6.
-        colorbar : bool
+            opaque.
+        colorbar : bool, default True
             If set to True, will color-code the data in the sample column
             `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that every line has a different color.
-        colorbar_col : int
+        colorbar_col : int, default 0
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is 0 (the first column - time).
-        colorbar_title : str
-            If set, the colorbar will have this title above. The default is
-            None.
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above.
 
         Returns
         -------
@@ -503,6 +503,25 @@ class LineData(IterableSamples):
         )
 
         return trace
+
+
+    def copy(self):
+        '''Create a deep copy of an instance of this class, including a new
+        inner numpy array `lines`.
+
+        Returns
+        -------
+        pept.LineData
+            A new instance of the `pept.LineData` class with the same
+            attributes as this instance, deep-copied.
+
+        '''
+        return pept.LineData(
+            self._lines.copy(order = "C"),
+            sample_size = self._sample_size,
+            overlap = self._overlap,
+            verbose = False
+        )
 
 
     def __str__(self):

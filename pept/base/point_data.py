@@ -46,6 +46,7 @@ from    matplotlib.colors       import  Normalize
 from    mpl_toolkits.mplot3d    import  Axes3D
 
 from    .iterable_samples       import  IterableSamples
+import  pept
 
 
 class PointData(IterableSamples):
@@ -62,21 +63,21 @@ class PointData(IterableSamples):
         data). It expects that the first column is time, followed by cartesian
         (3D) coordinates of points **in mm**, followed by any extra information
         the user needs. A row is then [time, x, y, z, etc].
-    sample_size : int, optional
+    sample_size : int, default 0
         An `int`` that defines the number of points that should be returned
         when iterating over `points`. A `sample_size` of 0 yields all the
-        data as one single sample. Default is 0.
-    overlap : int, optional
+        data as one single sample.
+    overlap : int, default 0
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `points`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. An error is raised if `overlap` is larger than
-        or equal to `sample_size`. Default is 0.
-    verbose : bool, optional
+        or equal to `sample_size`.
+    verbose : bool, default False
         An option that enables printing the time taken for the initialisation
         of an instance of the class. Useful when reading large files (10gb
-        files for PEPT data is not unheard of). Default is False.
+        files for PEPT data is not unheard of).
 
     Attributes
     ----------
@@ -206,11 +207,11 @@ class PointData(IterableSamples):
             filepath : filename or file handle
                 If filepath is a path (rather than file handle), it is relative
                 to where python is called.
-            delimiter : str, optional
+            delimiter : str, default '  '
                 The delimiter between values. The default is two spaces '  ',
                 such that numbers in the format '123,456.78' are
                 well-understood.
-            newline : str, optional
+            newline : str, default '\n'
                 The sequence of characters at the end of every line. The
                 default is a new line '\n'.
 
@@ -423,25 +424,24 @@ class PointData(IterableSamples):
 
         Parameters
         ----------
-        sample_indices : int or iterable or Ellipsis
+        sample_indices : int or iterable or Ellipsis, default Ellipsis
             The index or indices of the samples of points. An `int` signifies
             the sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all points).
-        size : float
-            The marker size of the points. The default is 2.
-        color : str or list-like
+        size : float, default 2
+            The marker size of the points.
+        color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
-            check the Plotly documentation. The default is None.
-        opacity : float
+            check the Plotly documentation.
+        opacity : float, default 0.8
             The opacity of the lines, where 0 is transparent and 1 is fully
-            opaque. The default is 0.8.
-        colorbar : bool
+            opaque.
+        colorbar : bool, default True
             If set to True, will color-code the data in the sample column
-            `colorbar_col`. Is overridden if `color` is set. The default is
-            True.
-        colorbar_col : int
+            `colorbar_col`. Is overridden if `color` is set.
+        colorbar_col : int, default -1
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is -1 (the last column).
@@ -450,9 +450,8 @@ class PointData(IterableSamples):
             input data. Typical ones include "Cividis", "Viridis" and "Magma".
             A full list is given at `plotly.com/python/builtin-colorscales/`.
             Only has an effect if `colorbar = True` and `color` is not set.
-        colorbar_title : str
-            If set, the colorbar will have this title above. The default is
-            None.
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above.
 
         Returns
         -------
@@ -512,6 +511,25 @@ class PointData(IterableSamples):
         )
 
         return trace
+
+
+    def copy(self):
+        '''Create a deep copy of an instance of this class, including a new
+        inner numpy array `points`.
+
+        Returns
+        -------
+        pept.PointData
+            A new instance of the `pept.PointData` class with the same
+            attributes as this instance, deep-copied.
+
+        '''
+        return pept.PointData(
+            self._points.copy(order = "C"),
+            sample_size = self._sample_size,
+            overlap = self._overlap,
+            verbose = False
+        )
 
 
     def __str__(self):
