@@ -35,38 +35,6 @@
 # Date   : 28.08.2019
 
 
-'''The `peptml` package implements a hierarchical density-based clustering
-algorithm for general Positron Emission Particle Tracking (PEPT).
-
-The PEPT-ML algorithm [1] works using the following steps:
-    1. Split the data into a series of individual "samples", each containing
-    a given number of LoRs. Use the base class pept.LineData for this.
-    2. For every sample of LoRs, compute the *cutpoints*, or the points in
-    space that minimise the distance to every pair of lines.
-    3. Cluster every sample using HDBSCAN and extract the centres of the
-    clusters ("1-pass clustering").
-    4. Splirt the centres into samples of a given size.
-    5. Cluster every sample of centres using HDBSCAN and extract the centres
-    of the clusters ("2-pass clustering").
-    6. Construct the trajectory of every particle using the centres from the
-    previous step.
-
-A typical workflow for using the `peptml` package would be:
-    1. Read the LoRs into a `pept.LineData` class instance and set the
-    `sample_size` and `overlap` appropriately.
-    2. Compute the cutpoints using the `pept.tracking.peptml.Cutpoints` class.
-    3. Instantiate an `pept.tracking.peptml.HDBSCANClusterer` class and cluster
-    the cutpoints found previously.
-
-More tutorials and examples can be found on the University of Birmingham
-Positron Imaging Centre's GitHub repository.
-
-PEPT-ML was successfuly used at the University of Birmingham to analyse real
-Fluorine-18 tracers in air.
-
-'''
-
-
 import  time
 import  sys
 import  os
@@ -121,39 +89,103 @@ class HDBSCANClusterer:
     samples encapsulated in a `pept.PointData` class (such as the one returned
     by the `Cutpoints` class) *in parallel*.
 
-    Parameters
+    Attributes
     ----------
+    min_cluster_size : int
+        (Taken from hdbscan's documentation): The minimum size of clusters;
+        single linkage splits that contain fewer points than this will be
+        considered points “falling out” of a cluster rather than a cluster
+        splitting into two new clusters.
+    min_samples : int
+        (Taken from hdbscan's documentation): The number of samples in a
+        neighbourhood for a point to be considered a core point. The default is
+        `None`, being set automatically to the `min_cluster_size`.
+    allow_single_cluster : bool or str
+        By default HDBSCAN will not produce a single cluster - this creates
+        "tighter" clusters (i.e. more accurate positions). Setting this to
+        `False` will discard datasets with a single tracer, but will produce
+        more accurate positions. Setting this to `True` will also work for
+        single tracers, at the expense of lower accuracy for cases with more
+        tracers. This class provides a third option, "auto", in which case two
+        clusterers will be used: one with `allow_single_cluster` set to `False`
+        and another with it set to `True`; the latter will only be used if the
+        first did not find any clusters.
+    max_workers : int
+        The maximum number of threads that will be used for asynchronously
+        clustering the samples in `cutpoints`.
+    labels : (N,) numpy.ndarray, dtype = int
+        A 1D array of the cluster labels for cutpoints fitted using
+        `fit_sample` or `fit`. If `fit_sample` is used, `labels` correspond to
+        each row in the sample array fitted. If `fit` is used with the setting
+        `get_labels = True`, `labels` correpond to the stacked labels for every
+        sample in the given `pept.PointData` class.
+
+    Methods
+    -------
+    fit_sample(
+        sample,
+        get_labels = False,
+        as_array = True,
+        verbose = False,
+        _set_labels = True
+    )
+        Fit one sample of cutpoints and return the cluster centres and
+        (optionally) the labelled cutpoints.
+    fit(
+        cutpoints,
+        get_labels = False,
+        max_workers = None,
+        verbose = True
+    )
+        Fit cutpoints (an instance of `PointData`) and return the cluster
+        centres and (optionally) the labelled cutpoints.
+
+    See Also
+    --------
+    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.PlotlyGrapher : Easy, publication-ready plotting of PEPT data.
+
+    Example Usage
+    -------------
+    A typical workflow would involve reading LoRs from a file, computing their
+    cutpoints, clustering them and plotting them.
+
+    >>> import pept
+    >>> from pept.tracking import peptml
+    >>>
+    >>> lors = pept.LineData(...)
+    >>> cutpoints = peptml.Cutpoints(lors, 0.1)
+    >>> clusterer = peptml.HDBSCANClusterer()
+    >>> centres = clusterer.fit(cutpoints)
+    >>>
+    >>> grapher = PlotlyGrapher()
+    >>> grapher.add_points(centres)
+    >>> grapher.show()
+
+    For more advanced uses of HDBSCANClusterer such as 2-pass clustering, do
+    check out the tutorials available on the Birmingham's Positron Imaging
+    Centre's GitHub repository at github.com/uob-positron-imaging-centre.
+    '''
+
+    def __init__(
+        self,
+        min_cluster_size = 20,
+        min_samples = None,
+        allow_single_cluster = "auto",
+        max_workers = None
+    ):
+        '''Class constructor:
+
+        Parameters
+        ----------
         min_cluster_size : int, default 20
             (Taken from hdbscan's documentation): The minimum size of clusters;
             single linkage splits that contain fewer points than this will be
             considered points “falling out” of a cluster rather than a cluster
-            splitting into two new clusters. The default is 20.
-        min_samples : int, optional
-            (Taken from hdbscan's documentation): The number of samples in a
-            neighbourhood for a point to be considered a core point. The default
-            is None, being set automatically to the `min_cluster_size`.
-        allow_single_cluster : bool or str, default "auto"
-            By default HDBSCAN will not produce a single cluster - this creates
-            "tighter" clusters (i.e. more accurate positions). Setting this to
-            `False` will discard datasets with a single tracer, but will
-            produce more accurate positions. Setting this to `True` will also
-            work for single tracers, at the expense of lower accuracy for cases
-            with more tracers. This class provides a third option, "auto", in
-            which case two clusterers will be used: one with
-            `allow_single_cluster` set to `False` and another with it set to
-            `True`; the latter will only be used if the first did not find any
-            clusters.
-        max_workers : int, optional
-            The maximum number of threads that will be used for asynchronously
-            clustering the samples in `cutpoints`.
-
-    Attributes
-    ----------
-        min_cluster_size : int
-            (Taken from hdbscan's documentation): The minimum size of clusters;
-            single linkage splits that contain fewer points than this will be
-            considered points “falling out” of a cluster rather than a cluster
-            splitting into two new clusters. The default is 20.
+            splitting into two new clusters.
         min_samples : int, optional
             (Taken from hdbscan's documentation): The number of samples in a
             neighbourhood for a point to be considered a core point. The
@@ -171,25 +203,17 @@ class HDBSCANClusterer:
             clusters.
         max_workers : int, optional
             The maximum number of threads that will be used for asynchronously
-            clustering the samples in `cutpoints`.
-        labels : (N,) numpy.ndarray, dtype = int
-            A 1D array of the cluster labels for cutpoints fitted using
-            `fit_sample` or `fit`. If `fit_sample` is used, `labels` correspond
-            to each row in the sample array fitted. If `fit` is used with the
-            setting `get_labels = True`, `labels` correpond to the stacked
-            labels for every sample in the given `pept.PointData` class.
+            clustering the samples in `cutpoints`. If unset (`None`), the
+            number of threads available on the machine (as returned by
+            `os.cpu_count()`) will be used.
 
-    '''
+        Raises
+        ------
+        ValueError
+            If `allow_single_cluster` is not `True`, `False` or "auto".
+        '''
 
-    def __init__(
-        self,
-        min_cluster_size = 20,
-        min_samples = None,
-        allow_single_cluster = "auto",
-        max_workers = None
-    ):
-
-        if 0 < min_cluster_size < 2:
+        if min_cluster_size < 2:
             warnings.warn((
                 "\n[WARNING]: min_cluster_size was set to 2, as it was "
                 f"{min_cluster_size} < 2.\n"
@@ -423,7 +447,7 @@ class HDBSCANClusterer:
             self._labels = labels
 
         # the centre of a cluster is the average of the time, x, y, z columns
-        # + the number of points of that cluster (i.e. cluster size)
+        # + the number of points in that cluster (i.e. cluster size)
         # centres columns: [time, x, y, z, ..etc.., cluster_size]
         centres = []
         for i in range(0, max_label + 1):
@@ -501,7 +525,9 @@ class HDBSCANClusterer:
             encoded as -1).
         max_workers : int, optional
             The maximum number of threads that will be used for asynchronously
-            clustering the samples in `cutpoints`.
+            clustering the samples in `cutpoints`. If unset (`None`), the
+            number of threads available on the machine (as returned by
+            `os.cpu_count()`) will be used.
         verbose : bool, default True
             Provide extra information when computing the cutpoints: time the
             operation and show a progress bar.
