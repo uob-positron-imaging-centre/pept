@@ -177,7 +177,7 @@ class HDBSCANClusterer:
         allow_single_cluster = "auto",
         max_workers = None
     ):
-        '''Class constructor:
+        '''HDBSCANClusterer class constructor.
 
         Parameters
         ----------
@@ -670,10 +670,7 @@ class HDBSCANClusterer:
             f"Type:\n{type(self)}\n\n"
             "Attributes\n"
             "----------\n"
-            f"{self.__str__()}\n\n"
-            "Methods\n-------\n"
-            "fit_sample(...)\n"
-            "fit(...)\n"
+            f"{self.__str__()}\n"
         )
 
         return docstr
