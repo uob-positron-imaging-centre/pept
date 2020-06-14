@@ -44,89 +44,21 @@ from    pept.utilities  import  read_csv
 
 class ParallelScreens(LineData):
     '''A subclass of `LineData` that initialises PEPT data for parallel screens
-    detectors from an input data file or array.
+    PET/PEPT detectors from an input data file or array.
 
     Provides the same functionality as the `LineData` class while initialising
     `lines` from  **PEPT scanners with two parallel screens**. That is,
     each LoR is defined by two 2D points on two screens separated by a given
     distance.
 
-    **The expected data columns in the file is `[time, x1, y1, x2, y2]`**. This
-    is automatically transformed into the standard `lines` format with
+    **The expected data columns in the file are `[time, x1, y1, x2, y2]`**.
+    This is automatically transformed into the standard `lines` format with
     columns being `[time, x1, y1, z1, x2, y2, z2]`, where `z1 = 0` and
     `z2 = separation`.
 
     `ParallelScreens` can be initialised with a predefined numpy array of LoRs
-    or read data from a `.csv` or `.a0n` file or equivalent.
-
-    Parameters
-    ----------
-    filepath_or_array : [str, pathlib.Path, IO] or numpy.ndarray-like (N, 5)
-        A path to a file to be read or an array for initialisation. A path is a
-        string with the (absolute or relative) path to the data file from which
-        the PEPT data will be read. It should include the full file name, along
-        with the extension (.csv, .a01, etc.).
-    screen_separation : float
-        The separation (in *mm*) between the two PEPT screens corresponding to
-        the `z` coordinate of the second point defining each line. The
-        attribute `lines`, with columns
-        `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
-        `z2 = separation`.
-    sample_size : int, default 200
-        An `int`` that defines the number of lines that should be returned when
-        iterating over `lines`. A `sample_size` of 0 yields all the data as
-        one single sample.
-    overlap : int, default 0
-        An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `lines`. An overlap of 0 implies
-        consecutive samples, while an overlap of (`sample_size` - 1) means
-        incrementing the samples by one. A negative overlap means skipping
-        values between samples. An error is raised if `overlap` is larger than
-        or equal to `sample_size`.
-    skiprows : int, default 0
-        The number of rows to skip from the beginning of the data file. Useful
-        when the data file includes a header of text that should be skipped.
-    max_rows : int, optional
-        The maximum number of rows that will be read from the data file.
-    verbose : bool, default True
-        An option that enables printing the time taken for the initialisation
-        of an instance of the class. Useful when reading large files (10gb
-        files for PEPT data is not unheard of).
-
-    Attributes
-    ----------
-    lines : (N, 7) numpy.ndarray
-        An (N, 7) numpy array that stores the PEPT LoRs as time and
-        cartesian (3D) coordinates of two points defining a line, **in mm**.
-        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
-    sample_size : int
-        An `int` that defines the number of lines that should be
-        returned when iterating over `lines`.
-    overlap : int
-        An `int` that defines the overlap between two consecutive
-        samples that are returned when iterating over `lines`.
-        An overlap of 0 means consecutive samples, while an overlap
-        of (`sample_size` - 1) means incrementing the samples by one.
-        A negative overlap means skipping values between samples. It
-        has to be smaller than `sample_size`.
-    number_of_lines : int
-        An `int` that corresponds to len(`lines`), or the number of
-        LoRs stored by `lines`.
-
-    Raises
-    ------
-    ValueError
-        If `overlap` >= `sample_size`. Overlap has to be smaller than
-        `sample_size`. Note that it can also be negative.
-    ValueError
-        If the data file does not have the (N, M >= 5) shape.
-
-    Notes
-    -----
-    The class saves `lines` as a **contiguous** numpy array for efficient
-    access in C / Cython functions. The inner data can be mutated, but do not
-    change the number of rows or columns after instantiating the class.
-
+    or read data from a `.csv` or `.a0n` file or equivalent. The attributes
+    and methods are the same as for `pept.LineData`.
     '''
 
     def __init__(
@@ -139,12 +71,58 @@ class ParallelScreens(LineData):
         nrows = None,
         verbose = True
     ):
+        '''ParallelScreens class constructor.
+
+        Parameters
+        ----------
+        filepath_or_array : [str, pathlib.Path, IO] or numpy.ndarray (N, 5)
+            A path to a file to be read from or an array for initialisation. A
+            path is a string with the (absolute or relative) path to the data
+            file or a URL from which the PEPT data will be read. It should
+            include the full file name, along with its extension (.csv, .a01,
+            etc.).
+        screen_separation : float
+            The separation (in *mm*) between the two PEPT screens corresponding
+            to the `z` coordinate of the second point defining each line. The
+            attribute `lines`, with columns
+            `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
+            `z2 = separation`.
+        sample_size : int, default 200
+            An `int`` that defines the number of lines that should be returned
+            when iterating over `lines`. A `sample_size` of 0 yields all the
+            data as one single sample. A good starting value would be 200 times
+            the maximum number of tracers that would be tracked.
+        overlap : int, default 0
+            An `int` that defines the overlap between two consecutive samples
+            that are returned when iterating over `lines`. An overlap of 0
+            implies consecutive samples, while an overlap of
+            (`sample_size` - 1) means incrementing the samples by one. A
+            negative overlap means skipping values between samples. An error is
+            raised if `overlap` is larger than or equal to `sample_size`.
+        skiprows : int, default 0
+            The number of rows to skip from the beginning of the data file. Useful
+            when the data file includes a header of text that should be skipped.
+        max_rows : int, optional
+            The maximum number of rows that will be read from the data file.
+        verbose : bool, default True
+            An option that enables printing the time taken for the initialisation
+            of an instance of the class. Useful when reading large files (10gb
+            files for PEPT data is not unheard of).
+
+        Raises
+        ------
+        ValueError
+            If `overlap` >= `sample_size`. Overlap has to be smaller than
+            `sample_size`. Note that it can also be negative.
+        ValueError
+            If the data file does not have the (N, M >= 5) shape.
+        '''
 
         if verbose:
             start = time.time()
 
         # Check wheter input is a valid `pandas.read_csv` filepath or a numpy
-        # array in a "Better To Ask Forgiveness Than Permission" way.
+        # array in an "Easier To Ask Forgiveness Than Permission" way.
         try:
             # Try to read the LoR data from `filepath_or_array`.
             # Check if an error is raised when reading file lines using
