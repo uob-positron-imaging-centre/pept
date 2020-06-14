@@ -140,14 +140,6 @@ class HDBSCANClusterer:
         Fit cutpoints (an instance of `PointData`) and return the cluster
         centres and (optionally) the labelled cutpoints.
 
-    See Also
-    --------
-    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-
     Example Usage
     -------------
     A typical workflow would involve reading LoRs from a file, computing their
@@ -168,6 +160,14 @@ class HDBSCANClusterer:
     For more advanced uses of HDBSCANClusterer such as 2-pass clustering, do
     check out the tutorials available on the Birmingham's Positron Imaging
     Centre's GitHub repository at github.com/uob-positron-imaging-centre.
+
+    See Also
+    --------
+    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     def __init__(
