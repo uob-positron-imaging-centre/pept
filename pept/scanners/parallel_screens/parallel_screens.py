@@ -28,7 +28,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # File   : parallel_screens.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 20.08.2019
 
@@ -54,11 +54,71 @@ class ParallelScreens(LineData):
     **The expected data columns in the file are `[time, x1, y1, x2, y2]`**.
     This is automatically transformed into the standard `lines` format with
     columns being `[time, x1, y1, z1, x2, y2, z2]`, where `z1 = 0` and
-    `z2 = separation`.
+    `z2 = screen_separation`.
 
     `ParallelScreens` can be initialised with a predefined numpy array of LoRs
     or read data from a `.csv` or `.a0n` file or equivalent. The attributes
     and methods are the same as for `pept.LineData`.
+
+    Attributes
+    ----------
+    sample_size, overlap, number_of_lines, etc.: inherited from `pept.LineData`
+        All attributes and methods from the parent class `pept.LineData` are
+        available after instantiation. Check its documentation for more
+        information.
+
+    Methods
+    -------
+    to_csv, lines_trace, etc. : inherited from `pept.LineData`
+        All attributes and methods from the parent class `pept.LineData` are
+        available after instantiation. Check its documentation for more
+        information.
+
+    Examples
+    --------
+    Initialise a `ParallelScreens` array for three LoRs on a parallel screens
+    PEPT scanner (i.e. each line is defined by **two** points each) with a
+    head separation of 500 mm:
+    >>> lors_raw = np.array([
+    >>>     [2, 100, 150, 200, 250],
+    >>>     [4, 350, 250, 100, 150],
+    >>>     [6, 450, 350, 250, 200]
+    >>> ])
+
+    >>> screen_separation = 500
+    >>> lors = pept.scanners.ParallelScreens(lors_raw, screen_separation)
+    >>> Initialising the PEPT data took 0.00038814544677734375 seconds.
+
+    >>> lors
+    >>> Class instance that inherits from `pept.LineData`.
+    >>> Type:
+    >>> <class 'pept.scanners.parallel_screens.parallel_screens.ParallelScreens'>
+    >>>
+    >>> Attributes
+    >>> ----------
+    >>> number_of_lines =   3
+    >>>
+    >>> sample_size =       200
+    >>> overlap =           0
+    >>> number_of_samples = 0
+    >>>
+    >>> lines =
+    >>> [[  2. 100. 150.   0. 200. 250. 500.]
+    >>> [  4. 350. 250.   0. 100. 150. 500.]
+    >>> [  6. 450. 350.   0. 250. 200. 500.]]
+    >>>
+    >>> Particular Cases
+    >>> ----------------
+    >>> > If sample_size == 0, all `lines` are returned as a single sample.
+    >>> > If overlap >= sample_size, an error is raised.
+    >>> > If overlap < 0, lines are skipped between samples.
+
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     def __init__(
@@ -86,9 +146,9 @@ class ParallelScreens(LineData):
             to the `z` coordinate of the second point defining each line. The
             attribute `lines`, with columns
             `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
-            `z2 = separation`.
+            `z2 = screen_separation`.
         sample_size : int, default 200
-            An `int`` that defines the number of lines that should be returned
+            An `int` that defines the number of lines that should be returned
             when iterating over `lines`. A `sample_size` of 0 yields all the
             data as one single sample. A good starting value would be 200 times
             the maximum number of tracers that would be tracked.
@@ -100,14 +160,15 @@ class ParallelScreens(LineData):
             negative overlap means skipping values between samples. An error is
             raised if `overlap` is larger than or equal to `sample_size`.
         skiprows : int, default 0
-            The number of rows to skip from the beginning of the data file. Useful
-            when the data file includes a header of text that should be skipped.
+            The number of rows to skip from the beginning of the data file.
+            Useful when the data file includes a header of text that should be
+            skipped.
         max_rows : int, optional
             The maximum number of rows that will be read from the data file.
         verbose : bool, default True
-            An option that enables printing the time taken for the initialisation
-            of an instance of the class. Useful when reading large files (10gb
-            files for PEPT data is not unheard of).
+            An option that enables printing the time taken for the
+            initialisation of an instance of the class. Useful when reading
+            large files (10gb files for PEPT data is not unheard of).
 
         Raises
         ------
