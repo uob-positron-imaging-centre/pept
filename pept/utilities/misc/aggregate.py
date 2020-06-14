@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File   : misc.py
+# File   : aggregate.py
 # License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 10.06.2020
@@ -10,8 +10,8 @@ import numpy as np
 
 
 def group_by_column(data_array, column_to_separate):
-    '''Group the rows in a 2D array based on the unique values in a given
-    column, returning the groups as a list of numpy arrays.
+    '''Group the rows in a 2D `data_array` based on the unique values in a
+    given `column_to_separate`, returning the groups as a list of numpy arrays.
 
     Parameters
     ----------
@@ -33,7 +33,26 @@ def group_by_column(data_array, column_to_separate):
     ValueError
         If data_array does not have exactly 2 dimensions.
 
+    Example Usage
+    -------------
+    Separate a 6x3 numpy array based on the last column:
+    >>> x = np.array([
+    >>>     [1, 2, 1],
+    >>>     [5, 3, 1],
+    >>>     [1, 1, 2],
+    >>>     [5, 2, 1],
+    >>>     [2, 4, 2]
+    >>> ])
+    >>> x_sep = pept.utilities.group_by_column(x)
+    >>> x_sep
+    >>> [array([[1, 2, 1],
+    >>>         [5, 3, 1],
+    >>>         [5, 2, 1]]),
+    >>>  array([[1, 1, 2],
+    >>>         [2, 4, 2]])]
+
     '''
+
     data_array = np.asarray(data_array)
     if data_array.ndim != 2:
         raise ValueError((

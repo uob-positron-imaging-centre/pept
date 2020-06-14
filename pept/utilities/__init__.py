@@ -9,7 +9,6 @@
 from    .cutpoints  import  *
 from    .traverse   import  *
 from    .parallel   import  *
-from    .io         import  *
 from    .misc       import  *
 
 

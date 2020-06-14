@@ -22,8 +22,8 @@ def number_of_lines(filepath_or_buffer):
     -------
     int
         The number of lines in the file pointed at by `filepath_or_buffer`.
-
     '''
+
     with open(filepath_or_buffer) as f:
         file_lines = sum(1 for line in f)
 
@@ -96,7 +96,6 @@ def read_csv(
         overhead.
     kwargs : optional
         Extra keyword arguments that will be passed to `pandas.read_csv`.
-
     '''
 
     data = pd.read_csv(
@@ -198,9 +197,7 @@ def read_csv_chunks(
         overhead.
     kwargs : optional
         Extra keyword arguments that will be passed to `pandas.read_csv`.
-
     '''
-
 
     reader = pd.read_csv(
         filepath_or_buffer,
@@ -241,49 +238,6 @@ class ChunkReader:
     skipping `skiprows` lines and reading in at most `nrows` lines. It returns
     `numpy.ndarray`s with `float` values.
 
-    Parameters
-    ----------
-    filepath_or_buffer : str, path object or file-like object
-        Any valid string path is acceptable. The string could be a URL. Valid
-        URL schemes include http, ftp, s3, and file. For file URLs, a host is
-        expected. A local file could be: file://localhost/path/to/table.csv. If
-        you want to pass in a path object, pandas accepts any `os.PathLike`. By
-        file-like object, we refer to objects with a `read()` method, such as a
-        file handler (e.g. via builtin `open` function) or `StringIO`.
-    chunksize : int
-        Number of lines read in a chunk of data.
-    skiprows : list-like, int or callable, optional
-        Line numbers to skip (0-indexed) or number of lines to skip (int) at
-        the start of the file.
-    nrows : int, optional
-        Number of rows of file to read. Useful for reading pieces of large
-        files.
-    dtype : Type name, default `float`
-        Data type for data or columns. E.g. {‘a’: np.float64, ‘b’: np.int32,
-        ‘c’: ‘Int64’}.
-    sep : str, default `"\s+"`
-        Delimiter to use. Separators longer than 1 character and different from
-        '\s+' will be interpreted as regular expressions and will also force
-        the use of the Python parsing engine.
-    engine : {‘c’, ‘python’}, default "c"
-        Parser engine to use. The C engine is faster while the python engine is
-        currently more feature-complete.
-    na_filter : bool, default `True`
-        Detect missing value markers (empty strings and the value of
-        na_values). In data without any NAs, passing na_filter=False can
-        improve the performance of reading a large file.
-    quoting : int or csv.QUOTE_* instance, default `csv.QUOTE_NONE`
-        Control field quoting behavior per csv.QUOTE_* constants. Use one of
-        QUOTE_MINIMAL (0), QUOTE_ALL (1), QUOTE_NONNUMERIC (2) or
-        QUOTE_NONE (3).
-    memory_map : bool, default True
-        If a filepath is provided for filepath_or_buffer, map the file object
-        directly onto memory and access the data directly from there. Using
-        this option can improve performance because there is no longer any I/O
-        overhead.
-    kwargs : optional
-        Extra keyword arguments that will be passed to `pandas.read_csv`.
-
     Attributes
     ----------
     number_of_chunks : int
@@ -305,13 +259,17 @@ class ChunkReader:
 
     Raises
     ------
-    EOFError : End Of File Error
-        If `skiprows` >= `number_of_lines`.
     IndexError
         Upon access to a non-existent chunk using subscript notation
         (i.e. `data[100]` when there are 50 chunks).
 
-    Example usage
+    See Also
+    --------
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+
+    Example Usage
     -------------
     Say "data.csv" contains 1_000_000 lines of data. Read chunks of 10_000
     lines as a time, skipping the first 100_000:
@@ -346,6 +304,58 @@ class ChunkReader:
         memory_map = True,
         **kwargs
     ):
+        '''ChunkReader class constructor.
+
+        Parameters
+        ----------
+        filepath_or_buffer : str, path object or file-like object
+            Any valid string path is acceptable. The string could be a URL.
+            Valid URL schemes include http, ftp, s3, and file. For file URLs, a
+            host is expected. A local file could be
+            file://localhost/path/to/table.csv. If you want to pass in a path
+            object, pandas accepts any `os.PathLike`. By file-like object, we
+            refer to objects with a `read()` method, such as a file handler
+            (e.g. via builtin `open` function) or `StringIO`.
+        chunksize : int
+            Number of lines read in a chunk of data.
+        skiprows : list-like, int or callable, optional
+            Line numbers to skip (0-indexed) or number of lines to skip (int)
+            at the start of the file.
+        nrows : int, optional
+            Number of rows of file to read. Useful for reading pieces of large
+            files.
+        dtype : Type name, default `float`
+            Data type for data or columns. E.g. {‘a’: np.float64,
+            ‘b’: np.int32, ‘c’: ‘Int64’}.
+        sep : str, default `"\s+"`
+            Delimiter to use. Separators longer than 1 character and different
+            from '\s+' will be interpreted as regular expressions and will also
+            force the use of the Python parsing engine.
+        engine : {‘c’, ‘python’}, default "c"
+            Parser engine to use. The C engine is faster while the python
+            engine is currently more feature-complete.
+        na_filter : bool, default `True`
+            Detect missing value markers (empty strings and the value of
+            na_values). In data without any NAs, passing na_filter=False can
+            improve the performance of reading a large file.
+        quoting : int or csv.QUOTE_* instance, default `csv.QUOTE_NONE`
+            Control field quoting behavior per csv.QUOTE_* constants. Use one
+            of QUOTE_MINIMAL (0), QUOTE_ALL (1), QUOTE_NONNUMERIC (2) or
+            QUOTE_NONE (3).
+        memory_map : bool, default True
+            If a filepath is provided for filepath_or_buffer, map the file
+            object directly onto memory and access the data directly from
+            there. Using this option can improve performance because there is
+            no longer any I/O overhead.
+        kwargs : optional
+            Extra keyword arguments that will be passed to `pandas.read_csv`.
+
+        Raises
+        ------
+        EOFError : End Of File Error
+            If `skiprows` >= `number_of_lines`.
+        '''
+
         self.filepath_or_buffer = filepath_or_buffer
         self._chunksize = chunksize
 
@@ -523,7 +533,5 @@ class ChunkReader:
         del data
 
         return data_array
-
-
 
 

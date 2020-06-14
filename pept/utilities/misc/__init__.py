@@ -5,11 +5,20 @@
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 10.06.2020
 
-from    .misc   import  group_by_column
+
+from    .aggregate  import  group_by_column
+from    .read_csv   import  number_of_lines
+from    .read_csv   import  read_csv
+from    .read_csv   import  read_csv_chunks
+from    .read_csv   import  ChunkReader
 
 
 __all__ = [
-    "group_by_column"
+    "group_by_column",
+    "number_of_lines",
+    "read_csv",
+    "read_csv_chunks",
+    "ChunkReader"
 ]
 
 
@@ -23,8 +32,5 @@ __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
 __status__ = "Development"
-
-
-
 
 
