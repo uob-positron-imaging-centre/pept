@@ -146,7 +146,7 @@ class HDBSCANClusterer:
     pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
     pept.PointData : Encapsulate points for ease of iteration and plotting.
     pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    pept.PlotlyGrapher : Easy, publication-ready plotting of PEPT data.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
 
     Example Usage
     -------------
