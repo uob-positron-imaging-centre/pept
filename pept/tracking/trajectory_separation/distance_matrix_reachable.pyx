@@ -111,7 +111,6 @@ cpdef distance_matrix_reachable(
     connecting points which are around the same timeframe, the points should be
     sorted based on thetime column (the first row) in `pts`. This should be
     done *prior* to calling this function.
-
     '''
 
     # Use Py_ssize_t as we will access C arrays (memoryviews on numpy arrays).

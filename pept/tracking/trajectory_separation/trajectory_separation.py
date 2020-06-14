@@ -201,14 +201,8 @@ def segregate_trajectories(
     ValueError
         If `points_window` is smaller than 1.
 
-    See Also
+    Examples
     --------
-    connect_trajectories : Connect segregated trajectories based on tracer
-                           signatures.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-
-    Example Usage
-    -------------
     A typical workflow would involve transforming LoRs into points using some
     tracking algorithm. These points include all tracers moving through the
     system, being intertwined (e.g. for two tracers A and B, the `point_data`
@@ -239,6 +233,12 @@ def segregate_trajectories(
            x (5, label = 0)      x (7, label = 1)
            x (6, label = 0)     x (9, label = 1)
           x (8, label = 0)      x (10, label = 1)
+
+    See Also
+    --------
+    connect_trajectories : Connect segregated trajectories based on tracer
+                           signatures.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     # Check `point_data` is a numpy array or pept.PointData
@@ -400,22 +400,22 @@ def connect_trajectories(
     ValueError
         If `point_data` is a numpy array with fewer than 6 columns.
 
-    See Also
-    --------
-    segregate_trajectories : Segregate the intertwined points from multiple
-                             trajectories into individual paths.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-
-    Example Usage
-    -------------
-    [TODO] - add full tutorial page on Bham PIC GitHub page for this.
-
     Note
     ----
     The labels are changed in-place to reflect the connected trajectories. For
     example, if there are 3 trajectories with labels 0, 1, 2 and the first two
     are connected, then all points which previously had the label 1 will be
     changed to label 0; the last trajectory's label remains unchanged, 2.
+
+    Examples
+    --------
+    [TODO] - add full tutorial page on Bham PIC GitHub page for this.
+
+    See Also
+    --------
+    segregate_trajectories : Segregate the intertwined points from multiple
+                             trajectories into individual paths.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     # Check `point_data` is a numpy array or pept.PointData
