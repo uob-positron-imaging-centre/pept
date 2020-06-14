@@ -240,6 +240,14 @@ class ChunkReader:
 
     Attributes
     ----------
+    filepath_or_buffer : str, path object or file-like object
+        Any valid string path is acceptable. The string could be a URL.
+        Valid URL schemes include http, ftp, s3, and file. For file URLs, a
+        host is expected. A local file could be
+        file://localhost/path/to/table.csv. If you want to pass in a path
+        object, pandas accepts any `os.PathLike`. By file-like object, we
+        refer to objects with a `read()` method, such as a file handler
+        (e.g. via builtin `open` function) or `StringIO`.
     number_of_chunks : int
         The number of chunks (also returned when using the `len` method),
         taking into account the lines skipped (`skiprows`), the number of lines
@@ -263,12 +271,6 @@ class ChunkReader:
         Upon access to a non-existent chunk using subscript notation
         (i.e. `data[100]` when there are 50 chunks).
 
-    See Also
-    --------
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-
     Example Usage
     -------------
     Say "data.csv" contains 1_000_000 lines of data. Read chunks of 10_000
@@ -288,6 +290,11 @@ class ChunkReader:
     >>> chunks[-1]  # Last chunk
     >>> chunks[100] # IndexError
 
+    See Also
+    --------
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
     '''
 
     def __init__(
@@ -452,7 +459,7 @@ class ChunkReader:
 
     @property
     def nrows(self):
-        return _nrows
+        return self._nrows
 
 
     @nrows.setter
@@ -533,5 +540,32 @@ class ChunkReader:
         del data
 
         return data_array
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = (
+            f"filepath_or_buffer = {self.filepath_or_buffer}\n"
+            f"file_lines =         {self.file_lines}\n\n"
+            f"skiprows =           {self.skiprows}\n"
+            f"nrows =              {self.nrows}\n\n"
+            f"chunksize =          {self.chunksize}\n"
+            f"number_of_chunks =   {self.number_of_chunks}"
+        )
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPL
+        docstr = (
+            "Class instance that inherits from `pept.utilities.ChunkReader`.\n"
+            f"Type:\n{type(self)}\n\n"
+            "Attributes\n"
+            "----------\n"
+            f"{self.__str__()}\n"
+        )
+
+        return docstr
 
 
