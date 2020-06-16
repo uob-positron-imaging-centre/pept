@@ -561,11 +561,12 @@ class LineData(IterableSamples):
     def lines_trace(
         self,
         sample_indices = ...,
-        width = 2,
+        width = 2.0,
         color = None,
         opacity = 0.6,
         colorbar = True,
         colorbar_col = 0,
+        colorscale = "Magma",
         colorbar_title = None
     ):
         '''Get a Plotly trace for all the lines in selected samples.
@@ -585,7 +586,7 @@ class LineData(IterableSamples):
             sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all lines).
-        width : float, default 2
+        width : float, default 2.0
             The width of the lines.
         color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
@@ -602,6 +603,11 @@ class LineData(IterableSamples):
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is 0 (the first column - time).
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the `colorbar_col` column in the
+            input data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
         colorbar_title : str, optional
             If set, the colorbar will have this title above.
 
@@ -642,8 +648,8 @@ class LineData(IterableSamples):
         if colorbar:
             if color is None:
                 marker['color'] = []
-            marker.update(colorscale = "Magma")
 
+            marker.update(colorscale = colorscale)
             if colorbar_title is not None:
                 marker.update(colorbar = dict(title = colorbar_title))
 
