@@ -13,7 +13,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2019 Andrei Leonard Nicusan
+#    Copyright (C) 2020 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 
 
 # File   : point_data.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 19.08.2019
 
@@ -50,51 +50,51 @@ import  pept
 
 
 class PointData(IterableSamples):
-    '''A class for generic PEPT data iteration, manipulation and visualisation.
+    '''A class for general PEPT point-like data iteration, manipulation and
+    visualisation.
 
-    This class is used to encapsulate points. It can yield samples of the
-    `points` of an adaptive `sample_size` and `overlap`, without requiring
-    additional storage.
+    In the context of positron-based particle tracking, points are defined by a
+    timestamp, 3D coordinates and any other extra information (such as
+    trajectory label or some tracer signature). This class is used for the
+    encapsulation of 3D points - be they tracer locations, cutpoints, etc. -,
+    efficiently yielding samples of `points` of an adaptive `sample_size` and
+    `overlap`.
 
-    Parameters
-    ----------
-    points : (N, M) numpy.ndarray
-        An (N, M >= 4) numpy array that stores points (or any generic 2D set of
-        data). It expects that the first column is time, followed by cartesian
-        (3D) coordinates of points **in mm**, followed by any extra information
-        the user needs. A row is then [time, x, y, z, etc].
-    sample_size : int, default 0
-        An `int`` that defines the number of points that should be returned
-        when iterating over `points`. A `sample_size` of 0 yields all the
-        data as one single sample.
-    overlap : int, default 0
-        An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `points`. An overlap of 0 means
-        consecutive samples, while an overlap of (`sample_size` - 1) means
-        incrementing the samples by one. A negative overlap means skipping
-        values between samples. An error is raised if `overlap` is larger than
-        or equal to `sample_size`.
-    verbose : bool, default False
-        An option that enables printing the time taken for the initialisation
-        of an instance of the class. Useful when reading large files (10gb
-        files for PEPT data is not unheard of).
+    Much like a complement to `LineData`, `PointData` is an abstraction over
+    point-like data that may be encountered in the context of PEPT (e.g.
+    pre-tracked tracer locations), as once the raw points are transformed into
+    the common `PointData` format, any tracking, analysis or visualisation
+    algorithm in the `pept` package can be used interchangeably. Moreover, it
+    provides a stable, user-friendly interface for iterating over points in
+    *samples* - this can be useful for tracking algorithms, as some take a few
+    points (a *sample*), produce an accurate tracer location, then move to the
+    next sample of points, repeating the procedure. Using overlapping samples
+    is also useful for improving the time resolution of the algorithms.
+
+    This is the base class for point-like data; subroutines that accept and/or
+    return `PointData` instances (or subclasses thereof) can be found
+    throughout the `pept` package. If you'd like to create new algorithms based
+    on them, you can check out the `pept.tracking.peptml.cutpoints` module as
+    an example; the `Cutpoints` class receives a `LineData` instance,
+    transforms the samples of LoRs into cutpoints, then initialises itself as a
+    `PointData` subclass - thereby inheriting all its methods and attributes.
 
     Attributes
     ----------
     points : (N, M) numpy.ndarray
         An (N, M >= 4) numpy array that stores the points as time, followed by
-        cartesian (3D) coordinates of the point **in mm**, followed by any
-        extra information. Each row is then `[time, x, y, z, etc]`.
+        cartesian (3D) coordinates of the point, followed by any extra
+        information. The data columns are then `[time, x, y, z, etc]`.
     sample_size : int
         An `int` that defines the number of lines that should be returned when
-        iterating over `points`. Default is 0.
+        iterating over `points`. The default is 0.
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `points`. An overlap of 0 means
         consecutive samples, while an overlap of (`sample_size` - 1) means
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
-        `sample_size`. Default is 0.
+        `sample_size`. The default is 0.
     number_of_points : int
         An `int` that corresponds to len(`points`), or the number of points
         stored by `points`.
@@ -102,23 +102,144 @@ class PointData(IterableSamples):
         An `int` that corresponds to the number of samples that can be accessed
         from the class, taking the `overlap` into consideration.
 
+    Methods
+    -------
+    sample(n)
+        Get sample number n (indexed from 0).
+    to_csv(filepath, delimiter = '  ', newline = '\n')
+        Write `points` to a CSV file.
+    plot(sample_indices = ..., ax = None, colorbar_col = -1)
+        Plot points from selected samples using matplotlib.
+    plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = -1):
+        Plot points from selected samples using matplotlib on PEPT-style axes.
+    points_trace(sample_indices = ..., size = 2, color = None, opacity = 0.8,
+                 colorbar = True, colorbar_col = -1, colorscale = "Magma",
+                 colorbar_title = None)
+        Get a Plotly trace for all points in selected samples, with possible
+        color-coding.
+    copy()
+        Create a deep copy of an instance of this class, including a new inner
+        numpy array `points`.
+
     Raises
     ------
     ValueError
         If `overlap` >= `sample_size`. Overlap is required to be smaller than
         `sample_size`, unless `sample_size` is 0. Note that it can also be
         negative.
-    ValueError
-        If `line_data` does not have (N, M) shape, where M >= 4.
 
     Notes
     -----
-    The class saves `points` as a **contiguous** numpy array for efficient
+    This class saves `points` as a **contiguous** numpy array for efficient
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
 
-    '''
+    Examples
+    --------
+    Initialise a `PointData` instance containing 10 points with a `sample_size`
+    of 3.
+    >>> points_raw = np.arange(40).reshape(10, 4)
+    >>> print(points_raw)
+    [[ 0,  1,  2,  3],
+     [ 4,  5,  6,  7],
+     [ 8,  9, 10, 11],
+     [12, 13, 14, 15],
+     [16, 17, 18, 19],
+     [20, 21, 22, 23],
+     [24, 25, 26, 27],
+     [28, 29, 30, 31],
+     [32, 33, 34, 35],
+     [36, 37, 38, 39]])
+    >>> point_data = pept.PointData(points_raw, sample_size = 3)
 
+    >>> print(point_data)
+    number_of_points =  10
+    sample_size =       3
+    overlap =           0
+    number_of_samples = 3
+    points =
+    [[ 0.  1.  2.  3.]
+    [ 4.  5.  6.  7.]
+    [ 8.  9. 10. 11.]
+    [12. 13. 14. 15.]
+    [16. 17. 18. 19.]
+    [20. 21. 22. 23.]
+    [24. 25. 26. 27.]
+    [28. 29. 30. 31.]
+    [32. 33. 34. 35.]
+    [36. 37. 38. 39.]]
+
+    Access samples using subscript notation. Notice how the samples are
+    consecutive, as `overlap` is 0 by default.
+    >>> point_data[0]
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.]])
+    >>> point_data[1]
+    array([[12., 13., 14., 15.],
+           [16., 17., 18., 19.],
+           [20., 21., 22., 23.]])
+
+    Now set an overlap of 2; notice how the number of samples changes:
+    >>> len(point_data)         # Number of samples
+    3
+    >>> point_data.overlap = 2
+    >>> len(point_data)
+    8
+
+    Notice how rows are repeated from one sample to the next when accessing
+    them, because `overlap` is now 2:
+    >>> point_data[0]
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.]])
+    >>> point_data[1]
+    array([[ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.],
+           [12., 13., 14., 15.]])
+
+    Now change `sample_size` to 5 and notice again how the number of samples
+    changes:
+    >>> len(point_data)
+    8
+    >>> point_data.sample_size = 5
+    >>> len(point_data)
+    2
+    >>> point_data[0]
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.],
+           [12., 13., 14., 15.],
+           [16., 17., 18., 19.]])
+    >>> point_data[1]
+    array([[12., 13., 14., 15.],
+           [16., 17., 18., 19.],
+           [20., 21., 22., 23.],
+           [24., 25., 26., 27.],
+           [28., 29., 30., 31.]])
+
+    Notice how the samples do not cover the whole input `points_raw` array, as
+    the last lines are omitted - think of the `sample_size` and `overlap`. They
+    are still inside the inner `points` attribute of `point_data` though:
+    >>> point_data.points
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.],
+           [12., 13., 14., 15.],
+           [16., 17., 18., 19.],
+           [20., 21., 22., 23.],
+           [24., 25., 26., 27.],
+           [28., 29., 30., 31.],
+           [32., 33., 34., 35.],
+           [36., 37., 38., 39.]])
+
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
+    '''
 
     def __init__(
         self,
@@ -127,6 +248,37 @@ class PointData(IterableSamples):
         overlap = 0,
         verbose = False
     ):
+        '''`PointData` class constructor.
+
+        Parameters
+        ----------
+        points : (N, M) numpy.ndarray
+            An (N, M >= 4) numpy array that stores points (or any generic 2D
+            set of data). It expects that the first column is time, followed by
+            cartesian (3D) coordinates of points, followed by any extra
+            information the user needs. The data columns are then
+            `[time, x, y, z, etc]`.
+        sample_size : int, default 0
+            An `int`` that defines the number of points that should be returned
+            when iterating over `points`. A `sample_size` of 0 yields all the
+            data as one single sample.
+        overlap : int, default 0
+            An `int` that defines the overlap between two consecutive samples
+            that are returned when iterating over `points`. An overlap of 0
+            means consecutive samples, while an overlap of (`sample_size` - 1)
+            implies incrementing the samples by one. A negative overlap means
+            skipping values between samples. An error is raised if `overlap` is
+            larger than or equal to `sample_size`.
+        verbose : bool, default False
+            An option that enables printing the time taken for the
+            initialisation of an instance of the class. Useful when reading
+            large files (10gb files for PEPT data is not unheard of).
+
+        Raises
+        ------
+        ValueError
+            If `line_data` does not have (N, M) shape, where M >= 4.
+        '''
 
         if verbose:
             start = time.time()
@@ -160,8 +312,8 @@ class PointData(IterableSamples):
         -------
         (M, N) numpy.ndarray
             A memory view of the points stored in `points`.
-
         '''
+
         return self._points
 
 
@@ -169,8 +321,8 @@ class PointData(IterableSamples):
     def data_samples(self):
         '''Implemented property for the `IterableSamples` parent class. See its
         documentation for more information.
-
         '''
+
         return self._points
 
 
@@ -178,8 +330,8 @@ class PointData(IterableSamples):
     def data_length(self):
         '''Implemented property for the IterableSamples parent class. See its
         documentation for more information.
-
         '''
+
         return self._number_of_points
 
 
@@ -191,13 +343,13 @@ class PointData(IterableSamples):
         -------
         int
             The number of points stored in `points`.
-
         '''
+
         return self._number_of_points
 
 
     def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
-        '''Write `points` to a CSV file
+        '''Write `points` to a CSV file.
 
         Write all points (and any extra data) stored in the class to a CSV
         file.
@@ -214,188 +366,180 @@ class PointData(IterableSamples):
             newline : str, default '\n'
                 The sequence of characters at the end of every line. The
                 default is a new line '\n'.
-
         '''
+
         np.savetxt(filepath, self._points, delimiter = delimiter,
                    newline = newline)
 
 
-    def plot_all_points(self, ax = None):
-        '''Plot all points using matplotlib
+    def plot(self, sample_indices = ..., ax = None, colorbar_col = -1):
+        '''Plot points from selected samples using matplotlib.
 
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points on it.
+        Returns matplotlib figure and axes objects containing all points
+        included in the samples selected by `sample_indices`.
+        `sample_indices` may be a single sample index (e.g. 0), an iterable
+        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
 
         Parameters
         ----------
+        sample_indices : int or iterable or Ellipsis, default Ellipsis
+            The index or indices of the samples of points. An `int` signifies
+            the sample index, an iterable (list-like) signifies multiple sample
+            indices, while an Ellipsis (`...`) signifies all samples. The
+            default is `...` (all points).
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
+        colorbar_col : int, default -1
+            The column in the data samples that will be used to color the
+            points. The default is -1 (the last column).
 
         Returns
         -------
         fig, ax : matplotlib figure and axes objects
 
-        Note
-        ----
-        Plotting all points in the case of large LoR arrays is *very*
-        computationally intensive. For large arrays (> 10000), plotting
-        individual samples using `plot_points_sample_n` is recommended.
+        Notes
+        -----
+        Plotting all points is very computationally-expensive for matplotlib.
+        It is recommended to only plot a couple of samples at a time, or use
+        the faster `pept.visualisation.PlotlyGrapher`.
+
+        Examples
+        --------
+        Plot the points from sample 1 in a `PointData` instance:
+        >>> point_data = pept.PointData(...)
+        >>> fig, ax = point_data.plot(1)
+        >>> fig.show()
+
+        Plot the points from samples 0, 1 and 2:
+        >>> fig, ax = point_data.plot([0, 1, 2])
+        >>> fig.show()
 
         '''
-        if ax == None:
+
+        if ax is None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
         else:
             fig = plt.gcf()
 
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just "iterate" over the single number or Ellipsis
+        if not hasattr(sample_indices, "__iter__"):
+            sample_indices = [sample_indices]
+
+        if sample_indices[0] == Ellipsis:
+            x = self._points[:, 1],
+            y = self._points[:, 2],
+            z = self._points[:, 3],
+            color = self._points[:, colorbar_col]
+        else:
+            x, y, z, color = [], [], [], []
+            for n in sample_indices:
+                sample = self[n]
+
+                x.extend(sample[:, 1])
+                y.extend(sample[:, 2])
+                z.extend(sample[:, 3])
+
+                color.extend(sample[:, colorbar_col])
+
+        color = np.array(color)
+
         # Scatter x, y, z, [color]
-
-        x = self._points[:, 1],
-        y = self._points[:, 2],
-        z = self._points[:, 3],
-
-        color = self._points[:, -1],
-
         cmap = plt.cm.magma
-        color_array = cmap(colour_data)
+        color_array = cmap(color / color.max())
 
-        ax.scatter(x,y,z,c=color_array[0])
+        ax.scatter(x, y, z, c = color_array)
 
         return fig, ax
 
 
-    def plot_all_points_alt_axes(self, ax = None ):
-        '''Plot all points using matplotlib on PEPT-style axes
+    def plot_alt_axes(self, sample_indices = ..., ax = None,
+                      colorbar_col = -1):
+        '''Plot points from selected samples using matplotlib on PEPT-style
+        axes.
 
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points on
-        the PEPT-style convention: **x** is *parallel and horizontal* to the
-        screens, **y** is *parallel and vertical* to the screens, **z** is
-        *perpendicular* to the screens. The mapping relative to the
-        Cartesian coordinates would then be: (x, y, z) -> (z, x, y)
+        Returns matplotlib figure and axes objects containing all points
+        included in the samples selected by `sample_indices`.
+        `sample_indices` may be a single sample index (e.g. 0), an iterable
+        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
+
+        The points are plotted using the PEPT-style convention: **x** is
+        *parallel and horizontal* to the screens, **y** is
+        *parallel and vertical* to the screens, **z** is *perpendicular* to the
+        screens. The mapping relative to the Cartesian coordinates would then
+        be: (x, y, z) -> (z, x, y).
 
         Parameters
         ----------
+        sample_indices : int or iterable or Ellipsis, default Ellipsis
+            The index or indices of the samples of points. An `int` signifies
+            the sample index, an iterable (list-like) signifies multiple sample
+            indices, while an Ellipsis (`...`) signifies all samples. The
+            default is `...` (all points).
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
+        colorbar_col : int, default -1
+            The column in the data samples that will be used to color the
+            points. The default is -1 (the last column).
 
         Returns
         -------
         fig, ax : matplotlib figure and axes objects
 
-        Note
-        ----
-        Plotting all points in the case of large LoR arrays is *very*
-        computationally intensive. For large arrays (> 10000), plotting
-        individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+        Notes
+        -----
+        Plotting all points is very computationally-expensive for matplotlib.
+        It is recommended to only plot a couple of samples at a time, or use
+        the faster `pept.visualisation.PlotlyGrapher`.
+
+        Examples
+        --------
+        Plot the points from sample 1 in a `PointData` instance:
+        >>> point_data = pept.PointData(...)
+        >>> fig, ax = point_data.plot_alt_axes(1)
+        >>> fig.show()
+
+        Plot the points from samples 0, 1 and 2:
+        >>> fig, ax = point_data.plot_alt_axes([0, 1, 2])
+        >>> fig.show()
 
         '''
-        if ax == None:
+
+        if ax is None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
         else:
             fig = plt.gcf()
 
-        # Scatter x, y, z, [color]
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just "iterate" over the single number or Ellipsis
+        if not hasattr(sample_indices, "__iter__"):
+            sample_indices = [sample_indices]
 
-        x = self._points[:, 1]
-        y = self._points[:, 2]
-        z = self._points[:, 3]
-
-        color = self._points[:, -1]
-
-        cmap = plt.cm.magma
-        color_array = cmap(color)
-
-        ax.scatter(z,x,y,c=color_array[0])
-
-        return fig, ax
-
-
-    def plot_points_sample_n(self, n, ax=None):
-        '''Plot points from sample `n` using matplotlib
-
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points
-        from sample number `n`.
-
-        Parameters
-        ----------
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
-        n : int
-            The number of the sample to be plotted.
-
-        Returns
-        -------
-
-        fig, ax : matplotlib figure and axes objects
-
-        '''
-        if ax == None:
-            fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
+        if sample_indices[0] == Ellipsis:
+            x = self._points[:, 1],
+            y = self._points[:, 2],
+            z = self._points[:, 3],
+            color = self._points[:, colorbar_col]
         else:
-            fig = plt.gcf()
+            x, y, z, color = [], [], [], []
+            for n in sample_indices:
+                sample = self[n]
+
+                x.extend(sample[:, 1])
+                y.extend(sample[:, 2])
+                z.extend(sample[:, 3])
+
+                color.extend(sample[:, colorbar_col])
+
+        color = np.array(color)
 
         # Scatter x, y, z, [color]
-
-        sample = self.sample_n(n)
-
-        x = sample[:, 1]
-        y = sample[:, 2]
-        z = sample[:, 3]
-
-        color = sample[:, -1]
-
         cmap = plt.cm.magma
-        color_array = cmap(color)
+        color_array = cmap(color / color.max())
 
-        ax.scatter(z,x,y,c=color_array[0])
-
-        return fig, ax
-
-
-    def plot_points_sample_n_alt_axes(self, n, ax=None):
-        '''Plot points from sample `n` using matplotlib on PEPT-style axes
-
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis, plots all points from
-        sample number sampleN on the PEPT-style coordinates convention:
-        **x** is *parallel and horizontal* to the screens, **y** is
-        *parallel and vertical* to the screens, **z** is *perpendicular*
-        to the screens. The mapping relative to the Cartesian coordinates
-        would then be: (x, y, z) -> (z, x, y)
-
-        Parameters
-        ----------
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
-        n : int
-            The number of the sample to be plotted.
-
-        Returns
-        -------
-
-        fig, ax : matplotlib figure and axes objects
-
-        '''
-        if ax == None:
-            fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
-        else:
-            fig = plt.gcf()
-
-        # Scatter x, y, z, [color]
-
-        sample = self.sample_n(n)
-
-        x = sample[:, 1]
-        y = sample[:, 2]
-        z = sample[:, 3]
-
-        color = sample[:, -1]
-
-        cmap = plt.cm.magma
-        color_array = cmap(color)
-
-        ax.scatter(z,x,y,c=color_array[0])
+        ax.scatter(z, x, y, c = color_array)
 
         return fig, ax
 
@@ -458,7 +602,25 @@ class PointData(IterableSamples):
         plotly.graph_objs.Scatter3d
             A Plotly trace of the points.
 
+        Examples
+        --------
+        Use `PlotlyGrapher` (a user-friendly wrapper around the `plotly`
+        library for PEPT-oriented data) to plot the points from sample 1 in a
+        `PointData` instance:
+        >>> point_data = pept.PointData(...)
+        >>> grapher = pept.visualisation.PlotlyGrapher()
+        >>> trace = point_data.points_trace(1)
+        >>> grapher.add_trace(trace)
+        >>> grapher.show()
+
+        Use `plotly.graph_objs` to plot the lines from samples 0, 1 and 2:
+        >>> import plotly.graph_objs as go
+        >>> fig = go.Figure()
+        >>> fig.add_trace(point_data.points_trace([0, 1, 2]))
+        >>> fig.show()
+
         '''
+
         # Check if sample_indices is an iterable collection (list-like)
         # otherwise just "iterate" over the single number or Ellipsis
         if not hasattr(sample_indices, "__iter__"):
@@ -522,8 +684,8 @@ class PointData(IterableSamples):
         pept.PointData
             A new instance of the `pept.PointData` class with the same
             attributes as this instance, deep-copied.
-
         '''
+
         return pept.PointData(
             self._points.copy(order = "C"),
             sample_size = self._sample_size,

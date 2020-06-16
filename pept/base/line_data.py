@@ -13,7 +13,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2019 Andrei Leonard Nicusan
+#    Copyright (C) 2020 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 
 
 # File   : line_data.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 19.08.2019
 
@@ -52,50 +52,49 @@ import  pept
 class LineData(IterableSamples):
     '''A class for PEPT LoR data iteration, manipulation and visualisation.
 
-    Generally, PEPT LoRs are lines in 3D space, each defined by two points,
-    irrespective of the geometry of the scanner used. This class is used
-    for LoRs (or any lines!) encapsulation. It can yield samples of the
-    `lines` of an adaptive `sample_size` and `overlap`, without requiring
-    additional storage.
+    Generally, PEPT Lines of Response (LoRs) are lines in 3D space, each
+    defined by two points, regardless of the geometry of the scanner used. This
+    class is used for the encapsulation of LoRs (or any lines!), efficiently
+    yielding samples of `lines` of an adaptive `sample_size` and `overlap`.
 
-    Parameters
-    ----------
-    lines : (N, 7) numpy.ndarray
-        An (N, 7) numpy array that stores the PEPT LoRs (or any generic set of
-        lines) as time and cartesian (3D) coordinates of two points defining
-        each line, **in mm**. A row is then [time, x1, y1, z1, x2, y2, z2].
-    sample_size : int, default 0
-        An `int`` that defines the number of lines that should be returned when
-        iterating over `lines`. A `sample_size` of 0 yields all the data as
-        one single sample.
-    overlap : int, default 0
-        An `int` that defines the overlap between two consecutive samples that
-        are returned when iterating over `lines`. An overlap of 0 means
-        consecutive samples, while an overlap of (`sample_size` - 1) means
-        incrementing the samples by one. A negative overlap means skipping
-        values between samples. An error is raised if `overlap` is larger than
-        or equal to `sample_size`.
-    verbose : bool, default False
-        An option that enables printing the time taken for the initialisation
-        of an instance of the class. Useful when reading large files (10gb
-        files for PEPT data is not unheard of).
+    It is an abstraction over PET / PEPT scanner geometries and data formats,
+    as once the raw LoRs (be they stored as binary, ASCII, etc.) are
+    transformed into the common `LineData` format, any tracking, analysis or
+    visualisation algorithm in the `pept` package can be used interchangeably.
+    Moreover, it provides a stable, user-friendly interface for iterating over
+    LoRs in *samples* - this is useful for tracking algorithms, as they
+    generally take a few LoRs (a *sample*), produce a tracer position, then
+    move to the next sample of LoRs, repeating the procedure. Using overlapping
+    samples is also useful for improving the time resolution of the algorithms.
+
+    This is the base class for LoR data; the subroutines for transforming other
+    data formats into `LineData` can be found in `pept.scanners`. If you'd like
+    to integrate another scanner geometry or raw data format into this package,
+    you can check out the `pept.scanners.parallel_screens` module as an
+    example. This usually only involves writing a single function by hand; then
+    all attributes and methods from `LineData` will be available to your new
+    data format. If you'd like to use `LineData` as the base for other
+    algorithms, you can check out the `pept.tracking.peptml.cutpoints` module
+    as an example; the `Cutpoints` class iterates the samples of LoRs in any
+    `LineData` **in parallel**, using `concurrent.futures.ThreadPoolExecutor`.
 
     Attributes
     ----------
-    lines : (N, 7) numpy.ndarray
-        An (N, 7) numpy array that stores the PEPT LoRs as time and cartesian
-        (3D) coordinates of two points defining a line, **in mm**. Each row is
-        then `[time, x1, y1, z1, x2, y2, z2]`.
+    lines : (N, M>=7) numpy.ndarray
+        An (N, M>=7) numpy array that stores the PEPT LoRs as time and
+        cartesian (3D) coordinates of two points defining a line, followed by
+        any additional data. The data columns are then
+        `[time, x1, y1, z1, x2, y2, z2, etc.]`.
     sample_size : int
         An `int` that defines the number of lines that should be returned when
-        iterating over `lines`. Default is 0.
+        iterating over `lines`. The default is 0.
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `lines`. An overlap of 0 implies
         consecutive samples, while an overlap of (`sample_size` - 1) implies
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
-        `sample_size`. Default is 0.
+        `sample_size`. The default is 0.
     number_of_lines : int
         An `int` that corresponds to len(`lines`), or the number of LoRs
         stored by `lines`.
@@ -103,26 +102,147 @@ class LineData(IterableSamples):
         An `int` that corresponds to the number of samples that can be accessed
         from the class. It takes `overlap` into consideration.
 
+    Methods
+    -------
+    sample(n)
+        Get sample number n (indexed from 0).
+    to_csv(filepath, delimiter = '  ', newline = '\n')
+        Write `lines` to a CSV file.
+    plot(sample_indices = ..., ax = None, colorbar_col = 0)
+        Plot lines from selected samples using matplotlib.
+    plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = 0):
+        Plot lines from selected samples using matplotlib on PEPT-style axes.
+    lines_trace(sample_indices = ..., width = 2, color = None, opacity = 0.6,
+                colorbar = True, colorbar_col = 0, colorbar_title = None)
+        Get a Plotly trace for all the lines in selected samples.
+    copy()
+        Create a deep copy of an instance of this class, including a new inner
+        numpy array `lines`.
+
     Raises
     ------
     ValueError
         If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
         has to be smaller than `sample_size`. Note that it can also be
         negative.
-    ValueError
-        If `lines` has fewer than 7 columns.
 
     Notes
     -----
     This class is made for LoRs that do not have Time of Flight data, such that
     every row in `lines` is comprised of a single timestamp and the points'
     coordinates: [time, x1, y1, z1, x2, y2, z2]. If your PET / PEPT scanner
-    has Time of Flight data, use the `LineDataToF` class.
+    does have Time of Flight data, use the `LineDataToF` class.
 
     The class saves `lines` as a **contiguous** numpy array for efficient
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
 
+    Examples
+    --------
+    Initialise a `LineData` instance containing 10 lines with a `sample_size`
+    of 3.
+    >>> lines_raw = np.arange(70).reshape(10, 7)
+    >>> print(lines_raw)
+    [[ 0  1  2  3  4  5  6]
+     [ 7  8  9 10 11 12 13]
+     [14 15 16 17 18 19 20]
+     [21 22 23 24 25 26 27]
+     [28 29 30 31 32 33 34]
+     [35 36 37 38 39 40 41]
+     [42 43 44 45 46 47 48]
+     [49 50 51 52 53 54 55]
+     [56 57 58 59 60 61 62]
+     [63 64 65 66 67 68 69]]
+    >>> line_data = pept.LineData(lines_raw, sample_size = 3)
+
+    >>> print(line_data)
+    number_of_lines =   10
+    sample_size =       3
+    overlap =           0
+    number_of_samples = 3
+    lines =
+    [[ 0.  1.  2.  3.  4.  5.  6.]
+     [ 7.  8.  9. 10. 11. 12. 13.]
+     [14. 15. 16. 17. 18. 19. 20.]
+     [21. 22. 23. 24. 25. 26. 27.]
+     [28. 29. 30. 31. 32. 33. 34.]
+     [35. 36. 37. 38. 39. 40. 41.]
+     [42. 43. 44. 45. 46. 47. 48.]
+     [49. 50. 51. 52. 53. 54. 55.]
+     [56. 57. 58. 59. 60. 61. 62.]
+     [63. 64. 65. 66. 67. 68. 69.]]
+
+    Access samples using subscript notation. Notice how the samples are
+    consecutive, as `overlap` is 0 by default.
+    >>> line_data[0]
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.]])
+    >>> line_data[1]
+    array([[21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.],
+           [35., 36., 37., 38., 39., 40., 41.]])
+
+    Now set an overlap of 2; notice how the number of samples changes:
+    >>> len(line_data)          # Number of samples
+    3
+    >>> line_data.overlap = 2
+    >>> len(line_data)
+    8
+
+    Notice how rows are repeated from one sample to the next when accessing
+    them, because `overlap` is now 2:
+    >>> line_data[0]
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.]])
+    >>> line_data[1]
+    array([[ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.],
+           [21., 22., 23., 24., 25., 26., 27.]])
+
+    Now change `sample_size` to 5 and notice again how the number of samples
+    changes:
+    >>> len(line_data)
+    8
+    >>> line_data.sample_size = 5
+    >>> len(line_data)
+    2
+    >>> line_data[0]
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.],
+           [21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.]])
+    >>> line_data[1]
+    array([[21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.],
+           [35., 36., 37., 38., 39., 40., 41.],
+           [42., 43., 44., 45., 46., 47., 48.],
+           [49., 50., 51., 52., 53., 54., 55.]])
+
+    Notice how the samples do not cover the whole input `lines_raw` array, as
+    the last lines are omitted - think of the `sample_size` and `overlap`. They
+    are still inside the inner `lines` attribute of `line_data` though:
+    >>> line_data.lines
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.],
+           [21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.],
+           [35., 36., 37., 38., 39., 40., 41.],
+           [42., 43., 44., 45., 46., 47., 48.],
+           [49., 50., 51., 52., 53., 54., 55.],
+           [56., 57., 58., 59., 60., 61., 62.],
+           [63., 64., 65., 66., 67., 68., 69.]])
+
+    See Also
+    --------
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.LineDataToF : Encapsulate LoRs-ToF for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
     '''
 
     def __init__(
@@ -132,6 +252,40 @@ class LineData(IterableSamples):
         overlap = 0,
         verbose = False
     ):
+        '''`LineData` class constructor.
+
+        Parameters
+        ----------
+        lines : (N, M>=7) numpy.ndarray
+            An (N, M>=7) numpy array that stores the PEPT LoRs (or any generic
+            set of lines) as time and cartesian (3D) coordinates of two points
+            defining each line, followed by any additional data. The data
+            columns are then `[time, x1, y1, z1, x2, y2, z2, etc.]`.
+        sample_size : int, default 0
+            An `int` that defines the number of lines that should be returned
+            when iterating over `lines`. A `sample_size` of 0 yields all the
+            data as one single sample.
+        overlap : int, default 0
+            An `int` that defines the overlap between two consecutive samples
+            that are returned when iterating over `lines`. An overlap of 0
+            means consecutive samples, while an overlap of (`sample_size` - 1)
+            means incrementing the samples by one. A negative overlap means
+            skipping values between samples. An error is raised if `overlap` is
+            larger than or equal to `sample_size`.
+        verbose : bool, default False
+            An option that enables printing the time taken for the
+            initialisation of an instance of the class. Useful when reading
+            large files (10gb files for PEPT data is not unheard of).
+
+        Raises
+        ------
+        ValueError
+            If `lines` has fewer than 7 columns.
+        ValueError
+            If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
+            has to be smaller than `sample_size`. Note that it can also be
+            negative.
+        '''
 
         if verbose:
             start = time.time()
@@ -149,7 +303,7 @@ class LineData(IterableSamples):
         self._number_of_lines = len(self._lines)
 
         # Call the IterableSamples constructor to make the class iterable in
-        # samples with overlap.
+        # terms of samples with overlap.
         IterableSamples.__init__(self, sample_size, overlap)
 
         if verbose:
@@ -165,16 +319,15 @@ class LineData(IterableSamples):
         -------
         (, 7) numpy.ndarray
             A memory view of the lines stored in `lines`.
-
         '''
+
         return self._lines
 
 
     @property
     def data_samples(self):
-        '''Implement property for the IterableSamples parent class. See its
+        '''Implemented property for the IterableSamples parent class. See its
         documentation for more information.
-
         '''
 
         return self._lines
@@ -182,10 +335,10 @@ class LineData(IterableSamples):
 
     @property
     def data_length(self):
-        '''Implement property for the IterableSamples parent class. See its
+        '''Implemented property for the IterableSamples parent class. See its
         documentation for more information.
-
         '''
+
         return self._number_of_lines
 
 
@@ -197,8 +350,8 @@ class LineData(IterableSamples):
         -------
         int
             The number of lines stored in `lines`.
-
         '''
+
         return self._number_of_lines
 
 
@@ -221,183 +374,186 @@ class LineData(IterableSamples):
                 default is a new line '\n'
 
         '''
+
         np.savetxt(filepath, self._lines, delimiter = delimiter,
                    newline = newline)
 
 
-    def plot_all_lines(self, ax = None, color='r', alpha=1.0 ):
-        '''Plot all lines using Matplotlib.
+    def plot(self, sample_indices = ..., ax = None, colorbar_col = 0):
+        '''Plot lines from selected samples using matplotlib.
 
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
-        it.
+        Returns matplotlib figure and axes objects containing all lines
+        included in the samples selected by `sample_indices`.
+        `sample_indices` may be a single sample index (e.g. 0), an iterable
+        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
 
         Parameters
         ----------
+        sample_indices : int or iterable or Ellipsis, default Ellipsis
+            The index or indices of the samples of lines. An `int` signifies
+            the sample index, an iterable (list-like) signifies multiple sample
+            indices, while an Ellipsis (`...`) signifies all samples. The
+            default is `...` (all lines).
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
-
-        color : matplotlib color option (default 'r')
-
-        alpha : matplotlib opacity option (default 1.0)
+        colorbar_col : int, default -1
+            The column in the data samples that will be used to color the
+            lines. The default is -1 (the last column).
 
         Returns
         -------
-
         fig, ax : matplotlib figure and axes objects
 
-        Note
-        ----
-        Plotting all lines in the case of large LoR arrays is *very*
-        computationally intensive. For large arrays (> 10000), plotting
-        individual samples using `plot_lines_sample_n` is recommended.
+        Notes
+        -----
+        Plotting all lines is very computationally-expensive for matplotlib. It
+        is recommended to only plot a couple of samples at a time, or use the
+        faster `pept.visualisation.PlotlyGrapher`.
+
+        Example
+        -------
+        Plot the lines from sample 1 in a `LineData` instance:
+        >>> lors = pept.LineData(...)
+        >>> fig, ax = lors.plot(1)
+        >>> fig.show()
+
+        Plot the lines from samples 0, 1 and 2:
+        >>> fig, ax = lors.plot([0, 1, 2])
+        >>> fig.show()
 
         '''
-        if ax == None:
+
+        if ax is None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
         else:
             fig = plt.gcf()
 
-        p1 = self._lines[:, 1:4]
-        p2 = self._lines[:, 4:7]
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just "iterate" over the single number or Ellipsis
+        if not hasattr(sample_indices, "__iter__"):
+            sample_indices = [sample_indices]
 
-        for i in range(0, self._number_of_lines):
-            ax.plot([ p1[i][0], p2[i][0] ],
-                    [ p1[i][1], p2[i][1] ],
-                    [ p1[i][2], p2[i][2] ],
-                    c = color, alpha = alpha)
+        lines, color = [], []
+        # For each selected sample include all the lines' coordinates
+        for n in sample_indices:
+            # If an Ellipsis was received, then include all lines.
+            if n is Ellipsis:
+                sample = self.lines
+            else:
+                sample = self[n]
+
+            for line in sample:
+                lines.append(line[0:7])
+                color.append(line[colorbar_col])
+
+        color = np.array(color)
+
+        # Scatter x, y, z [color]
+        cmap = plt.cm.magma
+        color_array = cmap(color / color.max())
+
+        for i, line in enumerate(lines):
+            ax.plot(
+                [line[1], line[4]],
+                [line[2], line[5]],
+                [line[3], line[6]],
+                c = color_array[i],
+                alpha = 0.8
+            )
 
         return fig, ax
 
 
-    def plot_all_lines_alt_axes(self, ax, color='r', alpha=1.0):
-        '''Plot all lines using matplotlib on PEPT-style axes.
+    def plot_alt_axes(self, sample_indices = ..., ax = None, colorbar_col = 0):
+        '''Plot lines from selected samples using matplotlib on PEPT-style
+        axes.
 
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines on
-        the PEPT-style convention: **x** is *parallel and horizontal* to the
-        screens, **y** is *parallel and vertical* to the screens, **z** is
-        *perpendicular* to the screens. The mapping relative to the
-        Cartesian coordinates would then be: (x, y, z) -> (z, x, y)
+        Returns matplotlib figure and axes objects containing all lines
+        included in the samples selected by `sample_indices`.
+        `sample_indices` may be a single sample index (e.g. 0), an iterable
+        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
+
+        The lines are plotted using the PEPT-style convention: **x** is
+        *parallel and horizontal* to the screens, **y** is
+        *parallel and vertical* to the screens, **z** is *perpendicular* to the
+        screens. The mapping relative to the Cartesian coordinates would then
+        be: (x, y, z) -> (z, x, y).
 
         Parameters
         ----------
+        sample_indices : int or iterable or Ellipsis, default Ellipsis
+            The index or indices of the samples of lines. An `int` signifies
+            the sample index, an iterable (list-like) signifies multiple sample
+            indices, while an Ellipsis (`...`) signifies all samples. The
+            default is `...` (all lines).
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
-
-        color : matplotlib color option (default 'r')
-
-        alpha : matplotlib opacity option (default 1.0)
+        colorbar_col : int, default -1
+            The column in the data samples that will be used to color the
+            lines. The default is -1 (the last column).
 
         Returns
         -------
-
         fig, ax : matplotlib figure and axes objects
 
-        Note
-        ----
-        Plotting all lines in the case of large LoR arrays is *very*
-        computationally intensive. For large arrays (> 10000), plotting
-        individual samples using `plot_lines_sample_n_alt_axes` is recommended.
+        Notes
+        -----
+        Plotting all lines is very computationally-expensive for matplotlib. It
+        is recommended to only plot a couple of samples at a time, or use the
+        faster `pept.visualisation.PlotlyGrapher`.
+
+        Examples
+        --------
+        Plot the lines from sample 1 in a `LineData` instance:
+        >>> lors = pept.LineData(...)
+        >>> fig, ax = lors.plot_alt_axes(1)
+        >>> fig.show()
+
+        Plot the lines from samples 0, 1 and 2:
+        >>> fig, ax = lors.plot_alt_axes([0, 1, 2])
+        >>> fig.show()
 
         '''
-        if ax == None:
+
+        if ax is None:
             fig = plt.figure()
             ax  = fig.add_subplot(111, projection='3d')
         else:
             fig = plt.gcf()
 
+        # Check if sample_indices is an iterable collection (list-like)
+        # otherwise just "iterate" over the single number or Ellipsis
+        if not hasattr(sample_indices, "__iter__"):
+            sample_indices = [sample_indices]
 
-        p1 = self._lines[:, 1:4]
-        p2 = self._lines[:, 4:7]
+        lines, color = [], []
+        # For each selected sample include all the lines' coordinates
+        for n in sample_indices:
+            # If an Ellipsis was received, then include all lines.
+            if n is Ellipsis:
+                sample = self.lines
+            else:
+                sample = self[n]
 
-        for i in range(0, self._number_of_lines):
-            ax.plot([ p1[i][2], p2[i][2] ],
-                    [ p1[i][0], p2[i][0] ],
-                    [ p1[i][1], p2[i][1] ],
-                    c = color, alpha=alpha)
+            for line in sample:
+                lines.append(line[0:7])
+                color.append(line[colorbar_col])
 
-        return fig, ax
+        color = np.array(color)
 
+        # Scatter x, y, z [color]
+        cmap = plt.cm.magma
+        color_array = cmap(color / color.max())
 
-    def plot_lines_sample_n(self, n, ax = None, color = 'r', alpha = 1.0):
-        '''Plot lines from sample `n` using Matplotlib.
-
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines
-        from sample number `n`.
-
-        Parameters
-        ----------
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
-
-        sampleN : int
-            The number of the sample to be plotted.
-
-        color : matplotlib color option (default 'r')
-
-        alpha : matplotlib opacity option (default 1.0)
-
-        Returns
-        -------
-
-        fig, ax : matplotlib figure and axes objects
-
-        '''
-        if ax == None:
-            fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
-        else:
-            fig = plt.gcf()
-
-        sample = self.sample_n(n)
-        for i in range(0, len(sample)):
-            ax.plot([ sample[i][1], sample[i][4] ],
-                    [ sample[i][2], sample[i][5] ],
-                    [ sample[i][3], sample[i][6] ],
-                    c = color, alpha = alpha)
-
-        return fig, ax
-
-
-    def plot_lines_sample_n_alt_axes(self, n, ax=None, color='r', alpha=1.0):
-        '''Plot lines from sample `n` using matplotlib on PEPT-style axes.
-
-        Given a **mpl_toolkits.mplot3d.Axes3D** axis `ax`, plots all lines from
-        sample number sampleN on the PEPT-style coordinates convention:
-        **x** is *parallel and horizontal* to the screens, **y** is
-        *parallel and vertical* to the screens, **z** is *perpendicular*
-        to the screens. The mapping relative to the Cartesian coordinates
-        would then be: (x, y, z) -> (z, x, y)
-
-        Parameters
-        ----------
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
-        n : int
-            The number of the sample to be plotted.
-
-        color : matplotlib color option (default 'r')
-
-        alpha : matplotlib opacity option (default 1.0)
-
-        Returns
-        -------
-
-        fig, ax : matplotlib figure and axes objects
-
-        '''
-        if ax == None:
-            fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
-        else:
-            fig = plt.gcf()
-
-        sample = self.sample_n(n)
-        for i in range(0, len(sample)):
-            ax.plot([ sample[i][3], sample[i][6] ],
-                    [ sample[i][1], sample[i][4] ],
-                    [ sample[i][2], sample[i][5] ],
-                    c = color, alpha = alpha)
+        for i, line in enumerate(lines):
+            ax.plot(
+                [line[3], line[6]],
+                [line[1], line[4]],
+                [line[2], line[5]],
+                c = color_array[i],
+                alpha = 0.8
+            )
 
         return fig, ax
 
@@ -454,7 +610,25 @@ class LineData(IterableSamples):
         plotly.graph_objs.Scatter3d
             A Plotly trace of the LoRs.
 
+        Examples
+        --------
+        Use `PlotlyGrapher` (a user-friendly wrapper around the `plotly`
+        library for PEPT-oriented data) to plot the lines from sample 1 in a
+        `LineData` instance:
+        >>> lors = pept.LineData(...)
+        >>> grapher = pept.visualisation.PlotlyGrapher()
+        >>> trace = lors.lines_trace(1)
+        >>> grapher.add_trace(trace)
+        >>> grapher.show()
+
+        Use `plotly.graph_objs` to plot the lines from samples 0, 1 and 2:
+        >>> import plotly.graph_objs as go
+        >>> fig = go.Figure()
+        >>> fig.add_trace(lors.lines_trace([0, 1, 2]))
+        >>> fig.show()
+
         '''
+
         # Check if sample_indices is an iterable collection (list-like)
         # otherwise just "iterate" over the single number or Ellipsis.
         if not hasattr(sample_indices, "__iter__"):
@@ -514,8 +688,8 @@ class LineData(IterableSamples):
         pept.LineData
             A new instance of the `pept.LineData` class with the same
             attributes as this instance, deep-copied.
-
         '''
+
         return pept.LineData(
             self._lines.copy(order = "C"),
             sample_size = self._sample_size,
