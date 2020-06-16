@@ -72,37 +72,13 @@ class PlotlyGrapher:
     represent the *xy*-plane.
 
     This class can be used to draw 3D scatter or line plots, with optional
-    colour-coding using extra data columns (e.g. relative tracer activity).
+    colour-coding using extra data columns (e.g. relative tracer activity or
+    trajectory label).
 
     It also provides easy access to the most common configuration parameters
     for the plots, such as axes limits, subplot titles, colorbar titles, etc.
     It can work with pre-computed Plotly traces (such as the ones from the
     `pept` base classes), as well as with numpy arrays.
-
-    Parameters
-    ----------
-    rows : int, optional
-        The number of rows of subplots. The default is 1.
-    cols : int, optional
-        The number of columns of subplots. The default is 1.
-    xlim : list or numpy.ndarray, optional
-        A list of length 2, formatted as `[x_min, x_max]`, where `x_min` is
-        the lower limit of the x-axis of all the subplots and `x_max` is the
-        upper limit of the x-axis of all the subplots. The default is
-        [0, 500], as for the Birmingham PEPT.
-    ylim : list or numpy.ndarray, optional
-        A list of length 2, formatted as `[y_min, y_max]`, where `y_min` is
-        the lower limit of the y-axis of all the subplots and `y_max` is the
-        upper limit of the y-axis of all the subplots. The default is
-        [0, 500], as for the Birmingham PEPT.
-    zlim : list or numpy.ndarray, optional
-        A list of length 2, formatted as `[z_min, z_max]`, where `z_min` is
-        the lower limit of the z-axis of all the subplots and `z_max` is the
-        upper limit of the z-axis of all the subplots. The default is
-        [0, 500], a usual screen separation for the Birmingham PEPT.
-    subplot_titles : list of str, optional
-        A list of the titles of the subplots - e.g. ["plot a)", "plot b)"]. The
-        default is a list of empty strings.
 
     Attributes
     ----------
@@ -118,45 +94,109 @@ class PlotlyGrapher:
         A list of length 2, formatted as `[z_min, z_max]`, where `z_min` is
         the lower limit of the z-axis of all the subplots and `z_max` is the
         upper limit of the z-axis of all the subplots.
-    fig : Plotly Figure instance
-        A Plotly Figure instance, with any number of subplots (as defined by
+    fig : Plotly.Figure instance
+        A Plotly.Figure instance, with any number of subplots (as defined by
         `rows` and `cols`) pre-configured for PEPT data.
+
+    Methods
+    -------
+    create_figure()
+        Create a Plotly figure, pre-configured for PEPT data.
+    add_points(points, row = 1, col = 1, size = 2.0, color = None,
+               opacity = 0.8, colorbar = True, colorbar_col = -1,
+               colorscale = "Magma", colorbar_title = None)
+        Create and plot a trace for all the points in a numpy array or
+        `pept.PointData`, with possible color-coding.
+    add_lines(lines, row = 1, col = 1, width = 2.0, color = None,
+              opacity = 0.6, colorbar = True, colorbar_col = 0,
+              colorscale = "Magma", colorbar_title = None)
+        Create and plot a trace for all the lines in a numpy array or
+        `pept.LineData`, with possible color-coding.
+    add_lines_tof(lines, row = 1, col = 1, width = 2.0, color = None,
+                  opacity = 0.6, colorbar = True, colorbar_col = 0,
+                  colorscale = "Magma", colorbar_title = None)
+        Create and plot a trace for all the lines with ToF data in a numpy
+        array or `pept.LineDataToF`, with possible color-coding.
+    add_trace(trace, row = 1, col = 1)
+        Add a precomputed Plotly trace to a given subplot.
+    add_traces(traces, row = 1, col = 1)
+        Add a list of precomputed Plotly traces to a given subplot.
+    show()
+        Show the Plotly figure.
 
     Raises
     ------
     ValueError
-        If `rows` < 1 or `cols` < 1.
-    TypeError
         If `xlim`, `ylim` or `zlim` are not lists of length 2.
 
     Example use
     -----------
-    The figure is created when instantiating the class
-
-    >>> lors = LineData(raw_lors...)
+    The figure is created when instantiating the class.
     >>> grapher = PlotlyGrapher()
+    >>> lors = LineData(raw_lors...)        # Some example lines
+    >>> points = PointData(raw_points...)   # Some example points
 
-    # Using a pre-computed trace from a LineData class:
-    >>> grapher.add_trace(lors.lines_trace(colorbar = True))
+    Using pre-computed traces from the `LineData` and `PointData` classes:
+    >>> grapher.add_trace(lors.lines_trace())
+    >>> grapher.add_traces([lors.lines_trace(), points.points_trace()])
 
-    # Creating a trace based on a nummpy array:
-    >>> sample = lors[0]
-    >>> grapher.add_lines(sample, colorbar = True)
+    Creating a trace based on a numpy array:
+    >>> sample_lors = lors[0]           # A numpy array of a single sample
+    >>> sample_points = points[0]
+    >>> grapher.add_lines(sample_lors)
+    >>> grapher.add_points(sample_points)
 
-    # Showing the plot:
+    Showing the plot:
     >>> grapher.show()
 
+    If you'd like to show the plot in your browser, you can set the default
+    Plotly renderer:
+    >>> plotly.io.renderers.default = "browser"
+
+    More examples are given in the docstrings of the `add_points`, `add_lines`
+    and `add_lines_tof` methods.
     '''
 
     def __init__(
         self,
         rows = 1,
         cols = 1,
-        xlim = None,#[0, 500],
-        ylim = None,#[0, 500],
-        zlim = None,#[0, 500],
+        xlim = None,
+        ylim = None,
+        zlim = None,
         subplot_titles = ["  "]
     ):
+        '''`PlotlyGrapher` class constructor.
+
+        Parameters
+        ----------
+        rows : int, optional
+            The number of rows of subplots. The default is 1.
+        cols : int, optional
+            The number of columns of subplots. The default is 1.
+        xlim : list or numpy.ndarray, optional
+            A list of length 2, formatted as `[x_min, x_max]`, where `x_min` is
+            the lower limit of the x-axis of all the subplots and `x_max` is
+            the upper limit of the x-axis of all the subplots.
+        ylim : list or numpy.ndarray, optional
+            A list of length 2, formatted as `[y_min, y_max]`, where `y_min` is
+            the lower limit of the y-axis of all the subplots and `y_max` is
+            the upper limit of the y-axis of all the subplots.
+        zlim : list or numpy.ndarray, optional
+            A list of length 2, formatted as `[z_min, z_max]`, where `z_min` is
+            the lower limit of the z-axis of all the subplots and `z_max` is
+            the upper limit of the z-axis of all the subplots.
+        subplot_titles : list of str, default ["  "]
+            A list of the titles of the subplots - e.g. ["plot a)", "plot b)"].
+            The default is a list of empty strings.
+
+        Raises
+        ------
+        ValueError
+            If `rows` < 1 or `cols` < 1.
+        ValueError
+            If `xlim`, `ylim` or `zlim` are not lists of length 2.
+        '''
 
         rows = int(rows)
         cols = int(cols)
@@ -174,7 +214,7 @@ class PlotlyGrapher:
             xlim = np.asarray(xlim, dtype = float)
 
             if xlim.ndim != 1 or xlim.shape[0] != 2:
-                raise TypeError((
+                raise ValueError((
                     "\n[ERROR]: xlim needs to be a list of length 2, formatted"
                     f" as xlim = [x_min, x_max]. Received {xlim}.\n"
                 ))
@@ -183,7 +223,7 @@ class PlotlyGrapher:
             ylim = np.asarray(ylim, dtype = float)
 
             if ylim.ndim != 1 or ylim.shape[0] != 2:
-                raise TypeError((
+                raise ValueError((
                     "\n[ERROR]: ylim needs to be a list of length 2, formatted"
                     f" as ylim = [y_min, y_max]. Received {ylim}.\n"
                 ))
@@ -192,7 +232,7 @@ class PlotlyGrapher:
             zlim = np.asarray(zlim, dtype = float)
 
             if zlim.ndim != 1 or zlim.shape[0] != 2:
-                raise TypeError((
+                raise ValueError((
                     "\n[ERROR]: zlim needs to be a list of length 2, formatted"
                     f" as zlim = [z_min, z_max]. Received {zlim}.\n"
                 ))
@@ -222,7 +262,6 @@ class PlotlyGrapher:
         fig : Plotly Figure instance
             A Plotly Figure instance, with any number of subplots (as defined
             when instantiating the class) pre-configured for PEPT data.
-
         '''
 
         specs = [[{"type": "scatter3d"}] * self._cols] * self._rows
@@ -291,7 +330,6 @@ class PlotlyGrapher:
         -------
         xlim : numpy.ndarray
             A numpy array of length 2 representing the upper and lower limits.
-
         '''
 
         return self._xlim
@@ -309,15 +347,14 @@ class PlotlyGrapher:
 
         Raises
         ------
-        TypeError
+        ValueError
             If `xlim` is not a list-like of length 2.
-
         '''
 
         xlim = np.asarray(xlim, dtype = float)
 
         if xlim.ndim != 1 or xlim.shape[0] != 2:
-            raise TypeError((
+            raise ValueError((
                 "\n[ERROR]: xlim needs to be a list of length 2, formatted as"
                 f"xlim = [x_min, x_max]. Received {xlim}.\n"
             ))
@@ -349,7 +386,6 @@ class PlotlyGrapher:
         -------
         ylim : numpy.ndarray
             A numpy array of length 2 representing the upper and lower limits.
-
         '''
 
         return self._ylim
@@ -367,15 +403,14 @@ class PlotlyGrapher:
 
         Raises
         ------
-        TypeError
+        ValueError
             If `ylim` is not a list-like of length 2.
-
         '''
 
         ylim = np.asarray(ylim, dtype = float)
 
         if ylim.ndim != 1 or ylim.shape[0] != 2:
-            raise TypeError((
+            raise ValueError((
                 "\n[ERROR]: ylim needs to be a list of length 2, formatted as"
                 f"ylim = [y_min, y_max]. Received {ylim}.\n"
             ))
@@ -407,7 +442,6 @@ class PlotlyGrapher:
         -------
         zlim : numpy.ndarray
             A numpy array of length 2 representing the upper and lower limits.
-
         '''
 
         return self._zlim
@@ -425,15 +459,14 @@ class PlotlyGrapher:
 
         Raises
         ------
-        TypeError
+        ValueError
             If `zlim` is not a list-like of length 2.
-
         '''
 
         zlim = np.asarray(zlim, dtype = float)
 
         if zlim.ndim != 1 or zlim.shape[0] != 2:
-            raise TypeError((
+            raise ValueError((
                 "\n[ERROR]: zlim needs to be a list of length 2, formatted as"
                 f"zlim = [z_min, z_max]. Received {zlim}.\n"
             ))
@@ -466,7 +499,6 @@ class PlotlyGrapher:
         fig : Plotly Figure instance
             The Plotly Figure instance stored in the class, containing all
             data and options set.
-
         '''
 
         return self._fig
@@ -534,8 +566,8 @@ class PlotlyGrapher:
         ValueError
             If `points` is not a numpy.ndarray with shape (M, N), where N >= 4.
 
-        Note
-        ----
+        Notes
+        -----
         If a colorbar is to be used (i.e. `colorbar = True` and `color = None`)
         and there are fewer than 10 unique values in the `colorbar_col` column
         in `points`, then the points for each unique label will be added as
@@ -545,6 +577,31 @@ class PlotlyGrapher:
         trajectories, as when there are fewer than 10 trajectories, the
         distinct colours automatically used by Plotly when adding multiple
         traces allow the points to be better distinguished.
+
+        Examples
+        --------
+        Add an array of points (data columns: [time, x, y, z]) to a
+        `PlotlyGrapher` instance:
+        >>> grapher = PlotlyGrapher()
+        >>> points_raw = np.array(...)      # shape (N, M >= 4)
+        >>> grapher.add_points(points_raw)
+        >>> grapher.show()
+
+        Add all the points in a `PointData` instance:
+        >>> point_data = pept.PointData(...)    # Some example data
+        >>> grapher.add_points(point_data)
+        >>> grapher.show()
+
+        Note that the above method can only add the whole `points` attribute of
+        `PointData`. If you'd like to only plot some samples, use the
+        `PointData.points_trace([sample_indices])` method:
+        >>> trace = point_data.points_trace([0, 1, 2]) # Select samples 0, 1, 2
+        >>> grapher.add_trace(trace)
+
+        If you have an extremely large number of points in a numpy array, you
+        can plot every 10th point using slices:
+        >>> pts = np.array(...)         # shape (N, M >= 4), N very large
+        >>> grapher.add_points(pts[::10])
 
         '''
 
@@ -687,6 +744,31 @@ class PlotlyGrapher:
         ValueError
             If `lines` is not a numpy.ndarray with shape (M, N), where N >= 7.
 
+        Examples
+        --------
+        Add an array of lines (data columns: [t, x1, y1, z1, x2, y2, z2]) to a
+        `PlotlyGrapher` instance:
+        >>> grapher = PlotlyGrapher()
+        >>> lines_raw = np.array(...)           # shape (N, M >= 7)
+        >>> grapher.add_lines(lines_raw)
+        >>> grapher.show()
+
+        Add all the lines in a `LineData` instance:
+        >>> line_data = pept.LineData(...)      # Some example data
+        >>> grapher.add_lines(line_data)
+        >>> grapher.show()
+
+        Note that the above method can only add the whole `lines` attribute of
+        `LineData`. If you'd like to only plot some samples, use the
+        `LineData.lines_trace([sample_indices])` method:
+        >>> trace = line_data.lines_trace([0, 1, 2]) # Select samples 0, 1, 2
+        >>> grapher.add_trace(trace)
+
+        If you have a very large number of lines in a numpy array, you can plot
+        every 10th point using slices:
+        >>> lines_raw = np.array(...)       # shape (N, M >= 7), N very large
+        >>> grapher.add_lines(lines_raw[::10])
+
         '''
 
         # If a pept.LineData instance (or subclass thereof!) is received, just
@@ -804,6 +886,31 @@ class PlotlyGrapher:
         ValueError
             If `lines` is not a numpy.ndarray with shape (M, N), where N >= 8.
 
+        Examples
+        --------
+        Add an array of lines (data columns: [t1, x1, y1, z1, t2, x2, y2, z2])
+        with **two timestamps** to a `PlotlyGrapher` instance:
+        >>> grapher = PlotlyGrapher()
+        >>> lines_raw = np.array(...)           # shape (N, M >= 8)
+        >>> grapher.add_lines_tof(lines_raw)
+        >>> grapher.show()
+
+        Add all the lines in a `LineDataToF` instance:
+        >>> line_data = pept.LineDataToF(...)   # Some example data
+        >>> grapher.add_lines_tof(line_data)
+        >>> grapher.show()
+
+        Note that the above method can only add the whole `lines` attribute of
+        `LineDataToF`. If you'd like to only plot some samples, use the
+        `LineDataToF.lines_trace([sample_indices])` method:
+        >>> trace = line_data.lines_trace([0, 1, 2]) # Select samples 0, 1, 2
+        >>> grapher.add_trace(trace)
+
+        If you have a very large number of lines in a numpy array, you can plot
+        every 10th point using slices:
+        >>> lines_raw = np.array(...)       # shape (N, M >= 8), N very large
+        >>> grapher.add_lines_tof(lines_raw[::10])
+
         '''
 
         # If a pept.LineDataToF instance (or subclass thereof!) is received,
@@ -870,7 +977,6 @@ class PlotlyGrapher:
             The row of the subplot to add a trace to.
         col : int, default 1
             The column of the subplot to add a trace to.
-
         '''
 
         # Add precomputed trace
@@ -890,7 +996,6 @@ class PlotlyGrapher:
             The row of the subplot to add the traces to.
         col : int, default 1
             The column of the subplot to add the traces to.
-
         '''
 
         # Add precomputed traces
@@ -918,5 +1023,30 @@ class PlotlyGrapher:
         '''
 
         self._fig.show()
+
+
+    def __str__(self):
+        # Shown when calling print(class)
+        docstr = (
+            f"xlim = {self.xlim}\n"
+            f"ylim = {self.ylim}\n"
+            f"zlim = {self.zlim}\n\n"
+            f"fig = \n{self.fig}"
+        )
+
+        return docstr
+
+
+    def __repr__(self):
+        # Shown when writing the class on a REPL
+        docstr = (
+            "Class instance that inherits from `pept.visualisation."
+            "PlotlyGrapher`.\n"
+            f"Type:\n{type(self)}\n\n"
+            "Attributes\n----------\n"
+            f"{self.__str__()}\n\n"
+        )
+
+        return docstr
 
 
