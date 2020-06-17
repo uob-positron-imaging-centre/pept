@@ -60,20 +60,6 @@ import  pept
 from    pept.utilities      import  find_cutpoints
 
 
-def find_spatial_error(true_positions, found_positions):
-
-    tree = cKDTree(true_positions)
-
-    n = len(found_positions)
-    spatial_error = np.empty((n, 3))
-
-    for i, centre in enumerate(found_positions):
-        d, index = tree.query(centre, k = 1,  n_jobs = -1)
-        spatial_error[i] = np.abs(centre - true_positions[index])
-
-    return spatial_error
-
-
 
 
 class HDBSCANClusterer:

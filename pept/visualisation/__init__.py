@@ -8,22 +8,24 @@
 # Date   : 22.08.2019
 
 
-'''The *plotly_grapher* module implements Plotly-based visualisation tools
-to aid PEPT data analysis and to create publication-ready figures.
+'''PEPT-oriented visualisation tools.
 
-The *PlotlyGrapher* class can create and automatically configure 3D subplots
-for PEPT data visualisation. The PEPT 3D axes convention has the *y*-axis
-pointing upwards, such that the vertical screens of a PEPT scanner represent
-the *xy*-plane. The class provides functionality for plotting 3D scatter or
-line plots, with optional colorbars.
+Summary
+-------
+This subpackage hosts visualisation functions and classes for PEPT data. At the
+moment, there is only one module, `plotly_grapher`, which implements
+Plotly-based visualisation tools to aid PEPT data analysis, creating 3D
+interactive, publication-ready figures.
 
-If you use the `pept` package, we ask you to cite the following paper:
-
-    Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
-    using machine learning. Review of Scientific Instruments.
-    2020 Jan 1;91(1):013329.
-    https://doi.org/10.1063/1.5129251
-
+Modules Provided
+----------------
+pept.visualisation
+│
+Classes imported into the subpackage root:
+├── PlotlyGrapher :     Plotly-based interactive 3D graphs with subplots.
+│
+Modules provided:
+└── plotly_grapher
 '''
 
 

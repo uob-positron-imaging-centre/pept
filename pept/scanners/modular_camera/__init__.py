@@ -16,12 +16,15 @@ __all__ = [
 ]
 
 
-__author__ =        "Sam Manger"
-__credits__ =       ["Andrei Leonard Nicusan", "Kit Windows-Yule", "Sam Manger"]
-__license__ =       "GNU v3.0"
-__version__ =       "0.1.0"
-__maintainer__ =    "Sam Manger"
-__email__ =         "s.manger@bham.ac.uk"
-__status__ =        "Development"
+__author__ = "Sam Manger"
+__credits__ = [
+    "Andrei Leonard Nicusan",
+    "Kit Windows-Yule",
+    "Sam Manger"
+]
+__license__ = "GNU v3.0"
+__maintainer__ = "Sam Manger"
+__email__ = "s.manger@bham.ac.uk"
+__status__ = "Development"
 
 

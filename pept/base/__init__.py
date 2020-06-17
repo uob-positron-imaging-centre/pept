@@ -6,6 +6,21 @@
 # Date   : 31.01.2020
 
 
+'''PEPT base classes.
+
+Subpackages Provided
+--------------------
+These classes are imported into the `pept` package root, so they are available
+as `pept.PointData`, `pept.LineData`, etc., without going through `base` first.
+
+pept.base
+├── PointData :     Encapsulate points for ease of iteration and visualisation.
+├── LineData :      Encapsulate lines (LoRs) with a single timestamp.
+├── LineDataToF :   Encapsulate LoRs with two timestamps, having ToF data.
+└── VoxelData :     Encapsulate voxels for ease of traversal and manipulation.
+'''
+
+
 from    .line_data      import  LineData
 from    .line_data_tof  import  LineDataToF
 from    .point_data     import  PointData
@@ -20,7 +35,7 @@ __all__ = [
 ]
 
 
-__author__ = "Andrei Leonard Nicusan, Sam Manger"
+__author__ = ["Andrei Leonard Nicusan", "Sam Manger"]
 __credits__ = [
     "Andrei Leonard Nicusan",
     "Kit Windows-Yule",
