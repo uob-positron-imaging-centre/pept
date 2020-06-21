@@ -121,8 +121,8 @@ class PlotlyGrapher:
         Add a precomputed Plotly trace to a given subplot.
     add_traces(traces, row = 1, col = 1)
         Add a list of precomputed Plotly traces to a given subplot.
-    show()
-        Show the Plotly figure.
+    show(equal_axes = True)
+        Show the Plotly figure, optionally setting equal axes limits.
 
     Raises
     ------
@@ -810,6 +810,10 @@ class PlotlyGrapher:
             if colorbar and color is None:
                 marker['color'].extend(3 * [line[colorbar_col]])
 
+        coords_x = np.array(coords_x, dtype = float)
+        coords_y = np.array(coords_y, dtype = float)
+        coords_z = np.array(coords_z, dtype = float)
+
         trace = go.Scatter3d(
             x = coords_x,
             y = coords_y,
@@ -952,6 +956,10 @@ class PlotlyGrapher:
             if colorbar and color is None:
                 marker['color'].extend(3 * [line[colorbar_col]])
 
+        coords_x = np.array(coords_x, dtype = float)
+        coords_y = np.array(coords_y, dtype = float)
+        coords_z = np.array(coords_z, dtype = float)
+
         trace = go.Scatter3d(
             x = coords_x,
             y = coords_y,
@@ -1006,21 +1014,70 @@ class PlotlyGrapher:
         )
 
 
-    def show(self):
-        '''Show the Plotly figure.
+    def show(self, equal_axes = True):
+        '''Show the Plotly figure, optionally setting equal axes limits.
 
         Note that the figure will be shown on the Plotly-configured renderer
         (e.g. browser, or PDF). The available renderers can be found by running
         the following code:
-
         >>> import plotly.io as pio
         >>> pio.renderers
 
         If you want an interactive figure in the browser, run the following:
-
         >>> pio.renderers.default = "browser"
 
+        Parameters
+        ----------
+        equal_axes : bool, default True
+            Set `xlim`, `ylim`, `zlim` to equal ranges such that the axes
+            limits are equalised. Only has an effect if `xlim`, `ylim` and
+            `zlim` are all `None`. If `False`, the default Plotly behaviour is
+            used (i.e. automatically use min, max for each dimension).
         '''
+
+        if (equal_axes == True and self.xlim is None and self.ylim is None and
+            self.zlim is None):
+            # Compute min, max for the `x`, `y`, `z` dimensions for every
+            # dataset added to `_fig`
+            def get_min_max(fig_data):
+                # Convert x, y, z attributes of `fig_data` to numpy arrays with
+                # `dtype = float`, such that `None` entries are casted to
+                # np.nan. Then find min, max for each dimension.
+                x = np.asarray(fig_data.x, dtype = float)
+                y = np.asarray(fig_data.y, dtype = float)
+                z = np.asarray(fig_data.z, dtype = float)
+
+                # Find min, max, ignoring np.nans
+                xmin = np.nanmin(x)
+                xmax = np.nanmax(x)
+
+                ymin = np.nanmin(y)
+                ymax = np.nanmax(y)
+
+                zmin = np.nanmin(z)
+                zmax = np.nanmax(z)
+
+                return [xmin, xmax, ymin, ymax, zmin, zmax]
+
+            # `lims` columns: [xmin, xmax, ymin, ymax, zmin, zmax].
+            lims = [get_min_max(fig_data) for fig_data in self._fig.data]
+            lims = np.array(lims, order = "F")
+
+            # Find global min and max for each dimension.
+            mins = lims[:, [0, 2, 4]].min(axis = 0)
+            maxs = lims[:, [1, 3, 5]].max(axis = 0)
+
+            # Find greatest range in all dimensions.
+            max_range = (maxs - mins).max()
+
+            # Find mean for each dimension to centre plot around it.
+            mean = (maxs + mins) / 2
+
+            # Finally, set xlim, ylim, zlim to be centred around their mean,
+            # with a span of max_range.
+            self.xlim = [mean[0] - max_range / 2, mean[0] + max_range / 2]
+            self.ylim = [mean[1] - max_range / 2, mean[1] + max_range / 2]
+            self.zlim = [mean[2] - max_range / 2, mean[2] + max_range / 2]
 
         self._fig.show()
 
