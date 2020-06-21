@@ -1,35 +1,135 @@
-# pept-dev
-A private development mirror of the official uob-positron-imaging-centre/pept repository.
+![](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/logo.png?raw=true)
 
-We are currently working on:
-- Implementing Voxel-based algorithms.
-- **Extending the base classes to accommodate Time-of-Flight information** (ie. using two timestamps per LoR). These might be non-trivial and cascade down onto the tracking algorithms.
+![version](https://img.shields.io/badge/version-0.2.0-blue)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
+[![](https://img.shields.io/badge/0.2.0-docs-success)](https://uob-positron-imaging-centre.github.io)
 
-Commits regarding the ergonomics of the package should go directly to the official repository - that includes:
-- Making classes more robust (e.g. have plotting functions select multiple samples from a class instead of just one). At the moment, these changes can break backwards compatibility. Sorry.
-- Improving the documentation.
 
-Suggestion for working on the package:
-1. Clone the repository in your terminal:
+# The `pept` Library
+
+A Python library that integrates all the tools necessary to perform research using Positron Emission Particle Tracking (PEPT). It includes algorithms for the location, identification and tracking of particles, in addition to tools for visualisation and analysis, and utilities allowing the realistic simulation of PEPT data.
+
+
+## Positron Emission Particle Tracking
+PEPT is a technique developed at the University of Birmingham which allows the non-invasive, three-dimensional tracking of one or more 'tracer' particles through particulate, fluid or multiphase systems. The technique allows particle or fluid motion to be tracked with sub-millimetre accuracy and sub-millisecond temporal resolution and, due to its use of highly-penetrating 511keV gamma rays, can be used to probe the internal dynamics of even large, dense, optically opaque systems - making it ideal for industrial as well as scientific applications.
+
+PEPT is performed by radioactively labelling a particle with a positron-emitting radioisotope such as fluorine-18 (18F) or gallium-66 (66Ga), and using the back-to-back gamma rays produced by electron-positron annihilation events in and around the tracer to triangulate its spatial position. Each detected gamma ray represents a line of response (LoR).
+
+![Transforming LoRs into trajectories using `pept`](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/pept_transformation.png?raw=true)
+<div style = "text-align: center"> Transforming gamma rays, or lines of response (left) into individual tracer trajectories (right) using the `pept` library. Depicted is experimental data of two tracers rotating at 42 RPM, imaged using the University of Birmingham Positron Imaging Centre's parallel screens PEPT camera. </div> 
+
+
+## Getting Started
+
+These instructions will help you get started with PEPT data analysis.
+
+
+### Prerequisites
+
+This package supports Python 3.6 and above. You can install it using the batteries-included [Anaconda distribution](https://www.anaconda.com/products/individual) or the bare-bones [Python interpreter](https://www.python.org/downloads/). You can also check out our Python and `pept` tutorials [here](https://github.com/uob-positron-imaging-centre/tutorials).
+
+
+### Installation
+
+You can install the latest official version of `pept` from PyPI:
+
 ```
-git clone https://github.com/anicusan/pept-dev
+pip install -U pept
 ```
 
-2. Install the package from the repo **in edit-mode**. This means that any change you make to the package will automatically be reflected in your code that uses it, without having to reinstall it.
+Or you can install the development version from the GitHub repository:
+
 ```
-cd pept-dev
-pip install -e .
+pip install git+https://github.com/uob-positron-imaging-centre/pept
 ```
 
-3. Now you can add new stuff to the package. You can write scripts in another directory to test the new features you've added.
 
-4. If you're happy with your changes and want to merge them to this repo, you can run the 3-clause prayer:
-```
-git add <your changed/new files>
-git commit -m "<some description of your additions>"
-git push
+### Example usage
+
+A minimal analysis script using the PEPT-ML algorithm from the `pept.tracking.peptml` package:
+
+```python
+import pept
+from pept.tracking import peptml
+
+# Read in LoRs from a web-hosted CSV file.
+lors_raw = pept.utilities.read_csv(
+    ("https://raw.githubusercontent.com/uob-positron-imaging-centre/"
+     "example_data/master/sample_2p_42rpm.csv"),    # Concatenate long string
+    skiprows = 16                                   # Skip file header
+)
+
+# Encapsulate LoRs in a `LineData` subclass and compute cutpoints.
+lors = pept.scanners.ParallelScreens(lors_raw, screen_separation = 712)
+cutpoints = peptml.Cutpoints(lors, max_distance = 0.15)
+
+# Cluster cutpoints using HDBSCAN and extract tracer locations.
+clusterer = peptml.HDBSCANClusterer()
+centres = clusterer.fit(cutpoints)
+
+# Plot tracer locations using Plotly.
+grapher = pept.visualisation.PlotlyGrapher()
+grapher.add_points(centres)
+grapher.show()
 ```
 
-That's it. Please recite "git add git commit git push" every evening to please the coding gods. Please be careful with your `git push`s. Love you all.
+Running the above code initialises 80,000 lines of PEPT data from an online location (containing the same experiment as before - two tracers rotating at 42 RPM), transforms lines of response into accurate tracer locations and plots them in a 3D interactive browser-based graph:
+
+![LoRs analysed using the PEPT-ML minimal script](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/pept_centres.png?raw=true)
+
+You can download some PEPT data samples from the [UoB Positron Imaging Centre's Repository](https://github.com/uob-positron-imaging-centre/example_data):
+
+```
+$> git clone https://github.com/uob-positron-imaging-centre/example_data
+```
+
+
+## Tutorials and Documentation
+
+A very fast-paced introduction to Python is available [here](https://colab.research.google.com/drive/1Uq8Ppiv8jR-XSVsKZMcCUNuXW-l6n_RI?usp=sharing); it is aimed at engineers whose background might be a few lines written MATLAB, as well as moderate C/C++ programmers.
+
+A beginner-friendly tutorial for using the `pept` package is available [here](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO).
+
+The links above point to Google Colaboratory, a Jupyter notebook-hosting website that lets you combine text with Python code, executing it on Google servers. Pretty neat, isn't it?
+
+Full documentation for the `pept` package is available [here](https://uob-positron-imaging-centre.github.io).
+
+
+## Performance
+
+Significant effort has been put into making the algorithms in this package as fast as possible. The most computionally-intensive parts have been implemented in `C` / `Cython` and parallelised using `joblib` and `concurrent.futures.ThreadPoolExecutor`. For example, using the `peptml` subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook Pro) takes ~26 s.
+
+
+## Help and Support
+
+We recommend you check out [our tutorials](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO). If your issue is not suitably resolved there, please check the [issues](https://github.com/uob-positron-imaging-centre/pept/issues) page on our GitHub. Finally, if no solution is available there, feel free to [open an issue](https://github.com/uob-positron-imaging-centre/pept/issues/new); the authors will attempt to respond as soon as possible.
+
+
+## Contributing
+
+At the moment, the subpackages in `pept.tracking` are biased towards PEPT-ML,
+as there aren't many algorithms integrated into package *yet*. New algorithms
+and/or recommendations for the package are more than welcome! `pept` aims to be
+a community effort, be it academic, industrial, medical, or just from PEPT
+enthusiasts - so it is open for help with documentation, algorithms, utilities
+or analysis scripts, tutorials, and pull requests in general! To contribute please fork the project, make your changes and submit a pull request. We will do our best to work through any issues with you and get your code merged into the main branch.
+
+
+## Citing
+
+If you used this codebase or any software making use of it in a scientific
+publication, we ask you to cite the following paper:
+
+> Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+
+> https://doi.org/10.1063/1.5129251
+
+
+## Licensing
+
+The `pept` package is GNU v3.0 licensed.
+Copyright (C) 2020 Andrei Leonard Nicusan.
+
+
 
 
