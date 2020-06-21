@@ -24,7 +24,6 @@ pept.utilities
 │
 Functions imported into the subpackage root:
 ├── find_cutpoints :            Find cutpoints from an array of LoRs; Cython.
-├── find_cutpoints_tof :        Find cutpoints from an array of ToF-LoRs.
 ├── find_weighted_cutpoints :   Find weighted cutpoints, as above.
 ├── group_by_columns :          Group array based on a column, returning list.
 ├── number_of_lines :           Find the number of lines in a file.

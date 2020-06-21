@@ -12,11 +12,11 @@ into the common base classes.
 
 Summary
 -------
-The PEPT base classes `PointData`, `LineData`, `LineDataTof` and `VoxelData`
-are abstractions over the type of data that may be encountered in the context
-of PEPT (e.g. LoRs are `LineData`, trajectory points are `PointData`), as once
-the raw data is transformed into the common formats, any tracking, analysis or
-visualisation algorithm in the `pept` package can be used interchangeably.
+The PEPT base classes `PointData`, `LineData`, and `VoxelData` are abstractions
+over the type of data that may be encountered in the context of PEPT (e.g. LoRs
+are `LineData`, trajectory points are `PointData`), as once the raw data is
+transformed into the common formats, any tracking, analysis or visualisation
+algorithm in the `pept` package can be used interchangeably.
 
 The `pept.scanners` subpackage provides modules for transforming the raw data
 from different PET / PEPT scanner geometries (parallel screens, modular

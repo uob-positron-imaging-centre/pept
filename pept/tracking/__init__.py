@@ -34,10 +34,7 @@ Subpackages:
 ├── peptml
 │   ├── find_cutpoints
 │   ├── get_cutoffs
-│   ├── find_cutpoints_tof
-│   ├── get_cutoffs_tof
 │   ├── Cutpoints
-│   ├── CutpointsToF
 │   └── HDBSCANClusterer
 └── trajectory_separation
     ├── segregate_trajectories

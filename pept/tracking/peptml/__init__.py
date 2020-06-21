@@ -70,12 +70,7 @@ References
 
 from    .cutpoints  import  find_cutpoints
 from    .cutpoints  import  get_cutoffs
-
-from    .cutpoints  import  find_cutpoints_tof
-from    .cutpoints  import  get_cutoffs_tof
-
 from    .cutpoints  import  Cutpoints
-from    .cutpoints  import  CutpointsToF
 
 from    .peptml     import  HDBSCANClusterer
 
@@ -83,10 +78,7 @@ from    .peptml     import  HDBSCANClusterer
 __all__ = [
     "find_cutpoints",
     "get_cutoffs",
-    "find_cutpoints_tof",
-    "get_cutoffs_tof"
     "Cutpoints",
-    "CutpointsToF"
     "HDBSCANClusterer"
 ]
 

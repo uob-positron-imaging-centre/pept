@@ -16,20 +16,17 @@ as `pept.PointData`, `pept.LineData`, etc., without going through `base` first.
 pept.base
 ├── PointData :     Encapsulate points for ease of iteration and visualisation.
 ├── LineData :      Encapsulate lines (LoRs) with a single timestamp.
-├── LineDataToF :   Encapsulate LoRs with two timestamps, having ToF data.
 └── VoxelData :     Encapsulate voxels for ease of traversal and manipulation.
 '''
 
 
 from    .line_data      import  LineData
-from    .line_data_tof  import  LineDataToF
 from    .point_data     import  PointData
 from    .voxel_data     import  VoxelData
 
 
 __all__ = [
     'LineData',
-    'LineDataTof'
     'PointData',
     'VoxelData'
 ]

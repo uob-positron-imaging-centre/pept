@@ -112,11 +112,6 @@ class PlotlyGrapher:
               colorscale = "Magma", colorbar_title = None)
         Create and plot a trace for all the lines in a numpy array or
         `pept.LineData`, with possible color-coding.
-    add_lines_tof(lines, row = 1, col = 1, width = 2.0, color = None,
-                  opacity = 0.6, colorbar = True, colorbar_col = 0,
-                  colorscale = "Magma", colorbar_title = None)
-        Create and plot a trace for all the lines with ToF data in a numpy
-        array or `pept.LineDataToF`, with possible color-coding.
     add_trace(trace, row = 1, col = 1)
         Add a precomputed Plotly trace to a given subplot.
     add_traces(traces, row = 1, col = 1)
@@ -154,7 +149,7 @@ class PlotlyGrapher:
     >>> plotly.io.renderers.default = "browser"
 
     More examples are given in the docstrings of the `add_points`, `add_lines`
-    and `add_lines_tof` methods.
+    methods.
     '''
 
     def __init__(
@@ -699,10 +694,7 @@ class PlotlyGrapher:
         `col`.
 
         It expects LoR-like data, where each line is defined by two points. The
-        expected data columns are [time, x1, y1, z1, x2, y2, z2, ...]. If the
-        two points defining the line have individual timestamps (i.e. the
-        PET/PEPT scanner has Time of Flight functionality), use the function
-        `add_lines_tof`.
+        expected data columns are [time, x1, y1, z1, x2, y2, z2, ...].
 
         Parameters
         ----------
@@ -806,152 +798,6 @@ class PlotlyGrapher:
             coords_x.extend([line[1], line[4], None])
             coords_y.extend([line[2], line[5], None])
             coords_z.extend([line[3], line[6], None])
-
-            if colorbar and color is None:
-                marker['color'].extend(3 * [line[colorbar_col]])
-
-        coords_x = np.array(coords_x, dtype = float)
-        coords_y = np.array(coords_y, dtype = float)
-        coords_z = np.array(coords_z, dtype = float)
-
-        trace = go.Scatter3d(
-            x = coords_x,
-            y = coords_y,
-            z = coords_z,
-            mode = 'lines',
-            opacity = opacity,
-            line = marker
-        )
-
-        self._fig.add_trace(trace, row = row, col = col)
-
-
-    def add_lines_tof(
-        self,
-        lines,
-        row = 1,
-        col = 1,
-        width = 2.0,
-        color = None,
-        opacity = 0.6,
-        colorbar = True,
-        colorbar_col = 0,
-        colorscale = "Magma",
-        colorbar_title = None
-    ):
-        '''Create and plot a trace for all the lines with ToF data in a numpy
-        array or `pept.LineDataToF`, with possible color-coding.
-
-        Creates a `plotly.graph_objects.Scatter3d` object for all the lines
-        included in the numpy array `lines` and adds it to the subplot
-        determined by `row` and `col`.
-
-        It expects LoR-like data with Time of Flight (ToF) data, where each
-        line is defined by two points, each having individual timestamps. The
-        expected data columns are [time1, x1, y1, z1, time2, x2, y2, z2, ...].
-
-        Parameters
-        ----------
-        lines : (M, N >= 8) numpy.ndarray or pept.LineDataToF
-            The expected data row [time1, x1, y1, z1, time2, x2, y2, z2, etc.].
-            If a `pept.LineData` instance (or subclass thereof) is received,
-            the inner `lines` will be used.
-        row : int, default 1
-            The row of the subplot to add a trace to.
-        col : int, default 1
-            The column of the subplot to add a trace to.
-        width : float, default 2.0
-            The width of the lines.
-        color : str or list-like, optional
-            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
-            colorbar list. Overrides `colorbar` if set. For more information,
-            check the Plotly documentation.
-        opacity : float, default 0.6
-            The opacity of the lines, where 0 is transparent and 1 is fully
-            opaque.
-        colorbar : bool, default True
-            If set to True, will color-code the data in the `lines` column
-            `colorbar_col`. Is overridden if `color` is set. The default is
-            True, so that each line has a different color.
-        colorbar_col : int, default 0
-            The column in the data samples that will be used to color the
-            points. Only has an effect if `colorbar` is set to True. The
-            default is 0 (the first column - time1).
-        colorscale : str, default "Magma"
-            The Plotly scheme for color-coding the `colorbar_col` column in the
-            input data. Typical ones include "Cividis", "Viridis" and "Magma".
-            A full list is given at `plotly.com/python/builtin-colorscales/`.
-            Only has an effect if `colorbar = True` and `color` is not set.
-        colorbar_title : str, optional
-            If set, the colorbar will have this title above it.
-
-        Raises
-        ------
-        ValueError
-            If `lines` is not a numpy.ndarray with shape (M, N), where N >= 8.
-
-        Examples
-        --------
-        Add an array of lines (data columns: [t1, x1, y1, z1, t2, x2, y2, z2])
-        with **two timestamps** to a `PlotlyGrapher` instance:
-        >>> grapher = PlotlyGrapher()
-        >>> lines_raw = np.array(...)           # shape (N, M >= 8)
-        >>> grapher.add_lines_tof(lines_raw)
-        >>> grapher.show()
-
-        Add all the lines in a `LineDataToF` instance:
-        >>> line_data = pept.LineDataToF(...)   # Some example data
-        >>> grapher.add_lines_tof(line_data)
-        >>> grapher.show()
-
-        Note that the above method can only add the whole `lines` attribute of
-        `LineDataToF`. If you'd like to only plot some samples, use the
-        `LineDataToF.lines_trace([sample_indices])` method:
-        >>> trace = line_data.lines_trace([0, 1, 2]) # Select samples 0, 1, 2
-        >>> grapher.add_trace(trace)
-
-        If you have a very large number of lines in a numpy array, you can plot
-        every 10th point using slices:
-        >>> lines_raw = np.array(...)       # shape (N, M >= 8), N very large
-        >>> grapher.add_lines_tof(lines_raw[::10])
-
-        '''
-
-        # If a pept.LineDataToF instance (or subclass thereof!) is received,
-        # just take the inner `lines`. Otherwise treat it as an array.
-        if isinstance(lines, pept.LineDataToF):
-            lines = lines.lines
-        else:
-            lines = np.asarray(lines, dtype = float)
-
-        # Check that lines has shape (N, 8)
-        if lines.ndim != 2 or lines.shape[1] < 8:
-            raise ValueError((
-                "\n[ERROR]: `lines` should have dimensions (M, N), where "
-                "N >= 8. Received {}\n".format(lines.shape)
-            ))
-
-        marker = dict(
-            width = width,
-            color = color,
-        )
-
-        if colorbar:
-            if color is None:
-                marker['color'] = []
-
-            marker.update(colorscale = colorscale)
-            if colorbar_title is not None:
-                marker.update(colorbar = dict(title = colorbar_title))
-
-        coords_x = []
-        coords_y = []
-        coords_z = []
-
-        for line in lines:
-            coords_x.extend([line[1], line[5], None])
-            coords_y.extend([line[2], line[6], None])
-            coords_z.extend([line[3], line[7], None])
 
             if colorbar and color is None:
                 marker['color'].extend(3 * [line[colorbar_col]])

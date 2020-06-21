@@ -128,11 +128,6 @@ class LineData(IterableSamples):
 
     Notes
     -----
-    This class is made for LoRs that do not have Time of Flight data, such that
-    every row in `lines` is comprised of a single timestamp and the points'
-    coordinates: [time, x1, y1, z1, x2, y2, z2]. If your PET / PEPT scanner
-    does have Time of Flight data, use the `LineDataToF` class.
-
     The class saves `lines` as a **contiguous** numpy array for efficient
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
@@ -239,7 +234,6 @@ class LineData(IterableSamples):
     See Also
     --------
     pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.LineDataToF : Encapsulate LoRs-ToF for ease of iteration and plotting.
     pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.

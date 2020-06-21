@@ -42,12 +42,12 @@ gamma ray represents a line of response (LoR) .
 
 Subpackages Provided
 --------------------
-The `pept` package provides four base classes at its root - `PointData`,
-`LineData`, `LineDataToF` and `VoxelData` - acting as common data formats that
-the rest of the package will use for its tracking, analysis and visualisation
-algorithms. Thus any subroutine integrated in the `pept` package can be used
-interchangeably with new PET / PEPT scanner geometries, data formats or
-novel algorithms.
+The `pept` package provides three base classes at its root - `PointData`,
+`LineData`, and `VoxelData` - acting as common data formats that the rest of
+the package will use for its tracking, analysis and visualisation algorithms.
+Thus any subroutine integrated in the `pept` package can be used
+interchangeably with new PET / PEPT scanner geometries, data formats or novel
+algorithms.
 
 The rest of the package is grouped into subpackages and modules following the
 hierarchy below:
@@ -57,7 +57,6 @@ pept
 Base classes imported into the package root:
 ├── PointData :     Base class encapsulating points.
 ├── LineData :      Base class encapsulating lines (LoRs) with one timestamp.
-├── LineDataToF :   Base class encapsulating LoRs with two timestamps.
 ├── VoxelData :     Base class encapsulating voxels.
 │
 Subpackages:
@@ -192,7 +191,6 @@ A more in-depth tutorial is available on [Google Colab]
 
 # Import base data structures
 from    .base.line_data     import  LineData
-from    .base.line_data_tof import  LineDataToF
 from    .base.point_data    import  PointData
 from    .base.voxel_data    import  VoxelData
 
@@ -210,7 +208,6 @@ from    .__version__        import  __version__
 
 __all__ = [
     'LineData',
-    'LineDataToF',
     'PointData',
     'VoxelData',
     'scanners',
