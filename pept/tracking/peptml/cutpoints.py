@@ -38,6 +38,8 @@
 import  time
 import  sys
 import  os
+import  warnings
+import  textwrap
 
 import  numpy               as      np
 from    scipy.spatial       import  cKDTree
@@ -444,6 +446,20 @@ class Cutpoints(pept.PointData):
                 "\n[ERROR]: line_data should be an instance (or subclass) of "
                 "`pept.LineData`.\n"
             ))
+
+        # Users might forget to set the sample_size, leaving it to the default
+        # value of 0; in that case, all lines are returned as a single sample -
+        # that might not be the intended behaviour.
+        if line_data.sample_size == 0:
+            warnings.warn(
+                textwrap.fill((
+                    "\n[WARNING]: The `line_data.sample_size` was left to the "
+                    "default value of 0, in which case all lines are returned "
+                    "as a single sample. For a very large number of lines, "
+                    "this might result in a long function execution time.\n"
+                ), replace_whitespace = False),
+                RuntimeWarning
+            )
 
         self._line_data = line_data
         self._max_distance = float(max_distance)
