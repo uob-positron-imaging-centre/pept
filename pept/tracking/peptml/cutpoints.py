@@ -452,12 +452,13 @@ class Cutpoints(pept.PointData):
         # that might not be the intended behaviour.
         if line_data.sample_size == 0:
             warnings.warn(
-                textwrap.fill(
-                    "[WARNING]: The `line_data.sample_size` was left to the "
+                textwrap.fill((
+                    "\n[WARNING]: The `line_data.sample_size` was left to the "
                     "default value of 0, in which case all lines are returned "
                     "as a single sample. For a very large number of lines, "
-                    "this might result in a long function execution time."
-                ), RuntimeWarning
+                    "this might result in a long function execution time.\n"
+                ), replace_whitespace = False),
+                RuntimeWarning
             )
 
         self._line_data = line_data

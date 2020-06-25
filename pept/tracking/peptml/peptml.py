@@ -567,12 +567,13 @@ class HDBSCANClusterer:
         # that might not be the intended behaviour.
         if cutpoints.sample_size == 0:
             warnings.warn(
-                textwrap.fill(
-                    "[WARNING]: The `cutpoints.sample_size` was left to the "
+                textwrap.fill((
+                    "\n[WARNING]: The `cutpoints.sample_size` was left to the "
                     "default value of 0, in which case all points are returned"
                     " as a single sample. For a very large number of points, "
-                    "this might result in a long function execution time."
-                ), RuntimeWarning
+                    "this might result in a long function execution time.\n"
+                ), replace_whitespace = False),
+                RuntimeWarning
             )
 
         get_labels = bool(get_labels)
