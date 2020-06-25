@@ -61,6 +61,7 @@ Base classes imported into the package root:
 │
 Subpackages:
 ├── base :                  Base classes (above).
+├── cookbook :              Pre-made PEPT analysis scripts, or recipes.
 ├── diagnostics :           PET/PEPT scanner diagnostics.
 ├── scanners :              Transform other data formats into base classes.
 │   ├── modular_camera :    Birmingham modular cameras binary data.
@@ -88,9 +89,7 @@ fast as possible. The most compute-intensive parts have been implemented in
 `C` / `Cython` and parallelised, where possible, using `joblib` and
 `concurrent.futures.ThreadPoolExecutor`. For example, using the `peptml`
 subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook
-Pro) takes ~26 s. This efficiency is largely due to the availabiliy of a great
-high-performance implementation of the HDBSCAN clustering algorithm
-(https://github.com/scikit-learn-contrib/hdbscan).
+Pro) takes ~26 s.
 
 Citing
 ------
@@ -182,7 +181,6 @@ use Plotly to produce some beautiful, interactive, 3D graphs:
 >>> grapher.add_points(trajectories, row = 2, col = 2)
 
 >>> grapher.show()
-```
 
 A more in-depth tutorial is available on [Google Colab]
 (https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO).
@@ -195,12 +193,13 @@ from    .base.point_data    import  PointData
 from    .base.voxel_data    import  VoxelData
 
 # Import subpackages
+from    .                   import  cookbook
+from    .                   import  diagnostics
 from    .                   import  scanners
 from    .                   import  simulation
-from    .                   import  diagnostics
 from    .                   import  tracking
-from    .                   import  visualisation
 from    .                   import  utilities
+from    .                   import  visualisation
 
 # Import package version
 from    .__version__        import  __version__
@@ -210,12 +209,13 @@ __all__ = [
     'LineData',
     'PointData',
     'VoxelData',
+    'cookbook',
+    'diagnostics',
     'scanners',
     'simulation',
-    'diagnostics',
     'tracking',
-    'visualisation',
-    'utilities'
+    'utilities',
+    'visualisation'
 ]
 
 
