@@ -39,6 +39,7 @@ import  time
 import  sys
 import  os
 import  warnings
+import  textwrap
 
 import  numpy               as      np
 from    scipy.spatial       import  cKDTree
@@ -560,6 +561,19 @@ class HDBSCANClusterer:
                 "`pept.PointData` (or any class inheriting from it). Received "
                 f"{type(cutpoints)}.\n"
             ))
+
+        # Users might forget to set the sample_size, leaving it to the default
+        # value of 0; in that case, all points are returned as a single sample;
+        # that might not be the intended behaviour.
+        if cutpoints.sample_size == 0:
+            warnings.warn(
+                textwrap.fill(
+                    "[WARNING]: The `cutpoints.sample_size` was left to the "
+                    "default value of 0, in which case all points are returned"
+                    " as a single sample. For a very large number of points, "
+                    "this might result in a long function execution time."
+                ), RuntimeWarning
+            )
 
         get_labels = bool(get_labels)
 
