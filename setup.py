@@ -107,6 +107,9 @@ cy_extensions = [
               **cy_extension_kw),
     Extension('pept.tracking.trajectory_separation.distance_matrix_reachable',
               ['pept/tracking/trajectory_separation/distance_matrix_reachable.pyx'],
+              **cy_extension_kw),
+    Extension('pept.tracking.birmingham_method.extensions.birmingham_method',
+              ['pept/tracking/birmingham_method/extensions/birmingham_method.pyx'],
               **cy_extension_kw)
 ]
 

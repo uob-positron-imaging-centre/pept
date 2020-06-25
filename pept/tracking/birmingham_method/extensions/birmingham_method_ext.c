@@ -5,277 +5,328 @@
  * Date              : 21.09.2019
  */
 
-/*
-
- */
 
 #include "birmingham_method_ext.h"
+#include <sys/types.h>              // for ssize_t
+#include <math.h>                   // for sqrt
+#include <float.h>                  // for DBL_MAX
+#include <stdlib.h>                 // for malloc
 
-void birmingham_method_ext(const double *lines, double *location, double *used, unsigned int n, const double fopt)
+
+void free_memory(
+        double *ttt, double *xx1, double *xx2, double *yy1,
+        double *yy2, double *zz1, double *zz2, double *x12,
+        double *y12, double *z12, double *r12, double *q12,
+        double *p12, double *a12, double *b12, double *c12,
+        double *d12, double *e12, double *f12, double *r2,
+        double *dev
+        )
+{
+    /*
+       Free all the heap-allocated (malloc'd) memory from
+       birmingham_method_ext.
+       */
+    free(ttt); ttt = NULL;
+    free(xx1); xx1 = NULL;
+    free(xx2); xx2 = NULL;
+    free(yy1); yy1 = NULL;
+    free(yy2); yy2 = NULL;
+    free(zz1); zz1 = NULL;
+    free(zz2); zz2 = NULL;
+
+    free(x12); x12 = NULL;
+    free(y12); y12 = NULL;
+    free(z12); z12 = NULL;
+
+    free(r12); r12 = NULL;
+    free(q12); q12 = NULL;
+    free(p12); p12 = NULL;
+
+    free(a12); a12 = NULL;
+    free(b12); b12 = NULL;
+    free(c12); c12 = NULL;
+    free(d12); d12 = NULL;
+    free(e12); e12 = NULL;
+    free(f12); f12 = NULL;
+
+    free(r2); r2 = NULL;
+    free(dev); dev = NULL;
+}
+
+
+void birmingham_method_ext(
+        const double *lines,    // flattened 2D numpy array of LoRs
+        const ssize_t nrows,    // number of rows in `lines`
+        const ssize_t ncols,    // number of columns `lines`
+        double *location,       // (5,) numpy array for the found location
+        int *used,              // (nrows,) numpy array
+        const double fopt       // fraction of LoRs used to find location
+        )
 {  
+    /* 
+       lines contains LORs
 
-    /* Function receives a set of LORs from python formatted in:
+       location is used to store calculated locations from this function
 
-        line[n] = [t, x1, y1, z1, x2, y2, z2]
+       used is an array of integers used to store which LORs have been used to
+       calculate final position
 
-        For the set of lines, the minimum distance point (MDP) is calculated.
-        A number of lines that lie outside the standard deviation of the 
-        MDP are then removed from the set, and the MDP is recalculated. This
-        process is repeated until approximately a set fraction (fopt) of the
-        original lines is left. The position is them returned.
+       nrows is the number of LORs per tracked location
+       fopt is the fraction of these LORs to use in the final location
+       */
 
-        Requires:
-            
-            lines of response
-            fopt
+    // Allocate vectors of double with `nrows` elements. They will be freed in
+    // free_memory(...);
+    double *ttt = (double*)malloc(sizeof(double) * nrows);
+    double *xx1 = (double*)malloc(sizeof(double) * nrows);
+    double *xx2 = (double*)malloc(sizeof(double) * nrows);
+    double *yy1 = (double*)malloc(sizeof(double) * nrows);
+    double *yy2 = (double*)malloc(sizeof(double) * nrows);
+    double *zz1 = (double*)malloc(sizeof(double) * nrows);
+    double *zz2 = (double*)malloc(sizeof(double) * nrows);
 
-        Returns:
+    double *x12 = (double*)malloc(sizeof(double) * nrows);
+    double *y12 = (double*)malloc(sizeof(double) * nrows);
+    double *z12 = (double*)malloc(sizeof(double) * nrows);
 
-            tracked position
-            used lines
+    double *r12 = (double*)malloc(sizeof(double) * nrows);
+    double *q12 = (double*)malloc(sizeof(double) * nrows);
+    double *p12 = (double*)malloc(sizeof(double) * nrows);
 
-    */
+    double *a12 = (double*)malloc(sizeof(double) * nrows);
+    double *b12 = (double*)malloc(sizeof(double) * nrows);
+    double *c12 = (double*)malloc(sizeof(double) * nrows);
+    double *d12 = (double*)malloc(sizeof(double) * nrows);
+    double *e12 = (double*)malloc(sizeof(double) * nrows);
+    double *f12 = (double*)malloc(sizeof(double) * nrows);
 
-    double ttt[n], xx1[n], xx2[n], yy1[n], yy2[n], zz1[n], zz2[n];
-    int use[n];
-    double x12[n], y12[n], z12[n], r12[n], q12[n], p12[n], a12[n], b12[n], c12[n], d12[n], e12[n], f12[n],  r2[n], dev[n];
-    // float tt,xx,yy,zz,er;
+    double *r2 = (double*)malloc(sizeof(double) * nrows);
+    double *dev = (double*)malloc(sizeof(double) * nrows);
+
+    double error;
 
     double Con_factor = 150; // Convergence factor when removing LORs from set
+    const double *line_i;
 
-    float x,y,z,error,avtime,avang,avpos,dx,dy,dz,dd,dismin,dismax;
-    // double sumerr,sumx,sumy,sumz,sumx2,sumy2,sumz2;
-    int imin, nused, i;
-    // int ninc,nfail,Nmin,Ninitn,ipass,ivariable,ibinary,ifile=1;
-    int ninit;
+    // the following variables are used while iteratively removing lines
+    double dismin, dismax;   
+    int imin, nused, it;
 
-    long imax,nprev,nfin;
-    // long ntries,nfirst,ltt,lxx,lyy,lzz,ler,ievent;
+    int imax, nprev, nfin;
 
-    double suma, sumb, sumc, sumd, sume, sumf, sump, sumq, sumr, ab, dq, dp, ar, ac, denom; // Initialise "sum" variables to be used for set of LORs
-    
-    void initarray() {
+    // an array used by the function "calculate" to store output variables
+    double calculate_results[8];
 
-            // Initialise arrays for set of LORs, to be used in calculate
+    for (it = 0; it < nrows; ++it)
+    {
+        line_i = lines + it * ncols;
 
-            // int i; // iterator
+        ttt[it] = line_i[0];
+        xx1[it] = line_i[1];
+        yy1[it] = line_i[2];
+        zz1[it] = line_i[3];
+        xx2[it] = line_i[4];
+        yy2[it] = line_i[5];
+        zz2[it] = line_i[6];
+        used[it] = 1;
 
-            int it;
+        // Calculate vectors for set of LORs, to be used in calculate
+        x12[it] = xx1[it] - xx2[it];    // Point 2 -> Point 1 vector in x-axis
+        y12[it] = yy1[it] - yy2[it];    // Point 2 -> Point 1 vector in y-axis
+        z12[it] = zz1[it] - zz2[it];    // Point 2 -> Point 1 vector in z-axis
 
-            it = 0;
+        // Magnitude of vector from P2 to P1
+        r2[it] = (x12[it] * x12[it]) + (y12[it] * y12[it]) +
+            (z12[it] * z12[it]);
 
-            for (it=0;it<ninit;it++)
-            {
+        r12[it] = (y12[it] * z12[it]) / r2[it];
+        q12[it] = (x12[it] * z12[it]) / r2[it];
+        p12[it] = (x12[it] * y12[it]) / r2[it];
 
-              // printf("%.2f\n", xx1[it] );
-              // use[it]=1;
-              x12[it]=xx1[it]-xx2[it];
-              y12[it]=yy1[it]-yy2[it];
-              z12[it]=zz1[it]-zz2[it];
-              r2[it]=x12[it]*x12[it]+y12[it]*y12[it]+z12[it]*z12[it];
+        a12[it] = ((y12[it] * y12[it]) + (z12[it] * z12[it])) / r2[it];
+        b12[it] = ((x12[it] * x12[it]) + (z12[it] * z12[it])) / r2[it];
+        c12[it] = ((y12[it] * y12[it]) + (x12[it] * x12[it])) / r2[it];
 
-              // if(r2[it]==0)r2[it]=1e-6;
-
-              r12[it]=y12[it]*z12[it]/r2[it];
-              q12[it]=x12[it]*z12[it]/r2[it];
-              p12[it]=x12[it]*y12[it]/r2[it];
-
-              a12[it]=(y12[it]*y12[it]+z12[it]*z12[it])/r2[it];
-              b12[it]=(x12[it]*x12[it]+z12[it]*z12[it])/r2[it];
-              c12[it]=(y12[it]*y12[it]+x12[it]*x12[it])/r2[it];
-              d12[it]=((yy2[it]*xx1[it]-yy1[it]*xx2[it])*y12[it]+(zz2[it]*xx1[it]-zz1[it]*xx2[it])*z12[it])/r2[it];
-              e12[it]=((zz2[it]*yy1[it]-zz1[it]*yy2[it])*z12[it]+(xx2[it]*yy1[it]-xx1[it]*yy2[it])*x12[it])/r2[it];
-              f12[it]=-((zz2[it]*yy1[it]-zz1[it]*yy2[it])*y12[it]+(zz2[it]*xx1[it]-zz1[it]*xx2[it])*x12[it])/r2[it];  
-            }
+        d12[it] = ((yy2[it] * xx1[it] - yy1[it] * xx2[it]) * y12[it] + 
+                (zz2[it] * xx1[it] - zz1[it] * xx2[it]) * z12[it]) / r2[it];
+        e12[it] = ((zz2[it] * yy1[it] - zz1[it] * yy2[it]) * z12[it] +
+                (xx2[it] * yy1[it] - xx1[it] * yy2[it]) * x12[it]) / r2[it];
+        f12[it] = -((zz2[it] * yy1[it] - zz1[it] * yy2[it]) * y12[it] +
+                (zz2[it] * xx1[it] - zz1[it] * xx2[it]) * x12[it]) / r2[it];
     }
 
-   
+    // The total number of lines used to determine final tracer position.
+    // Initially use all of them.
+    nused = nrows;
 
-    // }
+    // The target number of lines to be used to determine the final position.
+    nfin = (int)(nrows * fopt); 
 
-    void calculate(){
-      
-        suma=sumb=sumc=sumd=sume=sumf=sump=sumq=sumr=0;
+    int iteration = 0;
 
-        // printf("Initialised variables inside calculate()");
-        
-        for (i=0;i<ninit;i++)
+    while (nrows > 0)
+    {
+        iteration += 1;
+        imin = 0;
+        imax = 0;
+
+        calculate(a12, b12, c12, d12, e12, f12, p12, q12, r12, xx1, yy1, zz1,
+                x12, y12, z12, r2, ttt, dev, used, nused, nrows,
+                calculate_results);
+
+        // Should become nused == nfin, but used <= just to be sure.
+        if (nused <= nfin)
         {
-            // printf("(test)\n");
-            if(use[i]==1){
-                // Calculate "sum of" for lines in use
-                suma=suma+a12[i];
-                sumb=sumb+b12[i];
-                sumc=sumc+c12[i];
-                sumd=sumd+d12[i];
-                sume=sume+e12[i];
-                sumf=sumf+f12[i];
-                sump=sump+p12[i];
-                sumq=sumq+q12[i];
-                sumr=sumr+r12[i];
-             }
-        }
+            free_memory(ttt, xx1, xx2, yy1, yy2, zz1, zz2, x12, y12, z12, r12,
+                    q12, p12, a12, b12, c12, d12, e12, f12, r2, dev);
 
-        ab = suma*sumb-sump*sump;
-        dq = sumd*sumq+suma*sumf;
-        dp = sumd*sump+suma*sume;
-        ar = suma*sumr+sumq*sump;
-        ac = suma*sumc-sumq*sumq;
-        denom =(ar*ar-ab*ac);
-
-        if(denom == 0)
-        {
-            denom =1.0e-6;
-        }
-        if(ar==0)
-        {
-            ar=1.0e-6;
-        }
-        if(suma==0)
-        {
-            suma=1.0e-6;
-        }
-
-        z=(ab*dq+dp*ar)/denom;
-        y=(z*ac+dq)/ar;
-        x=(y*sump+z*sumq-sumd)/suma;
-
-        error=avtime=avpos=0;
-
-        //work out errors and time
-        for (i=0;i<ninit;i++){
-            dx=x-xx1[i];
-            dy=y-yy1[i];
-            dz=z-zz1[i];
-
-            dd=(dx*z12[i]-dz*x12[i])*(dx*z12[i]-dz*x12[i]);
-            dd=dd+(dy*x12[i]-dx*y12[i])*(dy*x12[i]-dx*y12[i]);
-            dd=dd+(dz*y12[i]-dy*z12[i])*(dz*y12[i]-dy*z12[i]);
-            dev[i]=dd/r2[i];
-        //fprintf(output,"errors %d %d %f %f %f %f",i,use[i],dx,dy,dz,dev[i]);
-            if(use[i]==1) {
-                error+=dev[i];
-                avtime+=ttt[i];
-                }
-            }
-        error=sqrt(error/nused);
-        avtime=avtime/nused;
-        avang=avang/nused;
-        if(avang>360)avang=avang-360;
-        avpos=avpos/nused;
-        //fprintf(output,"\n %f %f %f %f %f %f",x,y,z,error,suma,sumb);
-    }
-
-
-    void iterate(){
-      while(ninit>0){
-
-         calculate();
-         // printf("done calculate: nfin: %d nused: %d \n",nfin,nused);
-        
-        if(nused==nfin){
+            location[0] = calculate_results[0]; // t
+            location[1] = calculate_results[1]; // x
+            location[2] = calculate_results[2]; // y
+            location[3] = calculate_results[3]; // z
+            location[4] = calculate_results[7]; // error
             return;
         }
 
-        nprev=nused;
-        nused=0;
+        error = calculate_results[7];
+        nprev = nused;
+        nused = 0;
 
-        for (i=0;i<ninit;i++){
-            if(sqrt(dev[i])>(Con_factor*error/100))
-              use[i]=0;
-            else  {
-              use[i]=1;
-              nused=nused+1;
-              }
-        }
-
-        //Have reduced to too few events, so restore closest unused events
-         while(nused<nfin) {
-            dismin=10000;
-            for (i=0;i<ninit;i++)
-              if(use[i]==0&&dev[i]<dismin){
-                 imin=i;
-                 dismin=dev[i];
-                 }
-            use[imin]=1;
-            nused=nused+1;
-        }
-
-        //Haven't removed any, so remove furthest point
-        while(nused>=nprev) {
-            dismax=0;
-            for (i=0;i<ninit;i++)
-              if(use[i]==1&&dev[i]>dismax){
-                 imax=i;
-                 dismax=dev[i];
-                 }
-            use[imax]=0;
-            nused=nused-1;
-        }
-       }
-    }
-
-    void result()
-    {
-        // printf("\n%10.1f\t%10.1f\t%10.1f\t%10.1f\t%10.1f\t%5d\n",avtime,x,y,z,error,nused);
-        location[0] = avtime;
-        location[1] = x;
-        location[2] = y;
-        location[3] = z;
-        location[4] = error;
-        location[5] = nused;
-
-        for (i = 0; i < ninit; ++i)
+        // Iterate through the lines; if they lie too far away from the
+        // calculated centroid then we won't use them anymore.
+        for (it = 0; it < nrows; it++)
         {
-            used[i] = use[i];
+            if (sqrt(dev[it]) > (Con_factor * error / 100))
+                used[it] = 0;
+            else
+            {
+                used[it] = 1;
+                nused = nused + 1;
+            }
+        }
+
+        // If true, we have reduced to too few events, so restore closest
+        // unused events
+        while (nused < nfin)
+        {
+            dismin = DBL_MAX;
+            for (it = 0; it < nrows; it++)
+            {
+                if (used[it] == 0 && dev[it] < dismin)
+                {
+                    imin = it;
+                    dismin = dev[it];
+                }
+            }
+            used[imin] = 1;
+            nused = nused + 1;
+        }
+
+        // If true then we haven't removed any, so remove furthest point
+        while (nused >= nprev)
+        {
+            dismax = 0.0;
+            for (it = 0; it < nrows; it++)
+            {
+                if(used[it] == 1 && dev[it] > dismax)
+                {
+                    imax = it;
+                    dismax = dev[it];
+                }
+            }
+            used[imax] = 0;
+            nused = nused - 1;
+        }
+    }   
+
+    // Free memory in case we didn't enter the while loop above.
+    free_memory(ttt, xx1, xx2, yy1, yy2, zz1, zz2, x12, y12, z12, r12, q12,
+            p12, a12, b12, c12, d12, e12, f12, r2, dev);
+}
+
+void calculate(double *a12, double *b12, double *c12, double *d12,
+        double *e12, double *f12, double *p12, double *q12,
+        double *r12, double *xx1, double *yy1, double *zz1,
+        double *x12, double *y12, double *z12, double *r2, 
+        double *ttt, double *dev, int *used, int nused, 
+        int nrows, double *calculate_results )
+{
+    double x, y, z, error, avtime, dx = 0, dy = 0, dz = 0, dd;
+    double suma, sumb, sumc, sumd, sume, sumf, sump, sumq, sumr;
+    double ab, dq, dp, ar, ac, denom;
+
+    int it;
+
+    suma = sumb = sumc = sumd = sume = sumf = sump = sumq = sumr = 0;
+
+    for (it = 0; it < nrows; it++)
+    {
+        if (used[it] == 1)
+        {
+            // Calculate "sum of" for lines in use
+            suma = suma + a12[it];
+            sumb = sumb + b12[it];
+            sumc = sumc + c12[it];
+            sumd = sumd + d12[it];
+            sume = sume + e12[it];
+            sumf = sumf + f12[it];
+            sump = sump + p12[it];
+            sumq = sumq + q12[it];
+            sumr = sumr + r12[it];
         }
     }
 
-    ninit = n;
+    ab = suma * sumb - sump * sump;
+    dq = sumd * sumq + suma * sumf;
+    dp = sumd * sump + suma * sume;
+    ar = suma * sumr + sumq * sump;
+    ac = suma * sumc - sumq * sumq;
+    denom = (ar * ar - ab * ac);
 
-    // printf("Righto...\n");
+    if (denom == 0)
+        denom = 1.0e-6;
 
-    // printf("ninit is: %i\n", ninit);
+    if (ar == 0)
+        ar = 1.0e-6;
 
+    if (suma == 0)
+        suma = 1.0e-6;
 
-    i = 0;
+    z = (ab * dq + dp * ar) / denom;
+    y = (z * ac + dq) / ar;
+    x = (y * sump + z * sumq - sumd) / suma;
 
-    const double *line_i;
+    error = 0;
+    avtime = 0;
 
-    for (i = 0; i < ninit; ++i)
+    //work out errors and time
+    for (it = 0; it < nrows; it++)
     {
-        // printf("About to do line number %i:\t", i);
-        line_i = lines + i * 7;
-        ttt[i] = line_i[0];
-        xx1[i] = line_i[1];
-        yy1[i] = line_i[2];
-        zz1[i] = line_i[3];
-        xx2[i] = line_i[4];
-        yy2[i] = line_i[5];
-        zz2[i] = line_i[6];
-        use[i] = 1;
-        // printf("%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",ttt[i],xx1[i],yy1[i],zz1[i],xx2[i],yy2[i],zz2[i]);
-        // printf("Getting x y and z i got to: %i\n", i);
-    };
+        dx = x - xx1[it];
+        dy = y - yy1[it];
+        dz = z - zz1[it];
 
-    //
+        dd = (dx * z12[it] - dz * x12[it]) * (dx * z12[it] - dz * x12[it]);
+        dd = dd + (dy * x12[it] - dx * y12[it]) * (dy * x12[it] - dx * y12[it]);
+        dd = dd + (dz * y12[it] - dy * z12[it]) * (dz * y12[it] - dy * z12[it]);
+        dev[it] = dd / r2[it];
 
+        if (used[it] == 1)
+        {
+            error += dev[it];
+            avtime += ttt[it];
+        }
+    }
 
-    // printf("About to assign nused\n%i\n", it);
-    
-    nused = ninit;
+    error = sqrt(error / nused);
+    avtime = avtime / nused;
 
-    nfin = (n * fopt);//100;
-
-    // printf("nused is %i", nused);
-
-    //
-
-    initarray();
-    
-    // printf("About to begin iterate");
-
-    iterate();
-    result();
-    
+    calculate_results[0] = avtime;
+    calculate_results[1] = x;
+    calculate_results[2] = y;
+    calculate_results[3] = z;
+    calculate_results[4] = dx;
+    calculate_results[5] = dy;
+    calculate_results[6] = dz;
+    calculate_results[7] = error;
 }
