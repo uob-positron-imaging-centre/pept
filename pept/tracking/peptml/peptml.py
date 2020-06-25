@@ -30,7 +30,7 @@
 
 
 # File   : peptml.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 28.08.2019
 
@@ -64,11 +64,11 @@ from    pept.utilities      import  find_cutpoints
 
 class HDBSCANClusterer:
     '''Efficient, optionally-parallel HDBSCAN-based clustering for cutpoints
-    computed from LoRs.
+    computed from LoRs (or generic 3D points).
 
     This class is a wrapper around the `hdbscan` package, providing tools for
     parallel clustering of samples of cutpoints. It can return `PointData`
-    classes which can be easily manipulated or visualised.
+    classes for ease of manipulation and visualisation.
 
     Two main methods are provided: `fit_sample` for clustering a single numpy
     array of cutpoints (i.e. a single sample) and `fit` which clusters all the
@@ -489,8 +489,8 @@ class HDBSCANClusterer:
 
         This is a convenience function that clusters each sample in an instance
         of `pept.PointData` *in parallel*, using joblib. For more fine-grained
-        control over the clustering, the `fit_sample` can be used for each
-        individual sample.
+        control over the clustering, the `fit_sample` method can be used for
+        each individual sample.
 
         Parameters
         ----------
@@ -549,7 +549,6 @@ class HDBSCANClusterer:
         ----
         If no clusters were found (i.e. all labels are -1), the returned values
         are empty numpy arrays.
-
         '''
 
         if verbose:
