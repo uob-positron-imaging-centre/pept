@@ -98,9 +98,9 @@ class ParallelScreens(LineData):
     >>> ----------
     >>> number_of_lines =   3
     >>>
-    >>> sample_size =       200
+    >>> sample_size =       0
     >>> overlap =           0
-    >>> number_of_samples = 0
+    >>> number_of_samples = 1
     >>>
     >>> lines =
     >>> [[  2. 100. 150.   0. 200. 250. 500.]
@@ -125,7 +125,7 @@ class ParallelScreens(LineData):
         self,
         filepath_or_array,
         screen_separation,
-        sample_size = 200,
+        sample_size = 0,
         overlap = 0,
         skiprows = None,
         nrows = None,
@@ -147,7 +147,7 @@ class ParallelScreens(LineData):
             attribute `lines`, with columns
             `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
             `z2 = screen_separation`.
-        sample_size : int, default 200
+        sample_size : int, default 0
             An `int` that defines the number of lines that should be returned
             when iterating over `lines`. A `sample_size` of 0 yields all the
             data as one single sample. A good starting value would be 200 times
