@@ -30,7 +30,7 @@ Modules imported into the subpackage root:
 │
 Subpackages:
 ├── birmingham_method
-│   └── extensions
+│   └── BirminghamMethod
 ├── peptml
 │   ├── find_cutpoints
 │   ├── get_cutoffs

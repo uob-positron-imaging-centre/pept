@@ -39,21 +39,27 @@ from    tqdm                            import  tqdm
 
 import  pept
 
-from    .extensions.birmingham_method    import  birmingham_method
+from    .extensions.birmingham_method   import  birmingham_method
 
 
 class BirminghamMethod:
     '''The Birmingham Method is an efficient, analytical technique for tracking
     tracers using the LoRs from PEPT data.
 
-    This class is a wrapper around the `birmingham_method` subroutine
-    (implemented in C), providing tools for asynchronously trcking samples of
-    LoRs. It can return `PointData` classes which can be easily manipulated and
-    visualised.
-
     Two main methods are provided: `fit_sample` for tracking a single numpy
     array of LoRs (i.e. a single sample) and `fit` which tracks all the samples
     encapsulated in a `pept.LineData` class *in parallel*.
+
+    For the given `sample` of LoRs (a numpy.ndarray), this function minimises
+    the distance between all of the LoRs, rejecting a fraction of lines that
+    lie furthest away from the calculated distance. The process is repeated
+    iteratively until a specified fraction (`fopt`) of the original subset of
+    LORs remains.
+
+    This class is a wrapper around the `birmingham_method` subroutine
+    (implemented in C), providing tools for asynchronously tracking samples of
+    LoRs. It can return `PointData` classes which can be easily manipulated and
+    visualised.
 
     Attributes
     ----------
