@@ -2,7 +2,7 @@
 
 ![version](https://img.shields.io/badge/version-0.2.0-blue)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
-[![](https://img.shields.io/badge/0.2.0-docs-success)](https://uob-positron-imaging-centre.github.io)
+[![Documentation Status](https://readthedocs.org/projects/pept/badge/?version=latest)](https://pept.readthedocs.io/en/latest/?badge=latest)
 
 
 # The `pept` Library
