@@ -32,17 +32,20 @@ format.
 Subpackages Provided
 --------------------
 
-pept.scanners
-│
-Classes imported into subpackage root:
-├── ModularCamera :    Convert Birmingham modular cameras data into `LineData`.
-├── ParallelScreens :  Initialise parallel screens data as `LineData`.
-│
-Subpackages
-├── modular_camera
-│   └── ModularCamera
-└── parallel_screens
-    └── ParallelScreens
+::
+
+    pept.scanners
+    │
+    Classes imported into subpackage root:
+    ├── ModularCamera :    Convert modular cameras data into `LineData`.
+    ├── ParallelScreens :  Initialise parallel screens data as `LineData`.
+    │
+    Subpackages
+    ├── modular_camera
+    │   └── ModularCamera
+    └── parallel_screens
+        └── ParallelScreens
+
 '''
 
 

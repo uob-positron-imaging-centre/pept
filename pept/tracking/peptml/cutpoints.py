@@ -74,8 +74,9 @@ def find_cutpoints(
 
     This function considers every pair of lines in `sample_lines` and returns
     all the cutpoints that satisfy the following conditions:
-        1. The distance between the two lines is smaller than `max_distance`.
-        2. The cutpoint is within the `cutoffs`.
+
+    1. The distance between the two lines is smaller than `max_distance`.
+    2. The cutpoint is within the `cutoffs`.
 
     Parameters
     ----------
@@ -255,7 +256,7 @@ class Cutpoints(pept.PointData):
 
     Methods
     -------
-    find_cutpoints(line_data, max_distance, cutoffs = None,
+    find_cutpoints(line_data, max_distance, cutoffs = None,\
                    append_indices = False, max_workers = None, verbose = True)
         Compute the cutpoints from the samples in a `LineData` instance.
     sample, to_csv, plot, etc. : inherited from pept.PointData
@@ -268,16 +269,18 @@ class Cutpoints(pept.PointData):
     *automatically sets the sample_size* to the average number of cutpoints
     found per sample of LoRs.
 
-    Example usage
-    -------------
+    Examples
+    --------
     Compute the cutpoints for a `LineData` instance between lines that are less
     than 0.1 apart:
-        >>> line_data = pept.LineData(example_data)
-        >>> cutpts = peptml.Cutpoints(line_data, 0.1)
+
+    >>> line_data = pept.LineData(example_data)
+    >>> cutpts = peptml.Cutpoints(line_data, 0.1)
 
     Compute the cutpoints for a single sample:
-        >>> sample = line_data[0]
-        >>> cutpts_sample = peptml.find_cutpoints(sample, 0.1)
+
+    >>> sample = line_data[0]
+    >>> cutpts_sample = peptml.find_cutpoints(sample, 0.1)
 
     See Also
     --------
@@ -507,8 +510,6 @@ class Cutpoints(pept.PointData):
 
         # cutpoints shape: (n, m, 4), where n is the number of samples, and
         # m is the number of cutpoints in the sample
-        cutpoints = np.array(cutpoints)
-
         number_of_samples = len(cutpoints)
         cutpoints = np.vstack(cutpoints)
         number_of_cutpoints = len(cutpoints)

@@ -124,28 +124,33 @@ class PlotlyGrapher:
     ValueError
         If `xlim`, `ylim` or `zlim` are not lists of length 2.
 
-    Example use
-    -----------
+    Examples
+    --------
     The figure is created when instantiating the class.
+
     >>> grapher = PlotlyGrapher()
     >>> lors = LineData(raw_lors...)        # Some example lines
     >>> points = PointData(raw_points...)   # Some example points
 
     Using pre-computed traces from the `LineData` and `PointData` classes:
+
     >>> grapher.add_trace(lors.lines_trace())
     >>> grapher.add_traces([lors.lines_trace(), points.points_trace()])
 
     Creating a trace based on a numpy array:
+
     >>> sample_lors = lors[0]           # A numpy array of a single sample
     >>> sample_points = points[0]
     >>> grapher.add_lines(sample_lors)
     >>> grapher.add_points(sample_points)
 
     Showing the plot:
+
     >>> grapher.show()
 
     If you'd like to show the plot in your browser, you can set the default
     Plotly renderer:
+
     >>> plotly.io.renderers.default = "browser"
 
     More examples are given in the docstrings of the `add_points`, `add_lines`
@@ -577,12 +582,14 @@ class PlotlyGrapher:
         --------
         Add an array of points (data columns: [time, x, y, z]) to a
         `PlotlyGrapher` instance:
+
         >>> grapher = PlotlyGrapher()
         >>> points_raw = np.array(...)      # shape (N, M >= 4)
         >>> grapher.add_points(points_raw)
         >>> grapher.show()
 
         Add all the points in a `PointData` instance:
+
         >>> point_data = pept.PointData(...)    # Some example data
         >>> grapher.add_points(point_data)
         >>> grapher.show()
@@ -590,11 +597,13 @@ class PlotlyGrapher:
         Note that the above method can only add the whole `points` attribute of
         `PointData`. If you'd like to only plot some samples, use the
         `PointData.points_trace([sample_indices])` method:
+
         >>> trace = point_data.points_trace([0, 1, 2]) # Select samples 0, 1, 2
         >>> grapher.add_trace(trace)
 
         If you have an extremely large number of points in a numpy array, you
         can plot every 10th point using slices:
+
         >>> pts = np.array(...)         # shape (N, M >= 4), N very large
         >>> grapher.add_points(pts[::10])
 
@@ -740,12 +749,14 @@ class PlotlyGrapher:
         --------
         Add an array of lines (data columns: [t, x1, y1, z1, x2, y2, z2]) to a
         `PlotlyGrapher` instance:
+
         >>> grapher = PlotlyGrapher()
         >>> lines_raw = np.array(...)           # shape (N, M >= 7)
         >>> grapher.add_lines(lines_raw)
         >>> grapher.show()
 
         Add all the lines in a `LineData` instance:
+
         >>> line_data = pept.LineData(...)      # Some example data
         >>> grapher.add_lines(line_data)
         >>> grapher.show()
@@ -753,11 +764,13 @@ class PlotlyGrapher:
         Note that the above method can only add the whole `lines` attribute of
         `LineData`. If you'd like to only plot some samples, use the
         `LineData.lines_trace([sample_indices])` method:
+
         >>> trace = line_data.lines_trace([0, 1, 2]) # Select samples 0, 1, 2
         >>> grapher.add_trace(trace)
 
         If you have a very large number of lines in a numpy array, you can plot
         every 10th point using slices:
+
         >>> lines_raw = np.array(...)       # shape (N, M >= 7), N very large
         >>> grapher.add_lines(lines_raw[::10])
 
@@ -866,10 +879,12 @@ class PlotlyGrapher:
         Note that the figure will be shown on the Plotly-configured renderer
         (e.g. browser, or PDF). The available renderers can be found by running
         the following code:
+
         >>> import plotly.io as pio
         >>> pio.renderers
 
         If you want an interactive figure in the browser, run the following:
+
         >>> pio.renderers.default = "browser"
 
         Parameters

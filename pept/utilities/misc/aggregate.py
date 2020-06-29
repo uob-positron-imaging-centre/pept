@@ -33,9 +33,10 @@ def group_by_column(data_array, column_to_separate):
     ValueError
         If data_array does not have exactly 2 dimensions.
 
-    Example Usage
-    -------------
+    Examples
+    --------
     Separate a 6x3 numpy array based on the last column:
+
     >>> x = np.array([
     >>>     [1, 2, 1],
     >>>     [5, 3, 1],

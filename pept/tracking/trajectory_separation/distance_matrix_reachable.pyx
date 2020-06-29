@@ -51,6 +51,7 @@ from scipy.sparse import csr_matrix
 
 from libc.float cimport DBL_MIN
 from libc.math cimport sqrt
+cimport numpy as np
 
 
 cpdef distance_matrix_reachable(
@@ -60,11 +61,13 @@ cpdef distance_matrix_reachable(
     '''Compute the distance matrix from a time-sorted array of points `pts`
     based on a sliding `points_window`.
 
-    Function signature:
-        distance_matrix_reachable(
-            double[:, :] pts,       # Array of points, cols = [t, x, y, z, ...]
-            int points_window
-        )
+    ::
+
+        Function signature:
+            distance_matrix_reachable(
+                double[:, :] pts,   # Array of points, cols = [t, x, y, z, ...]
+                int points_window
+            )
 
     The distance between the points (pts[i], pts[j]) is stored in the distance
     matrix at indices (i, j), making it upper-triangular.
@@ -105,8 +108,8 @@ cpdef distance_matrix_reachable(
         A SciPy sparse matrix in the CSR format, containing the distances
         between every pair of reachable points in `pts`.
 
-    Note
-    ----
+    Notes
+    -----
     In order for the `points_window` to act as a sliding window, in effect only
     connecting points which are around the same timeframe, the points should be
     sorted based on thetime column (the first row) in `pts`. This should be
@@ -125,9 +128,12 @@ cpdef distance_matrix_reachable(
     # Pre-allocate the arrays for creating the sparse distance matrix. In the
     # sparse matrix, every data point `dists` has an associated row in `rows`
     # column in `cols`.
-    dists_arr = np.zeros(ndists, dtype = np.float64)
-    rows_arr = np.zeros(ndists, dtype = np.float64)
-    cols_arr = np.zeros(ndists, dtype = np.float64)
+    cdef np.ndarray[double, ndim = 1] dists_arr = np.zeros(ndists, dtype =
+                                                           np.float64)
+    cdef np.ndarray[double, ndim = 1] rows_arr = np.zeros(ndists, dtype =
+                                                          np.float64)
+    cdef np.ndarray[double, ndim = 1] cols_arr = np.zeros(ndists, dtype =
+                                                          np.float64)
 
     # We'll work with memoryviews on the above arrays:
     cdef double[:] dists = dists_arr

@@ -12,10 +12,11 @@ implementation of the well-known Birmingham method for single-tracer tracking.
 Summary
 -------
 A typical workflow for using the `birmingham_method` package would be:
-    1. Read the LoRs into a `pept.LineData` class instance and set the
-    `sample_size` and `overlap` appropriately.
-    2. Instantiate a `pept.tracking.birmingham_method.BirminghamMethod` class
-    and transform the LoRs into tracer locations using the `fit` method.
+
+1. Read the LoRs into a `pept.LineData` class instance and set the
+   `sample_size` and `overlap` appropriately.
+2. Instantiate a `pept.tracking.birmingham_method.BirminghamMethod` class and
+   transform the LoRs into tracer locations using the `fit` method.
 
 Extended Summary
 ----------------
@@ -26,14 +27,17 @@ specified fraction ("fopt") of the original subset of LORs remains.
 
 The Birmingham method has been used extensively for well over 30 years at the
 University of Birmingham to track radioactively-labelled tracers in a variety
-of industrial and scientific systems.
+of industrial and scientific systems [1]_.
 
 Modules Provided
 ----------------
-pept.tracking.birmingham_method
-│
-Classes imported into the subpackage root:
-└── BirminghamMethod :  Transform samples of LoRs into single tracer locations.
+
+::
+
+    pept.tracking.birmingham_method
+    │
+    Classes imported into the subpackage root:
+    └── BirminghamMethod :  Transform samples of LoRs into tracer locations.
 
 References
 ----------

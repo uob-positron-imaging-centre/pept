@@ -91,18 +91,20 @@ def parallel_map_file(
     because the chunk numbers are guaranteed to be unique, any data can be
     saved to a file whose name includes this chunk number, making it unique.
 
-    Example usage
-    -------------
+    Examples
+    --------
     For a random file-like CSV data object:
+
     >>> import io
-    >>> flike = io.StringIO("1,2,3\n4,5,6\n7,8,9")
+    >>> flike = io.StringIO("1,2,3\\n4,5,6\\n7,8,9")
     >>> def func(data, chunk_number):
     >>>     return (data, chunk_number)
     >>> results = parallel_map_file(func, flike, 0, 3, 1)
     >>> print(results)
-    [ ([1, 2, 3], 0), ([4, 5, 6], 1), ([7, 8, 9], 2) ]
+    >>> [ ([1, 2, 3], 0), ([4, 5, 6], 1), ([7, 8, 9], 2) ]
 
     '''
+
     nchunks = int((end - start) / chunksize)
 
     with Pool(processes = processes) as pool:

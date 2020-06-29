@@ -72,23 +72,24 @@ class BirminghamMethod:
     fit_sample(sample, get_used = False, as_array = True, verbose = False)
         Use the Birmingham method to track a tracer location from a numpy
         array (i.e. one sample) of LoRs.
-    fit(line_data, max_error = 10, get_used = False, max_workers = None,
+    fit(line_data, max_error = 10, get_used = False, max_workers = None,\
         verbose = True)
         Fit lines of response (an instance of 'LineData') and return the
         tracked locations and (optionally) the LoRs that were used.
 
-    Example Usage
-    -------------
+    Examples
+    --------
     A typical workflow would involve reading LoRs from a file, instantiating a
     `BirminghamMethod` class, tracking the tracer locations from the LoRs, and
     plotting them.
+
     >>> import pept
     >>> from pept.tracking.birmingham_method import BirminghamMethod
-    >>>
+
     >>> lors = pept.LineData(...)   # set sample_size and overlap appropriately
     >>> bham = BirminghamMethod()
     >>> locations = bham.fit(lors)  # this is a `pept.PointData` instance
-    >>>
+
     >>> grapher = PlotlyGrapher()
     >>> grapher.add_points(locations)
     >>> grapher.show()
@@ -362,11 +363,11 @@ class BirminghamMethod:
         # data_list is a list of tuples, in which the first element is an
         # array of the `location`, and the second element is `used`, a
         # boolean mask representing the used LoRs.
-        locations = np.array([r[0] for r in data_list if len(r[0]) != 0])
-        used = np.array([r[1] for r in data_list if len(r[1]) != 0])
+        locations = [r[0] for r in data_list if len(r[0]) != 0]
+        used = [r[1] for r in data_list if len(r[1]) != 0]
 
         # Remove LoRs with error above max_error
-        locations = np.vstack(np.array(locations))
+        locations = np.vstack(locations)
         locations = np.delete(
             locations,
             np.argwhere(locations[:, 4] > max_error),

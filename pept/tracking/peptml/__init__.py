@@ -15,28 +15,30 @@ Particle Tracking (PEPT).
 Summary
 -------
 A typical workflow for using the `peptml` package would be:
-    1. Read the LoRs into a `pept.LineData` class instance and set the
-    `sample_size` and `overlap` appropriately.
-    2. Compute the cutpoints using the `pept.tracking.peptml.Cutpoints` class.
-    3. Instantiate an `pept.tracking.peptml.HDBSCANClusterer` class and cluster
-    the cutpoints found previously.
-    4. Optional: cluster the results from the previous step again for smoother,
-    tighter trajectories.
+
+1. Read the LoRs into a `pept.LineData` class instance and set the
+   `sample_size` and `overlap` appropriately.
+2. Compute the cutpoints using the `pept.tracking.peptml.Cutpoints` class.
+3. Instantiate an `pept.tracking.peptml.HDBSCANClusterer` class and cluster the
+   cutpoints found previously.
+4. Optional: cluster the results from the previous step again for smoother,
+   tighter trajectories.
 
 Extended Summary
 ----------------
-The PEPT-ML algorithm [1] works using the following steps:
-    1. Split the data into a series of individual "samples", each containing
-    a given number of LoRs. Use the base class pept.LineData for this.
-    2. For every sample of LoRs, compute the *cutpoints*, or the points in
-    space that minimise the distance to every pair of lines.
-    3. Cluster every sample using HDBSCAN and extract the centres of the
-    clusters ("1-pass clustering").
-    4. Split the centres into samples of a given size.
-    5. Cluster every sample of centres using HDBSCAN and extract the centres
-    of the clusters ("2-pass clustering").
-    6. Construct the trajectory of every particle using the centres from the
-    previous step.
+The PEPT-ML algorithm [1]_ works using the following steps:
+
+1. Split the data into a series of individual "samples", each containing a
+   given number of LoRs. Use the base class pept.LineData for this.
+2. For every sample of LoRs, compute the *cutpoints*, or the points in space
+   that minimise the distance to every pair of lines.
+3. Cluster every sample using HDBSCAN and extract the centres of the clusters
+   ("1-pass clustering").
+4. Split the centres into samples of a given size.
+5. Cluster every sample of centres using HDBSCAN and extract the centres of the
+   clusters ("2-pass clustering").
+6. Construct the trajectory of every particle using the centres from the
+   previous step.
 
 More tutorials and examples can be found on the University of Birmingham
 Positron Imaging Centre's GitHub repository.
@@ -46,18 +48,21 @@ Fluorine-18 tracers in air.
 
 Modules Provided
 ----------------
-pept.tracking.peptml
-│
-Functions imported into the subpackage root:
-├── find_cutpoints :        Find cutpoints from a NumPy array/sample of lines.
-├── get_cutoffs :           Find cutpoint cutoffs from an array of lines.
-├── find_cutpoints_tof :    Find cutpoints from an array of lines with ToF.
-├── get_cutoffs_tof :       Find cutoffs from an array of lines with ToF.
-│
-Classes imported into the subpackage root:
-├── Cutpoints :         Compute cutpoints from samples in a `LineData`.
-├── CutpointsToF :      Compute cutpoints from samples in a `LineDataToF`.
-└── HDBSCANClusterer :  Cluster samples of cutpoints in parallel.
+
+::
+
+    pept.tracking.peptml
+    │
+    Functions imported into the subpackage root:
+    ├── find_cutpoints :        Find cutpoints from a NumPy array of lines.
+    ├── get_cutoffs :           Find cutpoint cutoffs from an array of lines.
+    ├── find_cutpoints_tof :    Find cutpoints from an array of lines with ToF.
+    ├── get_cutoffs_tof :       Find cutoffs from an array of lines with ToF.
+    │
+    Classes imported into the subpackage root:
+    ├── Cutpoints :         Compute cutpoints from samples in a `LineData`.
+    ├── CutpointsToF :      Compute cutpoints from samples in a `LineDataToF`.
+    └── HDBSCANClusterer :  Cluster samples of cutpoints in parallel.
 
 References
 ----------

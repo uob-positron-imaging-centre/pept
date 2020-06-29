@@ -99,11 +99,12 @@ cpdef void traverse3d(
             voxels in the z-dimension. It must be *sorted* in ascending order
             with *equally-spaced* numbers and length Z + 1 (voxels.shape[2] + 1).
 
-    Example usage
-    -------------
+    Examples
+    --------
     The input parameters can be easily generated using numpy before calling the
     function. For example, if a volume of 300 x 400 x 500 is split into
     30 x 40 x 50 voxels, a possible code would be:
+
     >>> import numpy as np
     >>> from pept.utilities.traverse import traverse3d
     >>>
@@ -114,6 +115,7 @@ cpdef void traverse3d(
     The grid has one extra element than the number of voxels. For example, 5
     voxels between 0 and 5 would be delimited by the grid [0, 1, 2, 3, 4, 5]
     which has 6 elements (see off-by-one errors - story of my life).
+
     >>> grid_x = np.linspace(0, volume[0], number_of_voxels[0] + 1)
     >>> grid_y = np.linspace(0, volume[1], number_of_voxels[1] + 1)
     >>> grid_z = np.linspace(0, volume[2], number_of_voxels[2] + 1)
@@ -121,10 +123,11 @@ cpdef void traverse3d(
     >>> random_lines = np.random.random((100, 7)) * 300
 
     Calling `traverse3d` will modify `voxels` in-place.
+
     >>> traverse3d(voxels, random_lines, grid_x, grid_y, grid_z)
 
-    Note
-    ----
+    Notes
+    -----
     This function is an adaptation of a widely-used algorithm [1], optimised
     for PEPT LoRs traversal.
 

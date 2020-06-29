@@ -20,27 +20,30 @@ Even though the functions are grouped in directories (subpackages) and files
 
 Subpackages Provided
 --------------------
-pept.utilities
-│
-Functions imported into the subpackage root:
-├── find_cutpoints :            Find cutpoints from an array of LoRs; Cython.
-├── find_weighted_cutpoints :   Find weighted cutpoints, as above.
-├── group_by_columns :          Group array based on a column, returning list.
-├── number_of_lines :           Find the number of lines in a file.
-├── read_csv :                  Fast CSV file reader.
-├── read_csv_chunks :           Read CSV file in chunks using a generator.
-├── parallel_map_file :         Map a function to chunks of a file in parallel.
-├── traverse2d :                Traverse pixels.
-├── traverse3d :                Traverse voxels.
-│
-Classes imported into the subpackage root:
-├── ChunkReader :               Lazily read/access chunks from a CSV file.
-│
-Subpackages
-├── cutpoints
-├── misc
-├── parallel
-└── traverse
+
+::
+
+    pept.utilities
+    │
+    Functions imported into the subpackage root:
+    ├── find_cutpoints :            Find cutpoints from an array of LoRs.
+    ├── group_by_columns :          Group array into a list by column.
+    ├── number_of_lines :           Find the number of lines in a file.
+    ├── read_csv :                  Fast CSV file reader.
+    ├── read_csv_chunks :           Read CSV file in chunks using a generator.
+    ├── parallel_map_file :         Map a function to chunks of a file.
+    ├── traverse2d :                Traverse pixels.
+    ├── traverse3d :                Traverse voxels.
+    │
+    Classes imported into the subpackage root:
+    ├── ChunkReader :               Lazily read/access chunks from a CSV file.
+    │
+    Subpackages
+    ├── cutpoints
+    ├── misc
+    ├── parallel
+    └── traverse
+
 '''
 
 

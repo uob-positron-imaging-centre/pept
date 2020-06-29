@@ -79,6 +79,7 @@ class ParallelScreens(LineData):
     Initialise a `ParallelScreens` array for three LoRs on a parallel screens
     PEPT scanner (i.e. each line is defined by **two** points each) with a
     head separation of 500 mm:
+
     >>> lors_raw = np.array([
     >>>     [2, 100, 150, 200, 250],
     >>>     [4, 350, 250, 100, 150],

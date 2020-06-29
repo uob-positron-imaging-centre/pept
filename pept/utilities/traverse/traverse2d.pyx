@@ -93,11 +93,12 @@ cpdef void traverse2d(
             pixels in the y-dimension. It must be *sorted* in ascending order
             with *equally-spaced* numbers and length Y + 1 (pixels.shape[1] + 1).
 
-    Example usage
-    -------------
+    Examples
+    --------
     The input parameters can be easily generated using numpy before calling the
     function. For example, if a plane of 300 x 400 is split into
     30 x 40 pixels, a possible code would be:
+
     >>> import numpy as np
     >>> from pept.utilities.traverse import traverse2d
     >>>
@@ -108,21 +109,23 @@ cpdef void traverse2d(
     The grid has one extra element than the number of pixels. For example, 5
     pixels between 0 and 5 would be delimited by the grid [0, 1, 2, 3, 4, 5]
     which has 6 elements (see off-by-one errors - story of my life).
+
     >>> grid_x = np.linspace(0, plane[0], number_of_pixels[0] + 1)
     >>> grid_y = np.linspace(0, plane[1], number_of_pixels[1] + 1)
     >>>
     >>> random_lines = np.random.random((100, 5)) * 100
 
     Calling `traverse2d` will modify `pixels` in-place.
+
     >>> traverse2d(pixels, random_lines, grid_x, grid_y)
 
-    Note
-    ----
+    Notes
+    -----
     This function is an adaptation of a widely-used algorithm [1], optimised
     for PEPT LoRs traversal.
 
     .. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
-       InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10)..
+       InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10).
 
     '''
 

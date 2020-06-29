@@ -109,26 +109,26 @@ class HDBSCANClusterer:
 
     Methods
     -------
-    fit_sample(
-        sample,
-        get_labels = False,
-        as_array = True,
-        verbose = False,
-        _set_labels = True
+    fit_sample(\
+        sample,\
+        get_labels = False,\
+        as_array = True,\
+        verbose = False,\
+        _set_labels = True\
     )
         Fit one sample of cutpoints and return the cluster centres and
         (optionally) the labelled cutpoints.
-    fit(
-        cutpoints,
-        get_labels = False,
-        max_workers = None,
-        verbose = True
+    fit(\
+        cutpoints,\
+        get_labels = False,\
+        max_workers = None,\
+        verbose = True\
     )
         Fit cutpoints (an instance of `PointData`) and return the cluster
         centres and (optionally) the labelled cutpoints.
 
-    Example Usage
-    -------------
+    Examples
+    --------
     A typical workflow would involve reading LoRs from a file, computing their
     cutpoints, clustering them and plotting them.
 
@@ -397,11 +397,10 @@ class HDBSCANClusterer:
         ValueError
             If `sample` is not a numpy array of shape (N, M), where M >= 4.
 
-        Note
-        ----
+        Notes
+        -----
         If no clusters were found (i.e. all labels are -1), the returned values
         are empty numpy arrays.
-
         '''
 
         if verbose:
@@ -546,8 +545,8 @@ class HDBSCANClusterer:
             If `cutpoints` is not an instance (or a subclass) of
             `pept.PointData`.
 
-        Note
-        ----
+        Notes
+        -----
         If no clusters were found (i.e. all labels are -1), the returned values
         are empty numpy arrays.
         '''
@@ -600,12 +599,12 @@ class HDBSCANClusterer:
         if not get_labels:
             # data_list is a list of arrays. Only choose the arrays with at
             # least one row.
-            centres = np.array([r for r in data_list if len(r) != 0])
+            centres = [r for r in data_list if len(r) != 0]
         else:
             # data_list is a list of tuples, in which the first element is an
             # array of the centres, and the second element is an array of the
             # labelled cutpoints.
-            centres = np.array([r[0] for r in data_list if len(r[0]) != 0])
+            centres = [r[0] for r in data_list if len(r[0]) != 0]
 
         if len(centres) != 0:
             centres = pept.PointData(
@@ -632,7 +631,7 @@ class HDBSCANClusterer:
                 # `cutpoints`, which is equal to the length of every array in
                 # `labelled_cutpoints`
                 labelled_cutpoints = pept.PointData(
-                    np.vstack(np.array(labelled_cutpoints)),
+                    np.vstack(labelled_cutpoints),
                     sample_size = len(labelled_cutpoints[0]),
                     overlap = 0,
                     verbose = False

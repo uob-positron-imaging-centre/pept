@@ -27,11 +27,14 @@ can be accessed as class attributes.
 
 Modules Provided
 ----------------
-pept.cookbook
-│
-Classes imported into the subpackage root:
-├── PEPTMLUser :            Use PEPT-ML to transform LoRs into trajectories.
-└── PEPTMLFindParameters :  Visually find good PEPT-ML clustering parameters.
+
+::
+
+    pept.cookbook
+    │
+    Classes imported into the subpackage root:
+    ├── PEPTMLUser :            Use PEPT-ML to turn LoRs into trajectories.
+    └── PEPTMLFindParameters :  Visual aid for PEPT-ML clustering parameters.
 
 Notes
 -----

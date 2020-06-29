@@ -66,19 +66,19 @@ AUTHOR = 'Andrei Leonard Nicusan'
 REQUIRES_PYTHON = '>=3.6.0'
 
 
-def requirements():
+def requirements(filename):
     # The dependencies are the same as the contents of requirements.txt
-    with open('requirements.txt') as f:
+    with open(filename) as f:
         return [line.strip() for line in f if line.strip()]
 
 
 # What packages are required for this module to be executed?
-REQUIRED = requirements()
+REQUIRED = requirements('requirements.txt')
 
 
 # What packages are optional?
 EXTRAS = {
-    # 'fancy feature': ['django'],
+    'docs': requirements('requirements_docs.txt'),
 }
 
 cythonize_kw = dict(language_level = 3)

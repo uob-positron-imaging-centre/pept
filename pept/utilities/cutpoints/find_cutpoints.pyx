@@ -57,13 +57,15 @@ cpdef find_cutpoints(
 ):
     '''Compute the cutpoints from a given array of lines.
 
-    Function signature:
-        find_cutpoints(
-            double[:, :] sample_lines,  # LoRs in sample
-            double max_distance,        # Max allowed distance between two LoRs
-            double[:] cutoffs,          # Spatial cutoff for cutpoints
-            bint append_indices = False # Append LoR indices used for each cutpoint
-        )
+    ::
+
+        Function signature:
+            find_cutpoints(
+                double[:, :] sample_lines,  # LoRs in sample
+                double max_distance,        # Max distance between two LoRs
+                double[:] cutoffs,          # Spatial cutoff for cutpoints
+                bint append_indices = False # Append LoR indices used
+            )
 
     This is a low-level Cython function that does not do any checks on the
     input data - it is meant to be used in other modules / libraries. For a
@@ -78,8 +80,9 @@ cpdef find_cutpoints(
 
     This function considers every pair of lines in `sample_lines` and returns
     all the cutpoints that satisfy the following conditions:
-        1. The distance between the two lines is smaller than `max_distance`.
-        2. The cutpoints are within the `cutoffs`.
+
+    1. The distance between the two lines is smaller than `max_distance`.
+    2. The cutpoints are within the `cutoffs`.
 
     Parameters
     ----------
@@ -108,8 +111,9 @@ cpdef find_cutpoints(
         two LoRs that were used to compute the cutpoint. The first column (for
         time) is sorted.
 
-    Example usage
-    -------------
+    Examples
+    --------
+
     >>> import numpy as np
     >>> from pept.utilities import find_cutpoints
     >>>
@@ -120,6 +124,7 @@ cpdef find_cutpoints(
     >>> cutpoints = find_cutpoints(lines, max_distance, cutoffs)
 
     '''
+
     # Lines for a single sample => n x 7 array
     # sample_lines row: [time X1 Y1 Z1 X2 Y2 Z2]
     cdef Py_ssize_t n = sample_lines.shape[0]

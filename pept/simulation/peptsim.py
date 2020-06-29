@@ -13,30 +13,29 @@ from    mpl_toolkits.mplot3d    import      Axes3D
 from    tqdm                    import      tqdm
 
 
-__all__ = ['Shape',
-           'Noise',
-           'Simulator']
-
 
 
 class Shape:
-    # Class of shape functions which return a random [x, y, z] point
-    # inside a given shape (sphere, cylinder, etc) centred around
-    # the origin
+    '''Class of shape functions which return a random [x, y, z] point inside a
+    given shape (sphere, cylinder, etc) centred around the origin.
+    '''
 
     def __init__(self, x=0.5, y=0.5, z=0.5):
-        # x, y, z are coordinate ranges for the three
-        # major axes. For example:
-        # For a sphere, x is radius; y and z are unused
-        # For a cylinder, x is radius, y is height; z is unused
-        # For a parallelipiped, x is width, y is depth, z is height
+        '''x, y, z are coordinate ranges for the three
+        major axes. For example:
+        For a sphere, x is radius; y and z are unused
+        For a cylinder, x is radius, y is height; z is unused
+        For a parallelipiped, x is width, y is depth, z is height
+
+        '''
         self.x = x
         self.y = y
         self.z = z
 
 
     def rotateX3D(vec, angleX):
-        # Rotate vec around the X axis by angleX radians
+        '''Rotate vec around the X axis by angleX radians.
+        '''
         rot = np.array([ [1, 0, 0], [0, np.cos(angleX), -np.sin(angleX)], [0, np.sin(angleX), np.cos(angleX)] ])
 
         return (rot @ vec)
@@ -44,7 +43,8 @@ class Shape:
 
 
     def sphere(self):
-        # Simulate as spherical coordinates
+        '''Simulate as spherical coordinates.
+        '''
         r = np.random.uniform(0, self.x)
         theta = np.random.uniform(0, np.pi)
         phi = np.random.uniform(0, 2 * np.pi)
@@ -57,10 +57,12 @@ class Shape:
 
 
     def cylinder(self, angleX=0, angleY=0, angleZ=0):
-        # Simulate as cylindrical coordinates
-        # cylinder is horizontal on the x axis
-        # => self.x is max radius
-        # => self.y is max height
+        '''Simulate as cylindrical coordinates.
+
+        Cylinder is horizontal on the x axis
+        => self.x is max radius
+        => self.y is max height
+        '''
         r = np.random.uniform(0, self.x)
 
         theta = np.random.uniform(0, 2 * np.pi)
@@ -71,12 +73,13 @@ class Shape:
 
 
 
-
-
 class Noise:
+    '''Add noise to simulated PEPT data.
+    '''
 
     def __init__(self, trajectory, xMax, yMax, zMax):
-        # Trajectory row: [time, X, Y, Z]
+        '''Trajectory row: [time, X, Y, Z]
+        '''
         self.trajectory = trajectory
         self.xMax = xMax
         self.yMax = yMax
@@ -86,7 +89,8 @@ class Noise:
     # Better to use addNoiseToPEPT. Add noise to PEPT screen projection, rather than to the
     # actual trajectory
     def create_trajectory_noise(self, numberOfPoints):
-        # Generate random X, Y, Z coordinates for noise points
+        '''Generate random X, Y, Z coordinates for noise points
+        '''
         xNoise = np.random.uniform(0, self.xMax, numberOfPoints)
         yNoise = np.random.uniform(0, self.yMax, numberOfPoints)
         zNoise = np.random.uniform(0, self.zMax, numberOfPoints)
@@ -100,6 +104,9 @@ class Noise:
 
 
     def get_trajectory_with_noise(self, noiseRatio):
+        '''Get trajectory with noise.
+        '''
+
         self.numberOfNoisePoints = int(len(self.trajectory) * noiseRatio)
         self.createTrajectoryNoise(self.numberOfNoisePoints)
 
@@ -111,8 +118,10 @@ class Noise:
 
 
     def add_noise_to_pept(self, pept_data, number_of_noise_points):
-        # PEPTdata row: [time, X1, Y1, X2, Y2]
-        # Generate random (X, Y) pairs coordinates for noise points in PEPTdata
+        '''PEPTdata row: [time, X1, Y1, X2, Y2]
+        Generate random (X, Y) pairs coordinates for noise points in PEPTdata
+        '''
+
         x1Noise = np.random.uniform(0, self.xMax, number_of_noise_points)
         y1Noise = np.random.uniform(0, self.yMax, number_of_noise_points)
 
@@ -131,7 +140,9 @@ class Noise:
 
 
     def add_spread_to_pept(self, pept_data, max_spread, depth):
-        # PEPTdata row: [time, X1, Y1, X2, Y2]
+        '''PEPTdata row: [time, X1, Y1, X2, Y2]
+        '''
+
         pept_data_copy = np.copy(pept_data)
 
         # Add positional spread to X1, Y1, X2, Y2
@@ -155,6 +166,8 @@ class Noise:
 
 
 class Simulator:
+    '''Simulate PEPT data.
+    '''
 
     def __init__(
         self,
@@ -168,6 +181,8 @@ class Simulator:
         x_max = 500,
         y_max = 500
     ):
+        '''Simulator class constructor.
+        '''
 
         # Trajectory row: [time, X, Y, Z]
         self.trajectory = trajectory
@@ -307,12 +322,5 @@ class Simulator:
 
     def write_noise_csv(self, fname):
         np.savetxt(fname, self.pept_data_with_noise, delimiter = '   ', newline = '\n  ')
-
-
-
-
-
-
-
 
 

@@ -25,7 +25,7 @@ algorithms for the location, identification and tracking of particles, in
 addition to tools for visualisation and analysis, and utilities allowing the
 realistic simulation of PEPT data.
 
-PEPT is a technique developed at the University of Birmingham [1] which allows
+PEPT is a technique developed at the University of Birmingham [1]_ which allows
 the non-invasive, three-dimensional tracking of one or more 'tracer' particles
 through particulate, fluid or multiphase systems. The technique allows particle
 or fluid motion to be tracked with sub-millimetre accuracy and sub-millisecond
@@ -52,32 +52,35 @@ algorithms.
 The rest of the package is grouped into subpackages and modules following the
 hierarchy below:
 
-pept
-│
-Base classes imported into the package root:
-├── PointData :     Base class encapsulating points.
-├── LineData :      Base class encapsulating lines (LoRs) with one timestamp.
-├── VoxelData :     Base class encapsulating voxels.
-│
-Subpackages:
-├── base :                  Base classes (above).
-├── cookbook :              Pre-made PEPT analysis scripts, or recipes.
-├── diagnostics :           PET/PEPT scanner diagnostics.
-├── scanners :              Transform other data formats into base classes.
-│   ├── modular_camera :    Birmingham modular cameras binary data.
-│   └── parallel_screens :  Birmingham parallel screens PEPT detector.
-├── simulation :            Simulate radioactively-labeled tracers.
-├── tests :                 Package unit tests.
-├── tracking :              Tracer identification and tracking algorithms.
-│   ├── birmingham_method : The original Birmingham Method [1].
-│   ├── peptml :            The PEPT-ML algorithm [2].
-│   └── trajectory_separation : Trajectory separation of pre-tracked tracers.
-├── utilities :             Utility functions such as fast CSV-readers.
-│   ├── cutpoints :         Compute cutpoints from LoRs; Cython functions.
-│   ├── misc :              Miscellaneous, I/O, data aggregation.
-│   ├── parallel :          Call arbitrary functions using multiple threads.
-│   └── traverse :          Traverse voxels for LoRs; Cython functions.
-└── visualisation :         Visualisation algorithms for LoRs, points, etc.
+::
+
+    pept
+    │
+    Base classes imported into the package root:
+    ├── PointData :     Base class encapsulating points.
+    ├── LineData :      Base class encapsulating lines (LoRs) w/ one timestamp.
+    ├── VoxelData :     Base class encapsulating voxels.
+    │
+    Subpackages:
+    ├── base :                  Base classes (above).
+    ├── cookbook :              Pre-made PEPT analysis scripts, or recipes.
+    ├── diagnostics :           PET/PEPT scanner diagnostics.
+    ├── scanners :              Transform other data formats into base classes.
+    │   ├── modular_camera :    Birmingham modular cameras binary data.
+    │   └── parallel_screens :  Birmingham parallel screens PEPT detector.
+    ├── simulation :            Simulate radioactively-labeled tracers.
+    ├── tests :                 Package unit tests.
+    ├── tracking :              Tracer identification and tracking algorithms.
+    │   ├── birmingham_method : The original Birmingham Method [1].
+    │   ├── peptml :            The PEPT-ML algorithm [2].
+    │   └── trajectory_separation : Trajectory separation of tracked tracers.
+    ├── utilities :             Utility functions such as fast CSV-readers.
+    │   ├── cutpoints :         Compute cutpoints from LoRs; Cython functions.
+    │   ├── misc :              Miscellaneous, I/O, data aggregation.
+    │   ├── parallel :          Call arbitrary functions using multithreading.
+    │   └── traverse :          Traverse voxels for LoRs; Cython functions.
+    └── visualisation :         Visualisation algorithms for LoRs, points, etc.
+
 
 Each subpackage has its own documentation containing module, class and function
 hierarchies such as the one above.
@@ -88,8 +91,8 @@ Significant effort has been put into making the algorithms in this package as
 fast as possible. The most compute-intensive parts have been implemented in
 `C` / `Cython` and parallelised, where possible, using `joblib` and
 `concurrent.futures.ThreadPoolExecutor`. For example, using the `peptml`
-subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook
-Pro) takes ~26 s.
+subpackage [2]_, analysing 1,000,000 LoRs on the author's machine (mid 2012
+MacBook Pro) takes ~26 seconds.
 
 Citing
 ------
@@ -118,15 +121,19 @@ References
 Examples
 --------
 You can download data samples from the UoB Positron Imaging Centre's
-Repository (https://github.com/uob-positron-imaging-centre/example_data). A
+Repository (`link <https://bit.ly/pept-example-data-repo>`_). A
 small but complete analysis script using the PEPT-ML algorithm is given below.
 
 First import the `pept` package and read in lines of response (LoRs) from our
 online repository. We'll use a sample of real data from an experiment conducted
 at Birmingham - two tracers rotating at 42RPM.
->>> import pept
->>> lors_raw = pept.utilities.read_csv(
-        ("https://raw.githubusercontent.com/uob-positron-imaging-centre/"
+
+.. code-block:: python
+
+    import pept
+
+    lors_raw = pept.utilities.read_csv(
+        ("https://raw.githubusercontent.com/uob-positron-imaging-centres/"
          "example_data/master/sample_2p_42rpm.csv"),  # Concatenate long string
         skiprows = 16                                 # Skip file header
     )
@@ -134,56 +141,75 @@ at Birmingham - two tracers rotating at 42RPM.
 Our data is in a format typical of the parallel screens PEPT detector from
 Birmingham. Convert it to our package's scanner-agnostic line format; we'll
 iterate through them one sample at a time, tracking the tracer locations:
->>> screen_separation = 712
->>> lors = pept.scanners.ParallelScreens(lors_raw, screen_separation,
-                                         sample_size = 200)
+
+.. code-block:: python
+
+    lors = pept.scanners.ParallelScreens(
+        lors_raw, screen_separation = 712, sample_size = 200
+    )
 
 Now it's time for some machine learning! Import the `peptml` package and
 transform the LoRs into *cutpoints* that we'll use to find tracer locations.
->>> from pept.tracking import peptml
->>> max_distance = 0.15
->>> cutpoints = peptml.Cutpoints(lors, max_distance)
+
+.. code-block:: python
+
+    from pept.tracking import peptml
+    cutpoints = peptml.Cutpoints(lors, max_distance = 0.15)
 
 Create a *clusterer* and use the cutpoints to find the centres of the tracers
 as they move through our system:
->>> clusterer = peptml.HDBSCANClusterer()
->>> centres = clusterer.fit(cutpoints)
+
+.. code-block:: python
+
+    clusterer = peptml.HDBSCANClusterer()
+    centres = clusterer.fit(cutpoints)
 
 This data looks alright (we'll plot everything in a minute), but we can do
 better. We can iterate through the centres once more, clustering them again,
 to get smooth, tight trajectories; for this, we'll set a small sample size and
 large overlap:
->>> centres.sample_size = 60
->>> centres.overlap = 59
->>> centres_2pass = clusterer.fit(centres)
+
+.. code-block:: python
+
+    centres.sample_size = 60
+    centres.overlap = 59
+    centres_2pass = clusterer.fit(centres)
 
 One more step! The locations of the two tracers tracked above are intertwined;
 we need to separate them into individual trajectories. We have a module for
 just that:
->>> import pept.tracking.trajectory_separation as tsp
->>> points_window = 10
->>> trajectory_cut_distance = 20
->>> trajectories = tsp.segregate_trajectories(centres_2pass, points_window,
-                                              trajectory_cut_distance)
+
+.. code-block:: python
+
+    import pept.tracking.trajectory_separation as tsp
+    points_window = 10
+    trajectory_cut_distance = 20
+    trajectories = tsp.segregate_trajectories(
+        centres_2pass, points_window, trajectory_cut_distance
+    )
 
 Finally, let's plot some LoRs, the tracer centres after one pass of clustering
 and after the second pass of clustering, and the separated trajectories. Let's
 use Plotly to produce some beautiful, interactive, 3D graphs:
->>> from pept.visualisation import PlotlyGrapher
->>> subplot_titles = ["Lines of Response (LoRs)", "HDBSCAN Clustering",
+
+.. code-block:: python
+
+    from pept.visualisation import PlotlyGrapher
+    subplot_titles = ["Lines of Response (LoRs)", "HDBSCAN Clustering",
                       "2-pass Clustering", "Separated Trajectories"]
->>> grapher = PlotlyGrapher(rows = 2, cols = 2, zlim = [0, 712],
+    grapher = PlotlyGrapher(rows = 2, cols = 2, zlim = [0, 712],
                             subplot_titles = subplot_titles)
 
->>> grapher.add_lines(lors.lines[:400])             # Only the first 400 LoRs
->>> grapher.add_points(centres, col = 2)
->>> grapher.add_points(centres_2pass, row = 2)
->>> grapher.add_points(trajectories, row = 2, col = 2)
+    grapher.add_lines(lors.lines[:400])             # Only the first 400 LoRs
+    grapher.add_points(centres, col = 2)
+    grapher.add_points(centres_2pass, row = 2)
+    grapher.add_points(trajectories, row = 2, col = 2)
 
->>> grapher.show()
+    grapher.show()
 
-A more in-depth tutorial is available on [Google Colab]
-(https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO).
+A more in-depth tutorial is available on
+`Google Colab <https://bit.ly/pept-tutorial-1>`_.
+
 '''
 
 

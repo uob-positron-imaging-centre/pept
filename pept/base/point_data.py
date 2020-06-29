@@ -106,14 +106,14 @@ class PointData(IterableSamples):
     -------
     sample(n)
         Get sample number n (indexed from 0).
-    to_csv(filepath, delimiter = '  ', newline = '\n')
+    to_csv(filepath)
         Write `points` to a CSV file.
     plot(sample_indices = ..., ax = None, colorbar_col = -1)
         Plot points from selected samples using matplotlib.
     plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = -1):
         Plot points from selected samples using matplotlib on PEPT-style axes.
-    points_trace(sample_indices = ..., size = 2, color = None, opacity = 0.8,
-                 colorbar = True, colorbar_col = -1, colorscale = "Magma",
+    points_trace(sample_indices = ..., size = 2, color = None, opacity = 0.8,\
+                 colorbar = True, colorbar_col = -1, colorscale = "Magma",\
                  colorbar_title = None)
         Get a Plotly trace for all points in selected samples, with possible
         color-coding.
@@ -138,100 +138,139 @@ class PointData(IterableSamples):
     --------
     Initialise a `PointData` instance containing 10 points with a `sample_size`
     of 3.
-    >>> points_raw = np.arange(40).reshape(10, 4)
-    >>> print(points_raw)
-    [[ 0,  1,  2,  3],
-     [ 4,  5,  6,  7],
-     [ 8,  9, 10, 11],
-     [12, 13, 14, 15],
-     [16, 17, 18, 19],
-     [20, 21, 22, 23],
-     [24, 25, 26, 27],
-     [28, 29, 30, 31],
-     [32, 33, 34, 35],
-     [36, 37, 38, 39]])
-    >>> point_data = pept.PointData(points_raw, sample_size = 3)
 
-    >>> print(point_data)
-    number_of_points =  10
-    sample_size =       3
-    overlap =           0
-    number_of_samples = 3
-    points =
-    [[ 0.  1.  2.  3.]
-    [ 4.  5.  6.  7.]
-    [ 8.  9. 10. 11.]
-    [12. 13. 14. 15.]
-    [16. 17. 18. 19.]
-    [20. 21. 22. 23.]
-    [24. 25. 26. 27.]
-    [28. 29. 30. 31.]
-    [32. 33. 34. 35.]
-    [36. 37. 38. 39.]]
+    .. ipython::
+
+        In [1]: import numpy as np
+
+        In [2]: import pept
+
+        In [3]: points_raw = np.arange(40).reshape(10, 4)
+
+        In [4]: print(points_raw)
+        [[ 0  1  2  3]
+         [ 4  5  6  7]
+         [ 8  9 10 11]
+         [12 13 14 15]
+         [16 17 18 19]
+         [20 21 22 23]
+         [24 25 26 27]
+         [28 29 30 31]
+         [32 33 34 35]
+         [36 37 38 39]]
+
+        In [5]: point_data = pept.PointData(points_raw, sample_size = 3)
+
+        In [6]: print(point_data)
+        number_of_points =  10
+        sample_size =       3
+        overlap =           0
+        number_of_samples = 3
+        points =
+        [[ 0.  1.  2.  3.]
+         [ 4.  5.  6.  7.]
+         [ 8.  9. 10. 11.]
+         [12. 13. 14. 15.]
+         [16. 17. 18. 19.]
+         [20. 21. 22. 23.]
+         [24. 25. 26. 27.]
+         [28. 29. 30. 31.]
+         [32. 33. 34. 35.]
+         [36. 37. 38. 39.]]
 
     Access samples using subscript notation. Notice how the samples are
     consecutive, as `overlap` is 0 by default.
-    >>> point_data[0]
-    array([[ 0.,  1.,  2.,  3.],
-           [ 4.,  5.,  6.,  7.],
-           [ 8.,  9., 10., 11.]])
-    >>> point_data[1]
-    array([[12., 13., 14., 15.],
-           [16., 17., 18., 19.],
-           [20., 21., 22., 23.]])
+
+    .. ipython::
+
+        In [7]: point_data[0]
+        Out[7]:
+        array([[ 0.,  1.,  2.,  3.],
+               [ 4.,  5.,  6.,  7.],
+               [ 8.,  9., 10., 11.]])
+
+        In [8]: point_data[1]
+        Out[8]:
+        array([[12., 13., 14., 15.],
+               [16., 17., 18., 19.],
+               [20., 21., 22., 23.]])
 
     Now set an overlap of 2; notice how the number of samples changes:
-    >>> len(point_data)         # Number of samples
-    3
-    >>> point_data.overlap = 2
-    >>> len(point_data)
-    8
+
+    .. ipython::
+
+        In [9]: len(point_data)         # Number of samples
+        Out[9]: 3
+
+        In [10]: point_data.overlap = 2
+
+        In [11]: len(point_data)
+        Out[11]: 8
 
     Notice how rows are repeated from one sample to the next when accessing
     them, because `overlap` is now 2:
-    >>> point_data[0]
-    array([[ 0.,  1.,  2.,  3.],
-           [ 4.,  5.,  6.,  7.],
-           [ 8.,  9., 10., 11.]])
-    >>> point_data[1]
-    array([[ 4.,  5.,  6.,  7.],
-           [ 8.,  9., 10., 11.],
-           [12., 13., 14., 15.]])
+
+    .. ipython::
+
+        In [12]: point_data[0]
+        Out[12]:
+        array([[ 0.,  1.,  2.,  3.],
+               [ 4.,  5.,  6.,  7.],
+               [ 8.,  9., 10., 11.]])
+
+        In [13]: point_data[1]
+        Out[13]:
+        array([[ 4.,  5.,  6.,  7.],
+               [ 8.,  9., 10., 11.],
+               [12., 13., 14., 15.]])
 
     Now change `sample_size` to 5 and notice again how the number of samples
     changes:
-    >>> len(point_data)
-    8
-    >>> point_data.sample_size = 5
-    >>> len(point_data)
-    2
-    >>> point_data[0]
-    array([[ 0.,  1.,  2.,  3.],
-           [ 4.,  5.,  6.,  7.],
-           [ 8.,  9., 10., 11.],
-           [12., 13., 14., 15.],
-           [16., 17., 18., 19.]])
-    >>> point_data[1]
-    array([[12., 13., 14., 15.],
-           [16., 17., 18., 19.],
-           [20., 21., 22., 23.],
-           [24., 25., 26., 27.],
-           [28., 29., 30., 31.]])
+
+    .. ipython::
+
+        In [14]: len(point_data)
+        Out[14]: 8
+
+        In [15]: point_data.sample_size = 5
+
+        In [16]: len(point_data)
+        Out[16]: 2
+
+        In [17]: point_data[0]
+        Out[17]:
+        array([[ 0.,  1.,  2.,  3.],
+               [ 4.,  5.,  6.,  7.],
+               [ 8.,  9., 10., 11.],
+               [12., 13., 14., 15.],
+               [16., 17., 18., 19.]])
+
+        In [18]: point_data[1]
+        Out[18]:
+        array([[12., 13., 14., 15.],
+               [16., 17., 18., 19.],
+               [20., 21., 22., 23.],
+               [24., 25., 26., 27.],
+               [28., 29., 30., 31.]])
 
     Notice how the samples do not cover the whole input `points_raw` array, as
     the last lines are omitted - think of the `sample_size` and `overlap`. They
     are still inside the inner `points` attribute of `point_data` though:
-    >>> point_data.points
-    array([[ 0.,  1.,  2.,  3.],
-           [ 4.,  5.,  6.,  7.],
-           [ 8.,  9., 10., 11.],
-           [12., 13., 14., 15.],
-           [16., 17., 18., 19.],
-           [20., 21., 22., 23.],
-           [24., 25., 26., 27.],
-           [28., 29., 30., 31.],
-           [32., 33., 34., 35.],
-           [36., 37., 38., 39.]])
+
+    .. ipython::
+
+        In [19]: point_data.points
+        Out[19]:
+        array([[ 0.,  1.,  2.,  3.],
+               [ 4.,  5.,  6.,  7.],
+               [ 8.,  9., 10., 11.],
+               [12., 13., 14., 15.],
+               [16., 17., 18., 19.],
+               [20., 21., 22., 23.],
+               [24., 25., 26., 27.],
+               [28., 29., 30., 31.],
+               [32., 33., 34., 35.],
+               [36., 37., 38., 39.]])
 
     See Also
     --------
@@ -307,11 +346,6 @@ class PointData(IterableSamples):
     @property
     def points(self):
         '''Get the points stored in the class.
-
-        Returns
-        -------
-        (M, N) numpy.ndarray
-            A memory view of the points stored in `points`.
         '''
 
         return self._points
@@ -338,17 +372,12 @@ class PointData(IterableSamples):
     @property
     def number_of_points(self):
         '''Get the number of points stored in the class.
-
-        Returns
-        -------
-        int
-            The number of points stored in `points`.
         '''
 
         return self._number_of_points
 
 
-    def to_csv(self, filepath, delimiter = '  ', newline = '\n'):
+    def to_csv(self, filepath):
         '''Write `points` to a CSV file.
 
         Write all points (and any extra data) stored in the class to a CSV
@@ -359,17 +388,9 @@ class PointData(IterableSamples):
             filepath : filename or file handle
                 If filepath is a path (rather than file handle), it is relative
                 to where python is called.
-            delimiter : str, default '  '
-                The delimiter between values. The default is two spaces '  ',
-                such that numbers in the format '123,456.78' are
-                well-understood.
-            newline : str, default '\n'
-                The sequence of characters at the end of every line. The
-                default is a new line '\n'.
         '''
 
-        np.savetxt(filepath, self._points, delimiter = delimiter,
-                   newline = newline)
+        np.savetxt(filepath, self._points)
 
 
     def plot(self, sample_indices = ..., ax = None, colorbar_col = -1):
@@ -406,11 +427,13 @@ class PointData(IterableSamples):
         Examples
         --------
         Plot the points from sample 1 in a `PointData` instance:
+
         >>> point_data = pept.PointData(...)
         >>> fig, ax = point_data.plot(1)
         >>> fig.show()
 
         Plot the points from samples 0, 1 and 2:
+
         >>> fig, ax = point_data.plot([0, 1, 2])
         >>> fig.show()
 
@@ -496,11 +519,13 @@ class PointData(IterableSamples):
         Examples
         --------
         Plot the points from sample 1 in a `PointData` instance:
+
         >>> point_data = pept.PointData(...)
         >>> fig, ax = point_data.plot_alt_axes(1)
         >>> fig.show()
 
         Plot the points from samples 0, 1 and 2:
+
         >>> fig, ax = point_data.plot_alt_axes([0, 1, 2])
         >>> fig.show()
 
@@ -607,6 +632,7 @@ class PointData(IterableSamples):
         Use `PlotlyGrapher` (a user-friendly wrapper around the `plotly`
         library for PEPT-oriented data) to plot the points from sample 1 in a
         `PointData` instance:
+
         >>> point_data = pept.PointData(...)
         >>> grapher = pept.visualisation.PlotlyGrapher()
         >>> trace = point_data.points_trace(1)
@@ -614,6 +640,7 @@ class PointData(IterableSamples):
         >>> grapher.show()
 
         Use `plotly.graph_objs` to plot the lines from samples 0, 1 and 2:
+
         >>> import plotly.graph_objs as go
         >>> fig = go.Figure()
         >>> fig.add_trace(point_data.points_trace([0, 1, 2]))

@@ -10,13 +10,17 @@
 
 Subpackages Provided
 --------------------
-These classes are imported into the `pept` package root, so they are available
-as `pept.PointData`, `pept.LineData`, etc., without going through `base` first.
+These classes are imported into the ``pept`` package root, so they are
+available as ``pept.PointData``, ``pept.LineData``, etc., without going through
+``base`` first.
 
-pept.base
-├── PointData :     Encapsulate points for ease of iteration and visualisation.
-├── LineData :      Encapsulate lines (LoRs) with a single timestamp.
-└── VoxelData :     Encapsulate voxels for ease of traversal and manipulation.
+::
+
+    pept.base
+    ├── PointData :     Encapsulate points for iteration and visualisation.
+    ├── LineData :      Encapsulate lines (LoRs) with a single timestamp.
+    └── VoxelData :     Encapsulate voxels for line traversal and manipulation.
+
 '''
 
 

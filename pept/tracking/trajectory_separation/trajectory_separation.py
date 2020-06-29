@@ -212,12 +212,14 @@ def segregate_trajectories(
     'x' is the position, and in parens is the array index at which that point
     is found).
 
-    `points`, numpy.ndarray, shape (10, 4), columns [time, x, y, z]:
-        x (1)                       x (2)
-         x (3)                     x (4)
-           x (5)                 x (7)
-           x (6)                x (9)
-          x (8)                 x (10)
+    ::
+
+        `points`, numpy.ndarray, shape (10, 4), columns [time, x, y, z]:
+            x (1)                       x (2)
+             x (3)                     x (4)
+               x (5)                 x (7)
+               x (6)                x (9)
+              x (8)                 x (10)
 
     >>> import pept.tracking.trajectory_separation as tsp
     >>> points_window = 10
@@ -226,13 +228,15 @@ def segregate_trajectories(
     >>>     points, points_window, trajectory_cut_distance
     >>> )
 
-    `segregated_trajectories`, numpy.ndarray, shape (10, 5),
-    columns [time, x, y, z, trajectory_label]:
-        x (1, label = 0)            x (2, label = 1)
-         x (3, label = 0)          x (4, label = 1)
-           x (5, label = 0)      x (7, label = 1)
-           x (6, label = 0)     x (9, label = 1)
-          x (8, label = 0)      x (10, label = 1)
+    ::
+
+        `segregated_trajectories`, numpy.ndarray, shape (10, 5),
+        columns [time, x, y, z, trajectory_label]:
+            x (1, label = 0)            x (2, label = 1)
+             x (3, label = 0)          x (4, label = 1)
+               x (5, label = 0)      x (7, label = 1)
+               x (6, label = 0)     x (9, label = 1)
+              x (8, label = 0)      x (10, label = 1)
 
     See Also
     --------
@@ -400,8 +404,8 @@ def connect_trajectories(
     ValueError
         If `point_data` is a numpy array with fewer than 6 columns.
 
-    Note
-    ----
+    Notes
+    -----
     The labels are changed in-place to reflect the connected trajectories. For
     example, if there are 3 trajectories with labels 0, 1, 2 and the first two
     are connected, then all points which previously had the label 1 will be
@@ -454,14 +458,14 @@ def connect_trajectories(
         return trajectory_list
     elif isinstance(trajectories_points, pept.PointData):
         trajectories_points_connected = pept.PointData(
-            np.vstack(np.array(trajectory_list)),
+            np.vstack(trajectory_list),
             sample_size = trajectories_points.sample_size,
             overlap = trajectories_points.overlap,
             verbose = False
         )
         return trajectories_points_connected
     else:
-        return np.vstack(np.array(trajectory_list))
+        return np.vstack(trajectory_list)
 
 
 

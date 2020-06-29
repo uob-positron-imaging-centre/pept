@@ -40,12 +40,13 @@ class PEPTMLUser:
     as class attributes (e.g. LoRs, clusterers, tracer locations).
 
     The class has three methods:
+
     1. __init__ : the class constructor that is run when instantiating it; it
-                  contains the actual PEPT-ML algorithm.
+       contains the actual PEPT-ML algorithm.
     2. typecheck_and_create_attributes : typecheck input parameters and create
-                                         class attributes.
+       class attributes.
     3. minimal : the minimal PEPT-ML code, without pretty-printing to the
-                 terminal.
+       terminal.
 
     It is more than recommended to look through the code, copy and hack into
     it! The class constructor (`__init__`) contains the PEPT-ML algorithm with
@@ -53,11 +54,15 @@ class PEPTMLUser:
     additions, use the equivalent code in the `minimal` method.
 
     The main steps of the PEPT-ML-User algorithm are:
+
     -- Done beforehand, by the user --
+
     1. Initialise LoRs in a `pept.LineData` instance (if they are stored in a
        file, you can use `pept.utilities.read_csv`). **You must do this before
        using this script**.
+
     -- Done by this script --
+
     2. Compute the cutpoints from the LoRs using the `peptml.Cutpoints` class.
     3. Cluster them once using `peptml.HDBSCANClusterer` to find the tracer
        locations (i.e. cluster *centres*) - this is *1-pass clustering*.
@@ -202,38 +207,38 @@ class PEPTMLUser:
 
     Methods
     -------
-    typecheck_and_create_attributes(
-        lors,
-        max_tracers,
-        sample_size = None,
-        overlap = None,
-        sample_size2 = None,
-        overlap2 = None,
-        max_distance = 0.15,
-        k1 = 0.15,
-        k2 = 0.6,
-        points_window = None,
-        trajectory_cut_distance = 10.0,
-        max_time_difference = 150.0,
-        max_signature_difference = 100.0
+    typecheck_and_create_attributes(\
+        lors,\
+        max_tracers,\
+        sample_size = None,\
+        overlap = None,\
+        sample_size2 = None,\
+        overlap2 = None,\
+        max_distance = 0.15,\
+        k1 = 0.15,\
+        k2 = 0.6,\
+        points_window = None,\
+        trajectory_cut_distance = 10.0,\
+        max_time_difference = 150.0,\
+        max_signature_difference = 100.0\
     )
         Typecheck input parameters and create class attributes. Used by the
         class constructor for checks that are not relevant to the actual
         PEPT-ML aglorithm.
-    minimal(
-        lors,
-        max_tracers,
-        sample_size = None,
-        overlap = None,
-        sample_size2 = None,
-        overlap2 = None,
-        max_distance = 0.15,                # mm
-        k1 = 0.15,                          # non-dimensional
-        k2 = 0.6,                           # non-dimensional
-        points_window = None,
-        trajectory_cut_distance = 10.0,     # mm
-        max_time_difference = 150,          # ms
-        max_signature_difference = 100      # cluster size difference
+    minimal(\
+        lors,\
+        max_tracers,\
+        sample_size = None,\
+        overlap = None,\
+        sample_size2 = None,\
+        overlap2 = None,\
+        max_distance = 0.15,\
+        k1 = 0.15,\
+        k2 = 0.6,\
+        points_window = None,\
+        trajectory_cut_distance = 10.0,\
+        max_time_difference = 150,\
+        max_signature_difference = 100\
     )
         The minimal code for using the PEPT-ML algorithm, without
         pretty-printing to the terminal. Useful for copy-pasting the code and
@@ -256,14 +261,16 @@ class PEPTMLUser:
     documentation online, at "uob-positron-imaging-centre.github.io", or by
     adding a questions mark in front of a package / module / class / function
     name in the Python shell or using the `help` command. For example:
-        >>> import pept
-        >>> ?pept.LineData          # Short documentation
-        >>> ??pept.LineData         # Long documentation
-        >>> help(pept.LineData)     # Even more info
+
+    >>> import pept
+    >>> ?pept.LineData          # Short documentation
+    >>> ??pept.LineData         # Long documentation
+    >>> help(pept.LineData)     # Even more info
 
     Examples
     --------
     An example call would be:
+
     >>> lors_raw = pept.utilities.read_csv("csv_file.csv")  # two tracers CSV
     >>> lors = pept.LineData(lors_raw)
     >>> user = pept.cookbook.PEPTMLUser(lors, 2)            # max_tracers = 2
@@ -804,12 +811,13 @@ class PEPTMLFindParameters:
     as class attributes (e.g. LoRs, clusterers, tracer locations).
 
     The class has three methods:
-    1. __init__ : the class constructor that is run when instantiating it; it
-                  contains the actual PEPT-ML algorithm.
-    2. typecheck_and_create_attributes : typecheck input parameters and create
-                                         class attributes.
-    3. minimal : the minimal PEPT-ML code, without pretty-printing to the
-                 terminal.
+
+        1. __init__ : the class constructor that is run when instantiating it;
+           it contains the actual PEPT-ML algorithm.
+        2. typecheck_and_create_attributes : typecheck input parameters and
+           create class attributes.
+        3. minimal : the minimal PEPT-ML code, without pretty-printing to the
+           terminal.
 
     It is more than recommended to look through the code, copy and hack into
     it! The class constructor (`__init__`) contains the PEPT-ML algorithm with
@@ -817,15 +825,20 @@ class PEPTMLFindParameters:
     additions, use the equivalent code in the `minimal` method.
 
     The main steps of the PEPT-ML-User algorithm are:
+
     -- Done beforehand, by the user --
-    1. Initialise LoRs in a `pept.LineData` instance (if they are stored in a
-       file, you can use `pept.utilities.read_csv`). **You must do this before
-       using this script**.
+
+        1. Initialise LoRs in a `pept.LineData` instance (if they are stored in
+           a file, you can use `pept.utilities.read_csv`). **You must do this
+           before using this script**.
+
     -- Done by this script --
-    2. Compute the cutpoints from the LoRs using the `peptml.Cutpoints` class.
-    3. For every value in `np.linspace(k1[0], k1[1], iterations)`, cluster the
-       cutpoints using `peptml.HDBSCANClusterer` to find the tracer locations
-       (i.e. cluster *centres*) - this is *1-pass clustering*.
+
+        2. Compute the cutpoints from the LoRs using the `peptml.Cutpoints`
+           class.
+        3. For every value in `np.linspace(k1[0], k1[1], iterations)`, cluster
+           the cutpoints using `peptml.HDBSCANClusterer` to find the tracer
+           locations (i.e. cluster *centres*) - this is *1-pass clustering*.
 
     The function then plots the clustered cutpoints with colour-coded cluster
     labels and tracer locations for each value of k1 that was chosen. The user
@@ -942,14 +955,16 @@ class PEPTMLFindParameters:
     documentation online, at "uob-positron-imaging-centre.github.io", or by
     adding a questions mark in front of a package / module / class / function
     name in the Python shell or using the `help` command. For example:
-        >>> import pept
-        >>> ?pept.LineData          # Short documentation
-        >>> ??pept.LineData         # Long documentation
-        >>> help(pept.LineData)     # Even more info
+
+    >>> import pept
+    >>> ?pept.LineData          # Short documentation
+    >>> ??pept.LineData         # Long documentation
+    >>> help(pept.LineData)     # Even more info
 
     Examples
     --------
     An example call would be:
+
     >>> lors_raw = pept.utilities.read_csv("csv_file.csv")  # two tracers CSV
     >>> lors = pept.LineData(lors_raw)
     >>> user = pept.cookbook.PEPTMLFindParameters(lors, 2)  # max_tracers = 2

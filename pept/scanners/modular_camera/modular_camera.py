@@ -35,7 +35,8 @@ from    .extensions.get_pept_event import get_pept_LOR
 
 
 class ModularCamera(LineData):
-    '''A subclass of `LineData` that reads PEPT data from the modular camera DAQ.
+    '''A subclass of `LineData` that reads PEPT data from the modular camera
+    DAQ.
 
     Provides the same functionality as the `LineData` class while
     initialising `lines` from a given file. This is a helper class
@@ -48,53 +49,19 @@ class ModularCamera(LineData):
     is derived from the C-extension. The current useable geometry is a square
     layout with 4 stacks for 4 modules, separated by 250 mm.
 
-    Parameters
-    ----------
-    data_file : str
-        A string with the (absolute or relative) path to the data file
-        from which the PEPT data will be read. It should include the
-        full file name, along with the extension (.da_1)
-    sample_size : int, optional
-        An `int`` that defines the number of lines that should be
-        returned when iterating over `_lines`. A `sample_size` of 0
-        yields all the data as one single sample. (Default is 200)
-    overlap : int, optional
-        An `int` that defines the overlap between two consecutive
-        samples that are returned when iterating over `_lines`.
-        An overlap of 0 means consecutive samples, while an overlap
-        of (`sample_size` - 1) means incrementing the samples by one.
-        A negative overlap means skipping values between samples. An
-        error is raised if `overlap` is larger than or equal to
-        `sample_size`. (Default is 0)
-    filtered : list, optional
-        A list of 'int's of module pair numbers that will be filtered
-        from the PEPT data. For use when noisy data affects tracking.
-        (Default is [])
-    verbose : bool, optional
-        An option that enables printing the time taken for the
-        initialisation of an instance of the class. Useful when
-        reading large files (10gb files for PEPT data is not unheard
-        of). (Default is True)
-
     Attributes
     ----------
-    lines : (N, 7) numpy.ndarray
-        An (N, 7) numpy array that stores the PEPT LoRs as time and
-        cartesian (3D) coordinates of two points defining a line, **in mm**.
-        Each row is then `[time, x1, y1, z1, x2, y2, z2]`.
-    sample_size : int
-        An `int` that defines the number of lines that should be
-        returned when iterating over `_lines`. (Default is 200)
-    overlap : int
-        An `int` that defines the overlap between two consecutive
-        samples that are returned when iterating over `_lines`.
-        An overlap of 0 means consecutive samples, while an overlap
-        of (`sample_size` - 1) means incrementing the samples by one.
-        A negative overlap means skipping values between samples. It
-        has to be smaller than `sample_size`. (Default is 0)
-    numberOfLines : int
-        An `int` that corresponds to len(`_lines`), or the number of
-        LoRs stored by `_lines`.
+    sample_size, overlap, number_of_lines, etc.: inherited from `pept.LineData`
+        All attributes and methods from the parent class `pept.LineData` are
+        available after instantiation. Check its documentation for more
+        information.
+
+    Methods
+    -------
+    to_csv, lines_trace, etc. : inherited from `pept.LineData`
+        All attributes and methods from the parent class `pept.LineData` are
+        available after instantiation. Check its documentation for more
+        information.
 
     Raises
     ------
@@ -109,7 +76,6 @@ class ModularCamera(LineData):
     The class saves `lines` as a **contiguous** numpy array for
     efficient access in C functions. It should not be changed after
     instantiating the class.
-
     '''
 
     def __init__(
@@ -120,6 +86,36 @@ class ModularCamera(LineData):
         filtered = [],
         verbose = True
     ):
+        '''`ModularCamera` class constructor.
+
+        Parameters
+        ----------
+        data_file : str
+            A string with the (absolute or relative) path to the data file
+            from which the PEPT data will be read. It should include the
+            full file name, along with the extension (.da_1)
+        sample_size : int, optional
+            An `int`` that defines the number of lines that should be
+            returned when iterating over `_lines`. A `sample_size` of 0
+            yields all the data as one single sample. (Default is 200)
+        overlap : int, optional
+            An `int` that defines the overlap between two consecutive
+            samples that are returned when iterating over `_lines`.
+            An overlap of 0 means consecutive samples, while an overlap
+            of (`sample_size` - 1) means incrementing the samples by one.
+            A negative overlap means skipping values between samples. An
+            error is raised if `overlap` is larger than or equal to
+            `sample_size`. (Default is 0)
+        filtered : list, optional
+            A list of 'int's of module pair numbers that will be filtered
+            from the PEPT data. For use when noisy data affects tracking.
+            (Default is [])
+        verbose : bool, optional
+            An option that enables printing the time taken for the
+            initialisation of an instance of the class. Useful when
+            reading large files (10gb files for PEPT data is not unheard
+            of). (Default is True)
+        '''
 
         if verbose:
             start = time.time()

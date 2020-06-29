@@ -271,8 +271,8 @@ class ChunkReader:
         Upon access to a non-existent chunk using subscript notation
         (i.e. `data[100]` when there are 50 chunks).
 
-    Example Usage
-    -------------
+    Examples
+    --------
     Say "data.csv" contains 1_000_000 lines of data. Read chunks of 10_000
     lines as a time, skipping the first 100_000:
 
@@ -282,10 +282,12 @@ class ChunkReader:
     >>> chunks.file_lines   # 1_000_000
 
     Normal iteration:
+
     >>> for chunk in chunks:
     >>>     ... # neat operations
 
     Access a single chunk using subscripting:
+
     >>> chunks[0]   # First chunk
     >>> chunks[-1]  # Last chunk
     >>> chunks[100] # IndexError

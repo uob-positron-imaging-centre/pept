@@ -21,25 +21,27 @@ over the individual samples of lines / points being used.
 Subpackages Provided
 --------------------
 
-pept.tracking
-│
-Modules imported into the subpackage root:
-├── birmingham_method :     The Birmingham method for single-tracer tracking.
-├── peptml :                The PEPT-ML multi-tracer tracking algorithm.
-├── trajectory_separation : Separate tracked points into distinct trajectories.
-│
-Subpackages:
-├── birmingham_method
-│   └── BirminghamMethod
-├── peptml
-│   ├── find_cutpoints
-│   ├── get_cutoffs
-│   ├── Cutpoints
-│   └── HDBSCANClusterer
-└── trajectory_separation
-    ├── segregate_trajectories
-    ├── connect_trajectories
-    └── trajectory_errors
+::
+
+    pept.tracking
+    │
+    Modules imported into the subpackage root:
+    ├── birmingham_method :     The Birmingham method for single-tracers.
+    ├── peptml :                The PEPT-ML multi-tracer tracking algorithm.
+    ├── trajectory_separation : Separate located points into distinct tracks.
+    │
+    Subpackages:
+    ├── birmingham_method
+    │   └── BirminghamMethod
+    ├── peptml
+    │   ├── find_cutpoints
+    │   ├── get_cutoffs
+    │   ├── Cutpoints
+    │   └── HDBSCANClusterer
+    └── trajectory_separation
+        ├── segregate_trajectories
+        ├── connect_trajectories
+        └── trajectory_errors
 
 Notes
 -----

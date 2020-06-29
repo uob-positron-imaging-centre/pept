@@ -19,13 +19,17 @@ interactive, publication-ready figures.
 
 Modules Provided
 ----------------
-pept.visualisation
-│
-Classes imported into the subpackage root:
-├── PlotlyGrapher :     Plotly-based interactive 3D graphs with subplots.
-│
-Modules provided:
-└── plotly_grapher
+
+::
+
+    pept.visualisation
+    │
+    Classes imported into the subpackage root:
+    ├── PlotlyGrapher :     Plotly-based interactive 3D graphs with subplots.
+    │
+    Modules provided:
+    └── plotly_grapher
+
 '''
 
 

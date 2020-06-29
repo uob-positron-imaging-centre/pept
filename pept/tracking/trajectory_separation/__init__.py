@@ -25,16 +25,21 @@ using some *tracer signature* (e.g. cluster size in PEPT-ML).
 
 Functions Provided
 ------------------
-pept.tracking.trajectory_separation
-├── segregate_trajectories : Segregate intertwined points based on distance.
-├── connect_trajectories : Connect segregated paths based on tracer signatures.
-└── trajectory_errors : Calculate deviations between tracked and real paths.
+
+::
+
+    pept.tracking.trajectory_separation
+    ├── segregate_trajectories : Segregate intertwined points by distance.
+    ├── connect_trajectories : Connect segregated paths by tracer signatures.
+    └── trajectory_errors : Calculate deviations of tracked from real paths.
 
 Examples
 --------
 Take for example two tracers that go downwards (below, 'x' is the position, and
 in parantheses is the array index at which that point is found in the data
 array).
+
+::
 
                     Some tracking algorithm
                     -----------------------
@@ -54,12 +59,14 @@ array).
                                |
                                V
 
-    >>> import pept.tracking.trajectory_separation as tsp
-    >>> points_window = 10
-    >>> trajectory_cut_distance = 15    # mm
-    >>> segregated_trajectories = tsp.segregate_trajectories(
-    >>>     points, points_window, trajectory_cut_distance
-    >>> )
+>>> import pept.tracking.trajectory_separation as tsp
+>>> points_window = 10
+>>> trajectory_cut_distance = 15    # mm
+>>> segregated_trajectories = tsp.segregate_trajectories(
+>>>     points, points_window, trajectory_cut_distance
+>>> )
+
+::
 
                 Labelled, segregated trajectories
                 ---------------------------------
