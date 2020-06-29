@@ -61,6 +61,9 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
 ]
 
+# Master (or index) document
+master_doc = 'index'
+
 # Inheritance diagrams
 inheritance_graph_attrs = dict(rankdir="TB", size='""')
 
