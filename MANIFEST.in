@@ -1,9 +1,8 @@
 include README.md LICENSE CODE_OF_CONDUCT.md
-include requirements.txt
-global-include *.pyx
-global-include *.pxd
-global-include *.c*
-global-include *.h*
+include requirements.txt requirements_docs.txt
+include *.rst *.txt
+recursive-include pept *.py *.pyx *.pxd *.c* *.h*
 global-exclude .DS_Store
 global-exclude __pycache__
 global-exclude *.pyc
+global-exclude *.so
