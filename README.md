@@ -1,6 +1,6 @@
 ![](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/logo.png?raw=true)
 
-![version](https://img.shields.io/badge/version-0.2.0-blue)
+[![PyPI version](https://badge.fury.io/py/pept.svg)](https://badge.fury.io/py/pept)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
 [![Documentation Status](https://readthedocs.org/projects/pept/badge/?version=latest)](https://pept.readthedocs.io/en/latest/?badge=latest)
 
