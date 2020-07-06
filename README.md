@@ -31,21 +31,29 @@ These instructions will help you get started with PEPT data analysis.
 
 ### Prerequisites
 
-This package supports Python 3.6 and above. You can install it using the batteries-included [Anaconda distribution](https://www.anaconda.com/products/individual) or the bare-bones [Python interpreter](https://www.python.org/downloads/). You can also check out our Python and `pept` tutorials [here](https://github.com/uob-positron-imaging-centre/tutorials).
+This package supports Python 3.6 and above - it is built and tested for Python 3.6, 3.7 and 3.8 on Windows, Linux and macOS (thanks to [`conda-forge`](https://conda-forge.org/), which is awesome!).
+
+You can install it using the batteries-included [Anaconda distribution](https://www.anaconda.com/products/individual) or the bare-bones [Python interpreter](https://www.python.org/downloads/). You can also check out our Python and `pept` tutorials [here](https://github.com/uob-positron-imaging-centre/tutorials).
 
 
 ### Installation
 
-You can install the latest official version of `pept` from PyPI:
+The easiest and quickest installation, if you are using Anaconda:
 
 ```
-pip install -U pept
+conda install -c conda-forge pept
+```
+
+You can also install the latest release version of `pept` from PyPI:
+
+```
+pip install --upgrade pept
 ```
 
 Or you can install the development version from the GitHub repository:
 
 ```
-pip install git+https://github.com/uob-positron-imaging-centre/pept
+pip install --upgrade git+https://github.com/uob-positron-imaging-centre/pept
 ```
 
 
@@ -102,7 +110,7 @@ Full documentation for the `pept` package is available [here](https://uob-positr
 
 ## Performance
 
-Significant effort has been put into making the algorithms in this package as fast as possible. The most computionally-intensive parts have been implemented in `C` / `Cython` and parallelised using `joblib` and `concurrent.futures.ThreadPoolExecutor`. For example, using the `peptml` subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook Pro) takes ~26 s.
+Significant effort has been put into making the algorithms in this package as fast as possible. The most computionally-intensive parts have been implemented in [`C`](https://github.com/uob-positron-imaging-centre/pept/search?l=c) / [`Cython`](https://github.com/uob-positron-imaging-centre/pept/search?l=Cython) and parallelised using `joblib` and `concurrent.futures.ThreadPoolExecutor`. For example, using the `peptml` subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook Pro) takes ~26 s.
 
 
 ## Help and Support
