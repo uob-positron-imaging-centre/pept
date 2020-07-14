@@ -73,7 +73,8 @@ lors_raw = pept.utilities.read_csv(
 )
 
 # Encapsulate LoRs in a `LineData` subclass and compute cutpoints.
-lors = pept.scanners.ParallelScreens(lors_raw, screen_separation = 712)
+lors = pept.scanners.ParallelScreens(lors_raw, screen_separation = 712,
+                                     sample_size = 200)
 cutpoints = peptml.Cutpoints(lors, max_distance = 0.15)
 
 # Cluster cutpoints using HDBSCAN and extract tracer locations.
@@ -86,7 +87,7 @@ grapher.add_points(centres)
 grapher.show()
 ```
 
-Running the above code initialises 80,000 lines of PEPT data from an online location (containing the same experiment as before - two tracers rotating at 42 RPM), transforms lines of response into accurate tracer locations and plots them in a 3D interactive browser-based graph:
+Running the above code initialises 80,000 lines of PEPT data from an online location (containing the same experiment as before - two tracers rotating at 42 RPM), transforms lines of response into accurate tracer locations and plots them in a 3D interactive [browser-based graph](https://uob-positron-imaging-centre.github.io/live/sample_42rpm):
 
 ![LoRs analysed using the PEPT-ML minimal script](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/pept_centres.png?raw=true)
 
