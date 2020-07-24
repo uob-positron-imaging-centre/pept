@@ -1,14 +1,16 @@
-![](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/logo.png?raw=true)
+[![PEPT Logo](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/logo.png?raw=true)](https://github.com/uob-positron-imaging-centre/pept)
 
-[![PyPI version](https://badge.fury.io/py/pept.svg)](https://badge.fury.io/py/pept)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/pept.svg)](https://anaconda.org/conda-forge/pept)
-[![Documentation Status](https://readthedocs.org/projects/pept/badge/?version=latest)](https://pept.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/pept.svg?style=flat-square)](https://pypi.python.org/pypi/pept/)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/pept.svg?style=flat-square)](https://anaconda.org/conda-forge/pept)
+[![Documentation Status](https://readthedocs.org/projects/pept/badge/?version=latest&style=flat-square)](https://pept.readthedocs.io/en/latest/?badge=latest)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
 [![Azure Status](https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/pept-feedstock?branchName=master)](https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10178&branchName=master)
-[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/pept.svg)](https://anaconda.org/conda-forge/pept)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pept/badges/platforms.svg)](https://anaconda.org/conda-forge/pept)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pept/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pept)
-
+[![PyPI download month](https://img.shields.io/pypi/dm/pept.svg?style=flat-square&label=pypi downloads)](https://pypi.python.org/pypi/pept/)
+[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/pept.svg?style=flat-square&label=conda downloads)](https://anaconda.org/conda-forge/pept)
+[![License: GPL v3](https://img.shields.io/github/license/uob-positron-imaging-centre/pept?style=flat-square)](https://github.com/uob-positron-imaging-centre/pept)
+[![Anaconda-Platforms](https://anaconda.org/conda-forge/pept/badges/platforms.svg?style=flat-square)](https://anaconda.org/conda-forge/pept)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/pept.svg?style=flat-square)](https://pypi.python.org/pypi/pept/)
+[![Anaconda-Last Updated](https://anaconda.org/conda-forge/pept/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pept)
 
 
 # The `pept` Library
@@ -88,7 +90,7 @@ grapher.add_points(centres)
 grapher.show()
 ```
 
-Running the above code initialises 80,000 lines of PEPT data from an online location (containing the same experiment as before - two tracers rotating at 42 RPM), transforms lines of response into accurate tracer locations and plots them in a 3D interactive [browser-based graph](https://uob-positron-imaging-centre.github.io/live/sample_42rpm):
+Running the above code initialises 80,000 lines of PEPT data from an online location (containing the same experiment as before - two tracers rotating at 42 RPM), transforms lines of response into accurate tracer locations and plots them in a browser-based interactive  3D graph (live version available [here](https://uob-positron-imaging-centre.github.io/live/sample_42rpm)):
 
 ![LoRs analysed using the PEPT-ML minimal script](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/pept_centres.png?raw=true)
 
@@ -113,6 +115,8 @@ Full documentation for the `pept` package is available [here](https://uob-positr
 ## Performance
 
 Significant effort has been put into making the algorithms in this package as fast as possible. The most computionally-intensive parts have been implemented in [`C`](https://github.com/uob-positron-imaging-centre/pept/search?l=c) / [`Cython`](https://github.com/uob-positron-imaging-centre/pept/search?l=Cython) and parallelised using `joblib` and `concurrent.futures.ThreadPoolExecutor`. For example, using the `peptml` subpackage, analysing 1,000,000 LoRs on the author's machine (mid 2012 MacBook Pro) takes ~26 s.
+
+The tracking algorithms in `pept.tracking` successfully scaled up to hundreds of processors on BlueBEAR, the University of Birmingham's awesome [supercomputer](https://bear-apps.bham.ac.uk/applications/pept/0.2.2-foss-2019b-Python-3.7.4/).
 
 
 ## Help and Support
