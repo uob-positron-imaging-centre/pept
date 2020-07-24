@@ -6,7 +6,8 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
 [![Azure Status](https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/pept-feedstock?branchName=master)](https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10178&branchName=master)
 [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/pept.svg)](https://anaconda.org/conda-forge/pept)
-[![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/pept.svg)](https://anaconda.org/conda-forge/pept)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pept/badges/platforms.svg)](https://anaconda.org/conda-forge/pept)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pept/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pept)
 
 
 
