@@ -738,11 +738,11 @@ class PEPTMLUser:
             raise TypeError(
                 textwrap.fill((
                     "\n[ERROR]: `lors` should be an instance of `pept."
-                    f"LineData` (or subclass thereof). Received {type(lors)}."
+                    f"LineData` (or subclass thereof). Received {type(lors)}. "
                     "Note: you can read in LoR data from a CSV file using "
                     "`pept.utilities.read_csv`; initialise them in a `pept."
                     "LineData` before calling this function. Check this "
-                    "script's documentation for more.\n"
+                    "script's documentation for more information.\n"
                 ), replace_whitespace = False)
             )
 

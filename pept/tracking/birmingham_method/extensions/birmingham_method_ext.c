@@ -174,8 +174,8 @@ void birmingham_method_ext(
                 x12, y12, z12, r2, ttt, dev, used, nused, nrows,
                 calculate_results);
 
-        // Should become nused == nfin, but used <= just to be sure.
-        if (nused <= nfin)
+        // We used the target number of lines to calculate the tracer position.
+        if (nused == nfin)
         {
             free_memory(ttt, xx1, xx2, yy1, yy2, zz1, zz2, x12, y12, z12, r12,
                     q12, p12, a12, b12, c12, d12, e12, f12, r2, dev);
