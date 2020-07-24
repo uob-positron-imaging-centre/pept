@@ -36,6 +36,7 @@ def read_csv(
     nrows = None,               # Important
     dtype = float,              # Medium Importance
     sep = "\s+",                # Extra parameters
+    header = None,              #       |
     engine = "c",               #       |
     na_filter = False,          #       |
     quoting = csv.QUOTE_NONE,   #       |
@@ -78,6 +79,9 @@ def read_csv(
         Delimiter to use. Separators longer than 1 character and different from
         '\s+' will be interpreted as regular expressions and will also force
         the use of the Python parsing engine.
+    header : int, list of int, "infer", optional
+        Row number(s) to use as the column names, and the start of the data. By
+        default assume there is no header present (i.e. `header = None`).
     engine : {‘c’, ‘python’}, default "c"
         Parser engine to use. The C engine is faster while the python engine is
         currently more feature-complete.
@@ -104,6 +108,7 @@ def read_csv(
         nrows = nrows,
         dtype = dtype,
         sep = sep,
+        header = header,
         engine = engine,
         na_filter = na_filter,
         quoting = quoting,
@@ -111,10 +116,7 @@ def read_csv(
         **kwargs
     )
 
-    data_array = data.to_numpy(copy = True)
-    del data
-
-    return data_array
+    return data.to_numpy()
 
 
 def read_csv_chunks(
@@ -124,6 +126,7 @@ def read_csv_chunks(
     nrows = None,
     dtype = float,
     sep = "\s+",
+    header = None,
     engine = "c",
     na_filter = False,
     quoting = csv.QUOTE_NONE,
@@ -179,6 +182,9 @@ def read_csv_chunks(
         Delimiter to use. Separators longer than 1 character and different from
         '\s+' will be interpreted as regular expressions and will also force
         the use of the Python parsing engine.
+    header : int, list of int, "infer", optional
+        Row number(s) to use as the column names, and the start of the data. By
+        default assume there is no header present (i.e. `header = None`).
     engine : {‘c’, ‘python’}, default "c"
         Parser engine to use. The C engine is faster while the python engine is
         currently more feature-complete.
@@ -206,6 +212,7 @@ def read_csv_chunks(
         nrows = nrows,
         dtype = dtype,
         sep = sep,
+        header = header,
         engine = engine,
         na_filter = na_filter,
         quoting = quoting,
@@ -307,6 +314,7 @@ class ChunkReader:
         nrows = None,
         dtype = float,
         sep = "\s+",
+        header = None,
         engine = "c",
         na_filter = False,
         quoting = csv.QUOTE_NONE,
@@ -318,10 +326,9 @@ class ChunkReader:
         Parameters
         ----------
         filepath_or_buffer : str, path object or file-like object
-            Any valid string path is acceptable. The string could be a URL.
-            Valid URL schemes include http, ftp, s3, and file. For file URLs, a
-            host is expected. A local file could be
-            file://localhost/path/to/table.csv. If you want to pass in a path
+            Any valid string path *to a local file* is acceptable. If you want
+            to read in lines from an online location (i.e. using a URL), you
+            should use `pept.utilities.read_csv`. If you want to pass in a path
             object, pandas accepts any `os.PathLike`. By file-like object, we
             refer to objects with a `read()` method, such as a file handler
             (e.g. via builtin `open` function) or `StringIO`.
@@ -340,6 +347,10 @@ class ChunkReader:
             Delimiter to use. Separators longer than 1 character and different
             from '\s+' will be interpreted as regular expressions and will also
             force the use of the Python parsing engine.
+        header : int, list of int, "infer", optional
+            Row number(s) to use as the column names, and the start of the
+            data. By default assume there is no header present (i.e.
+            `header = None`).
         engine : {‘c’, ‘python’}, default "c"
             Parser engine to use. The C engine is faster while the python
             engine is currently more feature-complete.
@@ -390,6 +401,7 @@ class ChunkReader:
 
         self.dtype = dtype
         self.sep = sep
+        self.header = header
         self.engine = engine
         self.na_filter = na_filter
         self.quoting = quoting
@@ -498,6 +510,7 @@ class ChunkReader:
             nrows = self._chunksize,
             dtype = self.dtype,
             sep = self.sep,
+            header = self.header,
             engine = self.engine,
             na_filter = self.na_filter,
             quoting = self.quoting,
@@ -505,12 +518,9 @@ class ChunkReader:
             **self.kwargs
         )
 
-        data_array = data.to_numpy(copy = True)
-        del data
-
         self._index = self._index + 1
 
-        return data_array
+        return data.to_numpy()
 
 
     def __getitem__(self, key):
@@ -531,6 +541,7 @@ class ChunkReader:
             nrows = self._chunksize,
             dtype = self.dtype,
             sep = self.sep,
+            header = self.header,
             engine = self.engine,
             na_filter = self.na_filter,
             quoting = self.quoting,
@@ -538,10 +549,7 @@ class ChunkReader:
             **self.kwargs
         )
 
-        data_array = data.to_numpy(copy = True)
-        del data
-
-        return data_array
+        return data.to_numpy()
 
 
     def __str__(self):
