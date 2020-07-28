@@ -1,20 +1,13 @@
-pept.scanners package
-=====================
+pept.scanners
+=============
 
-Subpackages
------------
+.. automodule:: pept.scanners
+
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    pept.scanners.modular_camera
    pept.scanners.parallel_screens
 
 
-Module contents
----------------
-
-.. automodule:: pept.scanners
-   :members:
-   :undoc-members:
-   :show-inheritance:

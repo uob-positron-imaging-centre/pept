@@ -1,20 +1,14 @@
-pept.tracking package
-=====================
+pept.tracking
+=============
 
-Subpackages
------------
+.. automodule:: pept.tracking
+
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    pept.tracking.birmingham_method
    pept.tracking.peptml
    pept.tracking.trajectory_separation
 
-Module contents
----------------
 
-.. automodule:: pept.tracking
-   :members:
-   :undoc-members:
-   :show-inheritance:

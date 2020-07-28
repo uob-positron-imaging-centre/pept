@@ -1,5 +1,5 @@
-pept.diagnostics package
-========================
+pept.diagnostics
+================
 
 Module contents
 ---------------

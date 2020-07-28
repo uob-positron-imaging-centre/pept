@@ -1,11 +1,17 @@
 pept.visualisation package
 ==========================
 
-Module contents
----------------
-
 .. automodule:: pept.visualisation
+
+
+PlotlyGrapher
+-------------
+
+.. autoclass:: pept.visualisation.PlotlyGrapher
    :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
-   :autosummary:
+   :special-members: __init__
+
+
