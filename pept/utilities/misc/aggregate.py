@@ -44,7 +44,7 @@ def group_by_column(data_array, column_to_separate):
     >>>     [5, 2, 1],
     >>>     [2, 4, 2]
     >>> ])
-    >>> x_sep = pept.utilities.group_by_column(x)
+    >>> x_sep = pept.utilities.group_by_column(x, -1)
     >>> x_sep
     >>> [array([[1, 2, 1],
     >>>         [5, 3, 1],

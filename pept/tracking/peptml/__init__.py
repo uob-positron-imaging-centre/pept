@@ -56,12 +56,9 @@ Modules Provided
     Functions imported into the subpackage root:
     ├── find_cutpoints :        Find cutpoints from a NumPy array of lines.
     ├── get_cutoffs :           Find cutpoint cutoffs from an array of lines.
-    ├── find_cutpoints_tof :    Find cutpoints from an array of lines with ToF.
-    ├── get_cutoffs_tof :       Find cutoffs from an array of lines with ToF.
     │
     Classes imported into the subpackage root:
     ├── Cutpoints :         Compute cutpoints from samples in a `LineData`.
-    ├── CutpointsToF :      Compute cutpoints from samples in a `LineDataToF`.
     └── HDBSCANClusterer :  Cluster samples of cutpoints in parallel.
 
 References

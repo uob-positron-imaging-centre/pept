@@ -34,7 +34,7 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    api/pept.cookbook
    api/pept.diagnostics

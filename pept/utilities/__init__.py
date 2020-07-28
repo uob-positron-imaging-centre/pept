@@ -27,7 +27,7 @@ Subpackages Provided
     │
     Functions imported into the subpackage root:
     ├── find_cutpoints :            Find cutpoints from an array of LoRs.
-    ├── group_by_columns :          Group array into a list by column.
+    ├── group_by_column :           Group array into a list by column.
     ├── number_of_lines :           Find the number of lines in a file.
     ├── read_csv :                  Fast CSV file reader.
     ├── read_csv_chunks :           Read CSV file in chunks using a generator.

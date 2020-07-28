@@ -59,8 +59,8 @@ def parallel_map_file(
         default is `float`.
     processes : int
         The maximum number of threads that will be used for calling `func`. If
-        left to the default `None`, then the number returned by `os.cpu_count()`
-        will be used.
+        left to the default `None`, then the number returned by
+        `os.cpu_count()` will be used.
     callback : callable
         When the result from a `func` call becomes ready callback is applied to
         it, that is unless the call failed, in which case the error_callback is
@@ -77,7 +77,7 @@ def parallel_map_file(
         A Python list of the `func` call returns. The results are not
         necessarily in order, though this can be verified by using the chunk
         number that is supplied to each call to `func`. If `func` does not
-        return anything, it will simply be a list of `None`s.
+        return anything, it will simply be a list of `None`.
 
     Notes
     -----

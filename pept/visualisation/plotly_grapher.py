@@ -102,13 +102,13 @@ class PlotlyGrapher:
     -------
     create_figure()
         Create a Plotly figure, pre-configured for PEPT data.
-    add_points(points, row = 1, col = 1, size = 2.0, color = None,
-               opacity = 0.8, colorbar = True, colorbar_col = -1,
+    add_points(points, row = 1, col = 1, size = 2.0, color = None,\
+               opacity = 0.8, colorbar = True, colorbar_col = -1,\
                colorscale = "Magma", colorbar_title = None)
         Create and plot a trace for all the points in a numpy array or
         `pept.PointData`, with possible color-coding.
-    add_lines(lines, row = 1, col = 1, width = 2.0, color = None,
-              opacity = 0.6, colorbar = True, colorbar_col = 0,
+    add_lines(lines, row = 1, col = 1, width = 2.0, color = None,\
+              opacity = 0.6, colorbar = True, colorbar_col = 0,\
               colorscale = "Magma", colorbar_title = None)
         Create and plot a trace for all the lines in a numpy array or
         `pept.LineData`, with possible color-coding.
