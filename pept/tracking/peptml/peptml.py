@@ -647,6 +647,10 @@ class HDBSCANClusterer:
         return centres
 
 
+    def optimise(self):
+        pass
+
+
     def __str__(self):
         # Shown when calling print(class)
         docstr = (
