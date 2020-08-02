@@ -22,7 +22,6 @@ Cutpoints
 .. autoclass:: pept.tracking.peptml.Cutpoints
    :members:
    :inherited-members:
-   :undoc-members:
    :show-inheritance:
    :special-members: __init__
 
@@ -33,7 +32,6 @@ HDBSCANClusterer
 .. autoclass:: pept.tracking.peptml.HDBSCANClusterer
    :members:
    :inherited-members:
-   :undoc-members:
    :show-inheritance:
    :special-members: __init__
 
