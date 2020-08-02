@@ -18,16 +18,18 @@ LineData
 ^^^^^^^^
 .. autoclass:: pept.LineData
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
+   :special-members: __init__
 
 
 PointData
 ^^^^^^^^^
 .. autoclass:: pept.PointData
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
+   :special-members: __init__
 
 
 Subpackages

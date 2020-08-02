@@ -68,14 +68,18 @@ class IterableSamples(ABC):
     ----------
     data_samples : iterable that supports slicing
         An iterable (e.g. numpy array) that supports slicing syntax (data[5:7])
-        storing the data that will be iterated over in samples.
+        storing the data that will be iterated over in samples. Must be
+        implemented by a subclass!
+
     data_length : int
         The number of elements in `data_samples`. For a numpy.ndarray, that
-        corresponds to len(`line_data`).
+        corresponds to len(`line_data`). Must be implemented by a subclass!
+
     sample_size : int
         An `int`` that defines the number of items that should be returned in
         a single sample when iterating over `data_samples`. A `sample_size` of
         0 yields all the data as one single sample.
+
     overlap : int, optional
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `data_samples`. An overlap of 0
@@ -83,6 +87,7 @@ class IterableSamples(ABC):
         means incrementing the samples by one. A negative overlap implies
         skipping values between samples. An error is raised if `overlap` is
         larger than or equal to `sample_size`.
+
     number_of_samples : int
         An `int` that corresponds to the number of samples that can be
         accessed from the class. It takes `overlap` into consideration.
@@ -96,8 +101,7 @@ class IterableSamples(ABC):
     ------
     ValueError
         If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
-        has to be smaller than `sample_size`. Note that it can also be
-        negative.
+        must be smaller than `sample_size`. Note that it can also be negative.
 
     See Also
     --------
@@ -107,7 +111,7 @@ class IterableSamples(ABC):
     '''
 
     def __init__(self, sample_size, overlap):
-        '''``IterableSamples`` class constructor.
+        '''`IterableSamples` class constructor.
 
         Parameters
         ----------
@@ -115,6 +119,7 @@ class IterableSamples(ABC):
             An `int`` that defines the number of items that should be returned
             in a single sample when iterating over `data_samples`. A
             `sample_size` of 0 yields all the data as one single sample.
+
         overlap : int, optional
             An `int` that defines the overlap between two consecutive samples
             that are returned when iterating over `data_samples`. An overlap of
@@ -122,7 +127,6 @@ class IterableSamples(ABC):
             (`sample_size` - 1) means incrementing the samples by one. A
             negative overlap implies skipping values between samples. An error
             is raised if `overlap` is larger than or equal to `sample_size`.
-
         '''
 
         sample_size = int(sample_size)
@@ -148,66 +152,23 @@ class IterableSamples(ABC):
     @property
     @abstractmethod
     def data_samples(self):
-        '''The data encapsulated by the class the will be iterated over in
-        samples with overlap.
-
-        Must be implemented by a subclass.
-
-        '''
-
         pass
 
 
     @property
     @abstractmethod
     def data_length(self):
-        '''The number of items in `data_samples` (e.g. for a 2D numpy array,
-        this corresponds to the number of rows).
-
-        Must be implemented by a subclass.
-
-        '''
-
         pass
 
 
 
     @property
     def sample_size(self):
-        '''The number of items in one sample returned by the class.
-
-        Returns
-        -------
-        int
-            The sample size (number of lines) in one sample returned by
-            the class.
-
-        '''
-
         return self._sample_size
 
 
     @sample_size.setter
     def sample_size(self, sample_size):
-        '''Change `sample_size` without instantiating a new object.
-
-        It also resets the inner index of the class.
-
-        Parameters
-        ----------
-        sample_size : int
-            The new sample size. It has to be larger than `overlap`, unless it
-            is 0 (in which case all `point_data` will be returned as one
-            sample, ignoring the overlap).
-
-        Raises
-        ------
-        ValueError
-            If `overlap` >= `sample_size`. Overlap has to be smaller than
-            `sample_size`, unless `sample_size` is 0.
-
-        '''
-
         sample_size = int(sample_size)
 
         if sample_size < 0:
@@ -228,41 +189,11 @@ class IterableSamples(ABC):
 
     @property
     def overlap(self):
-        '''The overlap between every two samples returned by the class.
-
-        Returns
-        -------
-        int
-            The overlap (number of items) between every two samples returned by
-            the class.
-
-        '''
-
         return self._overlap
 
 
     @overlap.setter
     def overlap(self, overlap):
-        '''Change `overlap` without instantiating a new object.
-
-        It also resets the inner index of the class.
-
-        Parameters
-        ----------
-        overlap : int
-            The new overlap. It must be smaller than `sample_size`, unless
-            `sample_size` is 0 (in which case all `point_data` will be returned
-            as one sample and so overlap is ignored).
-
-        Raises
-        ------
-        ValueError
-            If `overlap` >= `sample_size`. `overlap` must be smaller than
-            `sample_size`, unless `sample_size` is 0. Note that `overlap` can
-            also be negative, in which case items are skipped between samples.
-
-        '''
-
         overlap = int(overlap)
 
         if self._sample_size != 0 and overlap >= self._sample_size:
@@ -277,19 +208,6 @@ class IterableSamples(ABC):
 
     @property
     def number_of_samples(self):
-        '''The number of samples, considering overlap.
-
-        If `sample_size == 0`, all data is returned as a single sample, and so
-        `number_of_samples` is 1. Otherwise, it checks the number of samples
-        every time it is called, taking `overlap` into consideration.
-
-        Returns
-        -------
-        int
-            The number of samples, taking `overlap` into consideration.
-
-        '''
-
         # If self.sample_size == 0, all data is returned as a single sample.
         if self._sample_size == 0:
             return 1
@@ -325,9 +243,9 @@ class IterableSamples(ABC):
         IndexError
             If `sample_size == 0`, all data is returned as one single sample.
             Raised if `n` is not 1.
+
         IndexError
             If `n > number_of_samples` or `n <= 0`.
-
         '''
 
         if self._sample_size == 0:

@@ -352,37 +352,16 @@ class Cutpoints(pept.PointData):
 
     @property
     def line_data(self):
-        '''The samples of LoRs for which the cutpoints are computed.
-
-        line_data : instance of pept.LineData
-        '''
-
         return self._line_data
 
 
     @property
     def max_distance(self):
-        '''The maximum distance between any pair of lines for which their
-        cutpoint is considered.
-
-        max_distance : float
-            The maximum distance between any two lines for their cutpoint to be
-            considered.
-        '''
-
         return self._max_distance
 
 
     @property
     def cutoffs(self):
-        '''Only consider the cutpoints which fall within these cutoff distances.
-
-        A list (or equivalent) of the cutoff distances for every axis,
-        formatted as [x_min, x_max, y_min, y_max, z_min, z_max].
-
-        cutoffs : (6) list or equivalent
-        '''
-
         return self._cutoffs
 
 

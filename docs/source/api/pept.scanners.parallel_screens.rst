@@ -10,7 +10,6 @@ ParallelScreens
 .. autoclass:: pept.scanners.parallel_screens.ParallelScreens
    :members:
    :inherited-members:
-   :undoc-members:
    :show-inheritance:
    :special-members: __init__
 

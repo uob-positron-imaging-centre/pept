@@ -125,32 +125,11 @@ class BirminghamMethod:
 
     @property
     def fopt(self):
-        '''The fraction of LORs used to locate a particle.
-
-        fopt : float
-            Float number between 0 and 1, representing the fraction of
-            remaining LORs in a sample used to locate the particle.
-        '''
-
         return self._fopt
 
 
     @fopt.setter
     def fopt(self, new_fopt):
-        '''The fraction of LORs used to locate a particle
-
-        Parameters
-        ----------
-        new_fopt : float
-            Float number between 0 and 1, representing the fraction of
-            remaining LORs in a sample used to locate the particle.
-
-        Raises
-        ------
-        ValueError
-            If 'new_fopt' is less than 0 or greater than 1.
-        '''
-
         new_fopt = float(new_fopt)
         if new_fopt > 1 or new_fopt <= 0:
             raise ValueError(textwrap.fill(

@@ -86,14 +86,17 @@ class PlotlyGrapher:
         A list of length 2, formatted as `[x_min, x_max]`, where `x_min` is
         the lower limit of the x-axis of all the subplots and `x_max` is the
         upper limit of the x-axis of all the subplots.
+
     ylim : list or numpy.ndarray
         A list of length 2, formatted as `[y_min, y_max]`, where `y_min` is
         the lower limit of the y-axis of all the subplots and `y_max` is the
         upper limit of the y-axis of all the subplots.
+
     zlim : list or numpy.ndarray
         A list of length 2, formatted as `[z_min, z_max]`, where `z_min` is
         the lower limit of the z-axis of all the subplots and `z_max` is the
         upper limit of the z-axis of all the subplots.
+
     fig : Plotly.Figure instance
         A Plotly.Figure instance, with any number of subplots (as defined by
         `rows` and `cols`) pre-configured for PEPT data.
@@ -102,20 +105,25 @@ class PlotlyGrapher:
     -------
     create_figure()
         Create a Plotly figure, pre-configured for PEPT data.
+
     add_points(points, row = 1, col = 1, size = 2.0, color = None,\
                opacity = 0.8, colorbar = True, colorbar_col = -1,\
                colorscale = "Magma", colorbar_title = None)
         Create and plot a trace for all the points in a numpy array or
         `pept.PointData`, with possible color-coding.
+
     add_lines(lines, row = 1, col = 1, width = 2.0, color = None,\
               opacity = 0.6, colorbar = True, colorbar_col = 0,\
               colorscale = "Magma", colorbar_title = None)
         Create and plot a trace for all the lines in a numpy array or
         `pept.LineData`, with possible color-coding.
+
     add_trace(trace, row = 1, col = 1)
         Add a precomputed Plotly trace to a given subplot.
+
     add_traces(traces, row = 1, col = 1)
         Add a list of precomputed Plotly traces to a given subplot.
+
     show(equal_axes = True)
         Show the Plotly figure, optionally setting equal axes limits.
 
@@ -172,20 +180,25 @@ class PlotlyGrapher:
         ----------
         rows : int, optional
             The number of rows of subplots. The default is 1.
+
         cols : int, optional
             The number of columns of subplots. The default is 1.
+
         xlim : list or numpy.ndarray, optional
             A list of length 2, formatted as `[x_min, x_max]`, where `x_min` is
             the lower limit of the x-axis of all the subplots and `x_max` is
             the upper limit of the x-axis of all the subplots.
+
         ylim : list or numpy.ndarray, optional
             A list of length 2, formatted as `[y_min, y_max]`, where `y_min` is
             the lower limit of the y-axis of all the subplots and `y_max` is
             the upper limit of the y-axis of all the subplots.
+
         zlim : list or numpy.ndarray, optional
             A list of length 2, formatted as `[z_min, z_max]`, where `z_min` is
             the lower limit of the z-axis of all the subplots and `z_max` is
             the upper limit of the z-axis of all the subplots.
+
         subplot_titles : list of str, default ["  "]
             A list of the titles of the subplots - e.g. ["plot a)", "plot b)"].
             The default is a list of empty strings.
@@ -194,6 +207,7 @@ class PlotlyGrapher:
         ------
         ValueError
             If `rows` < 1 or `cols` < 1.
+
         ValueError
             If `xlim`, `ylim` or `zlim` are not lists of length 2.
         '''
@@ -321,36 +335,11 @@ class PlotlyGrapher:
 
     @property
     def xlim(self):
-        '''The upper and lower limits of the *x*-axis.
-
-        The property is defined as a numpy array of length 2, formatted as
-        [x_min, x_max]
-
-        Returns
-        -------
-        xlim : numpy.ndarray
-            A numpy array of length 2 representing the upper and lower limits.
-        '''
-
         return self._xlim
 
 
     @xlim.setter
     def xlim(self, xlim):
-        '''Set the lower and upper boundaries of the *x*-axis.
-
-        Parameters
-        ----------
-        xlim : list or numpy.ndarray
-            A list-like of length 2 representing the upper and lower limits of
-            the *x*-axis, formatted as [x_min, x_max]
-
-        Raises
-        ------
-        ValueError
-            If `xlim` is not a list-like of length 2.
-        '''
-
         xlim = np.asarray(xlim, dtype = float)
 
         if xlim.ndim != 1 or xlim.shape[0] != 2:
@@ -377,36 +366,11 @@ class PlotlyGrapher:
 
     @property
     def ylim(self):
-        '''The upper and lower limits of the *y*-axis.
-
-        The property is defined as a numpy array of length 2, formatted as
-        [y_min, y_max]
-
-        Returns
-        -------
-        ylim : numpy.ndarray
-            A numpy array of length 2 representing the upper and lower limits.
-        '''
-
         return self._ylim
 
 
     @ylim.setter
     def ylim(self, ylim):
-        '''Set the lower and upper boundaries of the *y*-axis.
-
-        Parameters
-        ----------
-        ylim : list or numpy.ndarray
-            A list-like of length 2 representing the upper and lower limits of
-            the *y*-axis, formatted as [y_min, y_max]
-
-        Raises
-        ------
-        ValueError
-            If `ylim` is not a list-like of length 2.
-        '''
-
         ylim = np.asarray(ylim, dtype = float)
 
         if ylim.ndim != 1 or ylim.shape[0] != 2:
@@ -433,36 +397,11 @@ class PlotlyGrapher:
 
     @property
     def zlim(self):
-        '''The upper and lower limits of the *z*-axis.
-
-        The property is defined as a numpy array of length 2, formatted as
-        [z_min, z_max]
-
-        Returns
-        -------
-        zlim : numpy.ndarray
-            A numpy array of length 2 representing the upper and lower limits.
-        '''
-
         return self._zlim
 
 
     @zlim.setter
     def zlim(self, zlim):
-        '''Set the lower and upper boundaries of the *z*-axis
-
-        Parameters
-        ----------
-        zlim : list or numpy.ndarray
-            A list-like of length 2 representing the upper and lower limits of
-            the *z*-axis, formatted as [z_min, z_max]
-
-        Raises
-        ------
-        ValueError
-            If `zlim` is not a list-like of length 2.
-        '''
-
         zlim = np.asarray(zlim, dtype = float)
 
         if zlim.ndim != 1 or zlim.shape[0] != 2:
@@ -489,18 +428,6 @@ class PlotlyGrapher:
 
     @property
     def fig(self):
-        '''Return the Plotly Figure instance.
-
-        This is useful for manual configuration of the Plotly figure
-        stored in this class.
-
-        Returns
-        -------
-        fig : Plotly Figure instance
-            The Plotly Figure instance stored in the class, containing all
-            data and options set.
-        '''
-
         return self._fig
 
 
@@ -533,31 +460,40 @@ class PlotlyGrapher:
             The expected data columns are: [time, x1, y1, z1, etc.]. If a
             `pept.PointData` instance (or subclass thereof) is received, the
             inner `points` will be used.
+
         row : int, default 1
             The row of the subplot to add a trace to.
+
         col : int, default 1
             The column of the subplot to add a trace to.
+
         size : float, default 2.0
             The marker size of the points.
+
         color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation. The default is None.
+
         opacity : float, default 0.8
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque.
+
         colorbar : bool, default True
             If set to True, will color-code the data in the `points` column
             `colorbar_col`. Is overridden by `color` if set.
+
         colorbar_col : int, default -1
             The column in `points` that will be used to color the points. Only
             has an effect if `colorbar` is set to True. The default is -1 (the
             last column).
+
         colorscale : str, default "Magma"
             The Plotly scheme for color-coding the `colorbar_col` column in the
             input data. Typical ones include "Cividis", "Viridis" and "Magma".
             A full list is given at `plotly.com/python/builtin-colorscales/`.
             Only has an effect if `colorbar = True` and `color` is not set.
+
         colorbar_title : str, optional
             If set, the colorbar will have this title above it.
 
@@ -711,32 +647,41 @@ class PlotlyGrapher:
             The expected data columns: [time, x1, y1, z1, x2, y2, z2, etc.]. If
             a `pept.LineData` instance (or subclass thereof) is received, the
             inner `lines` will be used.
+
         row : int, default 1
             The row of the subplot to add a trace to.
+
         col : int, default 1
             The column of the subplot to add a trace to.
+
         width : float, default 2.0
             The width of the lines.
+
         color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation. The default is None.
+
         opacity : float, default 0.6
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque.
+
         colorbar : bool, default True
             If set to True, will color-code the data in the `lines` column
             `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that every line has a different color.
+
         colorbar_col : int, default 0
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is 0 (the first column - time).
+
         colorscale : str, default "Magma"
             The Plotly scheme for color-coding the `colorbar_col` column in the
             input data. Typical ones include "Cividis", "Viridis" and "Magma".
             A full list is given at `plotly.com/python/builtin-colorscales/`.
             Only has an effect if `colorbar = True` and `color` is not set.
+
         colorbar_title : str, optional
             If set, the colorbar will have this title above it.
 
@@ -840,8 +785,10 @@ class PlotlyGrapher:
         ----------
         trace : Plotly trace (Scatter3d)
             A precomputed Plotly trace
+
         row : int, default 1
             The row of the subplot to add a trace to.
+
         col : int, default 1
             The column of the subplot to add a trace to.
         '''
@@ -859,8 +806,10 @@ class PlotlyGrapher:
         ----------
         traces : list [ Plotly trace (Scatter3d) ]
             A list of precomputed Plotly traces
+
         row : int, default 1
             The row of the subplot to add the traces to.
+
         col : int, default 1
             The column of the subplot to add the traces to.
         '''

@@ -911,28 +911,26 @@ class PEPTMLFindParameters:
 
     Methods
     -------
-    typecheck_and_create_attributes(
-        lors,                       # Essential, pept.LineData
-        max_tracers,                # Essential, int
-        sample_size = None,             # Default 200 * max_tracers
-        overlap = None,                 # Default 150 * max_tracers
-        max_distance = 0.15,        # mm
-        k1 = [0.05, 0.8],           # non-dimensional, important
-        iterations = 5              # number of points between k1[0] and k1[1]
+    typecheck_and_create_attributes(\
+        lors,\
+        max_tracers,\
+        sample_size = None,\
+        overlap = None,\
+        max_distance = 0.15,\
+        k1 = [0.05, 0.8],\
+        iterations = 5\
     )
         Typecheck input parameters and create class attributes. Used by the
         class constructor for checks that are not relevant to the actual
         PEPT-ML aglorithm.
-    minimal(
-        lors,                       # Essential, pept.LineData
-        max_tracers,                # Essential, int
-        sample_size = None,             # Default 200 * max_tracers
-        overlap = None,                 # Default 150 * max_tracers
-        sample_size2 = None,            # Default 30 * max_tracers
-        overlap2 = None,                # Default sample_size2 - 1
-        max_distance = 0.15,        # mm
-        k1 = [0.05, 0.8],           # non-dimensional, important
-        iterations = 5              # number of points between k1[0] and k1[1]
+    minimal(\
+        lors,\
+        max_tracers,\
+        sample_size = None,\
+        overlap = None,\
+        max_distance = 0.15,\
+        k1 = [0.05, 0.8],\
+        iterations = 5\
     )
         The minimal code for using the algorithm in this class, without
         pretty-printing to the terminal. Useful for copy-pasting the code and

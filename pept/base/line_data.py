@@ -85,9 +85,11 @@ class LineData(IterableSamples):
         cartesian (3D) coordinates of two points defining a line, followed by
         any additional data. The data columns are then
         `[time, x1, y1, z1, x2, y2, z2, etc.]`.
+
     sample_size : int
         An `int` that defines the number of lines that should be returned when
         iterating over `lines`. The default is 0.
+
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `lines`. An overlap of 0 implies
@@ -95,9 +97,11 @@ class LineData(IterableSamples):
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
         `sample_size`. The default is 0.
+
     number_of_lines : int
         An `int` that corresponds to len(`lines`), or the number of LoRs
         stored by `lines`.
+
     number_of_samples : int
         An `int` that corresponds to the number of samples that can be accessed
         from the class. It takes `overlap` into consideration.
@@ -106,15 +110,20 @@ class LineData(IterableSamples):
     -------
     sample(n)
         Get sample number n (indexed from 0).
+
     to_csv(filepath)
         Write `lines` to a CSV file.
+
     plot(sample_indices = ..., ax = None, colorbar_col = 0)
         Plot lines from selected samples using matplotlib.
+
     plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = 0):
         Plot lines from selected samples using matplotlib on PEPT-style axes.
+
     lines_trace(sample_indices = ..., width = 2, color = None, opacity = 0.6,\
                 colorbar = True, colorbar_col = 0, colorbar_title = None)
         Get a Plotly trace for all the lines in selected samples.
+
     copy()
         Create a deep copy of an instance of this class, including a new inner
         numpy array `lines`.
@@ -123,8 +132,7 @@ class LineData(IterableSamples):
     ------
     ValueError
         If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
-        has to be smaller than `sample_size`. Note that it can also be
-        negative.
+        must be smaller than `sample_size`. Note that it can also be negative.
 
     Notes
     -----
@@ -294,10 +302,12 @@ class LineData(IterableSamples):
             set of lines) as time and cartesian (3D) coordinates of two points
             defining each line, followed by any additional data. The data
             columns are then `[time, x1, y1, z1, x2, y2, z2, etc.]`.
+
         sample_size : int, default 0
             An `int` that defines the number of lines that should be returned
             when iterating over `lines`. A `sample_size` of 0 yields all the
             data as one single sample.
+
         overlap : int, default 0
             An `int` that defines the overlap between two consecutive samples
             that are returned when iterating over `lines`. An overlap of 0
@@ -305,6 +315,7 @@ class LineData(IterableSamples):
             means incrementing the samples by one. A negative overlap means
             skipping values between samples. An error is raised if `overlap` is
             larger than or equal to `sample_size`.
+
         verbose : bool, default False
             An option that enables printing the time taken for the
             initialisation of an instance of the class. Useful when reading
@@ -314,6 +325,7 @@ class LineData(IterableSamples):
         ------
         ValueError
             If `lines` has fewer than 7 columns.
+
         ValueError
             If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
             has to be smaller than `sample_size`. Note that it can also be
@@ -346,35 +358,26 @@ class LineData(IterableSamples):
 
     @property
     def lines(self):
-        '''The lines stored in the class.
-        '''
-
+        # The lines stored in the class.
         return self._lines
 
 
     @property
     def data_samples(self):
-        '''Implemented property for the IterableSamples parent class. See its
-        documentation for more information.
-        '''
-
+        # Implemented property for the IterableSamples parent class. See its
+        # documentation for more details.
         return self._lines
 
 
     @property
     def data_length(self):
-        '''Implemented property for the IterableSamples parent class. See its
-        documentation for more information.
-        '''
-
+        # Implemented property for the IterableSamples parent class. See its
+        # documentation for more details.
         return self._number_of_lines
 
 
     @property
     def number_of_lines(self):
-        '''The number of lines stored in the class.
-        '''
-
         return self._number_of_lines
 
 
@@ -385,9 +388,9 @@ class LineData(IterableSamples):
 
         Parameters
         ----------
-            filepath : filename or file handle
-                If filepath is a path (rather than file handle), it is relative
-                to where python is called.
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
         '''
 
         np.savetxt(filepath, self._lines, delimiter = delimiter)
@@ -408,8 +411,10 @@ class LineData(IterableSamples):
             the sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all lines).
+
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
+
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
             lines. The default is -1 (the last column).
@@ -503,8 +508,10 @@ class LineData(IterableSamples):
             the sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all lines).
+
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
+
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
             lines. The default is -1 (the last column).
@@ -604,28 +611,35 @@ class LineData(IterableSamples):
             sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all lines).
+
         width : float, default 2.0
             The width of the lines.
+
         color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation. The default is None.
+
         opacity : float, default 0.6
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque.
+
         colorbar : bool, default True
             If set to True, will color-code the data in the sample column
             `colorbar_col`. Is overridden if `color` is set. The default is
             True, so that every line has a different color.
+
         colorbar_col : int, default 0
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is 0 (the first column - time).
+
         colorscale : str, default "Magma"
             The Plotly scheme for color-coding the `colorbar_col` column in the
             input data. Typical ones include "Cividis", "Viridis" and "Magma".
             A full list is given at `plotly.com/python/builtin-colorscales/`.
             Only has an effect if `colorbar = True` and `color` is not set.
+
         colorbar_title : str, optional
             If set, the colorbar will have this title above.
 

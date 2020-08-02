@@ -85,9 +85,11 @@ class PointData(IterableSamples):
         An (N, M >= 4) numpy array that stores the points as time, followed by
         cartesian (3D) coordinates of the point, followed by any extra
         information. The data columns are then `[time, x, y, z, etc]`.
+
     sample_size : int
         An `int` that defines the number of lines that should be returned when
         iterating over `points`. The default is 0.
+
     overlap : int
         An `int` that defines the overlap between two consecutive samples that
         are returned when iterating over `points`. An overlap of 0 means
@@ -95,9 +97,11 @@ class PointData(IterableSamples):
         incrementing the samples by one. A negative overlap means skipping
         values between samples. It is required to be smaller than
         `sample_size`. The default is 0.
+
     number_of_points : int
         An `int` that corresponds to len(`points`), or the number of points
         stored by `points`.
+
     number_of_samples : int
         An `int` that corresponds to the number of samples that can be accessed
         from the class, taking the `overlap` into consideration.
@@ -106,17 +110,22 @@ class PointData(IterableSamples):
     -------
     sample(n)
         Get sample number n (indexed from 0).
+
     to_csv(filepath)
         Write `points` to a CSV file.
+
     plot(sample_indices = ..., ax = None, colorbar_col = -1)
         Plot points from selected samples using matplotlib.
+
     plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = -1):
         Plot points from selected samples using matplotlib on PEPT-style axes.
+
     points_trace(sample_indices = ..., size = 2, color = None, opacity = 0.8,\
                  colorbar = True, colorbar_col = -1, colorscale = "Magma",\
                  colorbar_title = None)
         Get a Plotly trace for all points in selected samples, with possible
         color-coding.
+
     copy()
         Create a deep copy of an instance of this class, including a new inner
         numpy array `points`.
@@ -297,10 +306,12 @@ class PointData(IterableSamples):
             cartesian (3D) coordinates of points, followed by any extra
             information the user needs. The data columns are then
             `[time, x, y, z, etc]`.
+
         sample_size : int, default 0
             An `int`` that defines the number of points that should be returned
             when iterating over `points`. A `sample_size` of 0 yields all the
             data as one single sample.
+
         overlap : int, default 0
             An `int` that defines the overlap between two consecutive samples
             that are returned when iterating over `points`. An overlap of 0
@@ -308,6 +319,7 @@ class PointData(IterableSamples):
             implies incrementing the samples by one. A negative overlap means
             skipping values between samples. An error is raised if `overlap` is
             larger than or equal to `sample_size`.
+
         verbose : bool, default False
             An option that enables printing the time taken for the
             initialisation of an instance of the class. Useful when reading
@@ -345,35 +357,25 @@ class PointData(IterableSamples):
 
     @property
     def points(self):
-        '''Get the points stored in the class.
-        '''
-
         return self._points
 
 
     @property
     def data_samples(self):
-        '''Implemented property for the `IterableSamples` parent class. See its
-        documentation for more information.
-        '''
-
+        # Implemented property for the `IterableSamples` parent class. See its
+        # documentation for more details.
         return self._points
 
 
     @property
     def data_length(self):
-        '''Implemented property for the IterableSamples parent class. See its
-        documentation for more information.
-        '''
-
+        # Implemented property for the IterableSamples parent class. See its
+        # documentation for more details.
         return self._number_of_points
 
 
     @property
     def number_of_points(self):
-        '''Get the number of points stored in the class.
-        '''
-
         return self._number_of_points
 
 
@@ -385,9 +387,9 @@ class PointData(IterableSamples):
 
         Parameters
         ----------
-            filepath : filename or file handle
-                If filepath is a path (rather than file handle), it is relative
-                to where python is called.
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
         '''
 
         np.savetxt(filepath, self._points)
@@ -408,8 +410,10 @@ class PointData(IterableSamples):
             the sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all points).
+
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
+
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
             points. The default is -1 (the last column).
@@ -500,8 +504,10 @@ class PointData(IterableSamples):
             the sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all points).
+
         ax : mpl_toolkits.mplot3D.Axes3D object
             The 3D matplotlib-based axis for plotting.
+
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
             points. The default is -1 (the last column).
@@ -598,27 +604,34 @@ class PointData(IterableSamples):
             the sample index, an iterable (list-like) signifies multiple sample
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all points).
+
         size : float, default 2
             The marker size of the points.
+
         color : str or list-like, optional
             Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
             colorbar list. Overrides `colorbar` if set. For more information,
             check the Plotly documentation.
+
         opacity : float, default 0.8
             The opacity of the lines, where 0 is transparent and 1 is fully
             opaque.
+
         colorbar : bool, default True
             If set to True, will color-code the data in the sample column
             `colorbar_col`. Is overridden if `color` is set.
+
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
             points. Only has an effect if `colorbar` is set to True. The
             default is -1 (the last column).
+
         colorscale : str, default "Magma"
             The Plotly scheme for color-coding the `colorbar_col` column in the
             input data. Typical ones include "Cividis", "Viridis" and "Magma".
             A full list is given at `plotly.com/python/builtin-colorscales/`.
             Only has an effect if `colorbar = True` and `color` is not set.
+
         colorbar_title : str, optional
             If set, the colorbar will have this title above.
 
