@@ -236,7 +236,18 @@ class HDBSCANClusterer:
         min_samples : int, optional
             (Taken from hdbscan's documentation): The number of samples in a
             neighbourhood for a point to be considered a core point. The
-            default is None, being set automatically to the `min_cluster_size`.
+            default is `None`, being set automatically to the
+            `min_cluster_size`.
+
+        min_cluster_size_single : int, optional
+            The `min_cluster_size` value for `clusterer_single`, defined only
+            if `allow_single_cluster` is "auto". The default is `None`, being
+            set automatically to the `min_cluster_size`.
+
+        min_samples_single : int, optional
+            The `min_samples` value for `clusterer_single`, defined only if
+            `allow_single_cluster` is "auto". The default is `None`, being set
+            automatically to the `min_cluster_size`.
 
         allow_single_cluster : bool or str, default "auto"
             By default HDBSCAN will not produce a single cluster - this creates
@@ -264,6 +275,10 @@ class HDBSCANClusterer:
             `os.cpu_count()` is used. This should be left to the default 1, as
             parallelism is more advantageous between samples (i.e. when calling
             `fit`) rather than for each clustering algorithm run.
+
+        kwargs : keyword arguments
+            Other keyword arguments that will be passed to the HDBSCAN
+            instantiation.
 
         Raises
         ------
@@ -930,6 +945,15 @@ class HDBSCANClusterer:
             will return the scores for both the `clusterer` and
             `clusterer_single`; otherwise it returns only the `clusterer`
             score. If `_stability_params` is `None`, nothing is returned.
+
+        Raises
+        ------
+        ValueError
+            If `selected_indices` is not `None` and is not a list-like with a
+            single dimension.
+
+        ValueError
+            If `points` is a single sample and does not have shape (M, N>=4).
 
         Notes
         -----
