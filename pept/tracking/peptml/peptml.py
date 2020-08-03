@@ -303,7 +303,7 @@ class HDBSCANClusterer:
             "core_dist_n_jobs": core_dist_n_jobs,
             "gen_min_span_tree": True,
             "prediction_data": self._select_exemplars,
-            "cluster_selection_method": "leaf",
+            "cluster_selection_method": "leaf",         # Quite harsh
             **kwargs
         }
 
@@ -313,7 +313,7 @@ class HDBSCANClusterer:
             "core_dist_n_jobs": core_dist_n_jobs,
             "gen_min_span_tree": True,
             "prediction_data": self._select_exemplars,
-            "cluster_selection_method": "eom",
+            "cluster_selection_method": "eom",          # More lenient
             **kwargs
         }
 
@@ -855,6 +855,7 @@ class HDBSCANClusterer:
         self,
         points,
         nsamples = 16,
+        selected_indices = None,
         max_workers = None,
         verbose = True,
         _stability_params = None
@@ -864,7 +865,9 @@ class HDBSCANClusterer:
 
         The `points` are either a single sample (i.e. an (M, N>=4) numpy array)
         or an instance of `PointData` (i.e. multiple samples). In the latter
-        case, `nsamples` random samples are selected to optimise against.
+        case, the settings are optimised against `nsamples` random ramples
+        (if `selected_indices` is None), or the samples at indices
+        `selected_incides`.
 
         The CMA-ES (Covariance Matrix Adaptation Evolution Strategy) [1]_
         algorithm is used to find the `min_cluster_size` and
@@ -888,10 +891,17 @@ class HDBSCANClusterer:
             `PointData` (multiple samples).
 
         nsamples : int, default 16
-            If `points` is an instance of `pept.PointData`, `nsamples` random
-            samples are selected to optimise against. A larger number may
-            yield better parameters, but take more time to find. The default of
-            16 provides a good trade-off between the two.
+            If `points` is an instance of `pept.PointData` and
+            `selected_indices` is `None`, `nsamples` random samples are
+            selected to optimise against. A larger number may yield better
+            parameters, but take more time to find. The default of 16 provides
+            a good trade-off between the two.
+
+        selected_indices : list-like of int, optional
+            If `None`, `nsamples` random samples are selected from `points`.
+            Otherwise, select the samples in `points` at the indices contained
+            in `selected_indices`. Only has an effect if `points` is a
+            `pept.PointData`.
 
         max_workers : int, optional
             The maximum number of threads that will be used for asynchronously
@@ -941,18 +951,29 @@ class HDBSCANClusterer:
         # Select samples for clustering
         # points is either a single sample or PointData (i.e. multiple samples)
         if isinstance(points, pept.PointData):
-            # Select `nsamples` random samples
-            rng = np.random.default_rng()
-            random_indices = rng.integers(0, len(points) - 1, nsamples)
+            if selected_indices is None:
+                # Select `nsamples` random samples
+                rng = np.random.default_rng()
+                selected_indices = rng.integers(0, len(points) - 1, nsamples)
+            else:
+                # Ensure `selected_indices` is a list-like of integers
+                selected_indices = np.asarray(selected_indices, dtype = int)
+                if selected_indices.ndim != 1:
+                    raise ValueError(textwrap.fill(
+                        "[ERROR]: If `selected_indices` is defined, it must "
+                        "be list-like with a single dimension. Received "
+                        f"{selected_indices.shape}"
+                    ))
 
-            selected = [points[i] for i in random_indices]
+            selected = [points[i] for i in selected_indices]
+
         else:
             # We only have a single sample
             points = np.asarray(points, dtype = float)
             if points.ndim != 2 or points.shape[1] < 4:
-                raise ValueError((
-                    "If `points` is a single sample, it should have shape "
-                    f"(M, N>=4). Received {points.shape}."
+                raise ValueError(textwrap.fill(
+                    "[ERROR]: If `points` is a single sample, it should have "
+                    f"shape (M, N>=4). Received {points.shape}."
                 ))
 
             selected = [points]
@@ -966,8 +987,12 @@ class HDBSCANClusterer:
             )
 
             if self.clusterer_single is not None:
+                self.clusterer.min_cluster_size = \
+                    int(round(_stability_params[0]))
+                self.clusterer.min_samples = int(round(_stability_params[1]))
+
                 score_single = self._optimise_single(
-                    self.clusterer, self.clusterer_single, selected,
+                    self.clusterer_single, self.clusterer, selected,
                     max_workers, verbose, _stability_params[2:]
                 )
 
@@ -1101,14 +1126,7 @@ class HDBSCANClusterer:
             )
 
             stabilities = np.array(stabilities)
-
-            # If allow_single_cluster == False, don't decrease score for
-            # samples with no clusters found => compute mean of non-zeros.
-            if clusterer.allow_single_cluster:
-                score = stabilities.mean()
-            else:
-                stabilities = stabilities[stabilities != 0]
-                score = stabilities.mean() if len(stabilities) != 0 else 0
+            score = stabilities.mean()
 
             # Decrease score if there is more than 50% difference between
             # `min_cluster_size` and `min_samples`
@@ -1197,7 +1215,6 @@ class HDBSCANClusterer:
             )
 
             stabilities = np.array(stabilities)
-
             score = stabilities.mean()
 
             # Decrease score if there is more than 50% difference between
