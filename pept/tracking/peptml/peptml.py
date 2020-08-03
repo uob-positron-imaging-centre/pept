@@ -313,7 +313,7 @@ class HDBSCANClusterer:
             "core_dist_n_jobs": core_dist_n_jobs,
             "gen_min_span_tree": True,
             "prediction_data": self._select_exemplars,
-            "cluster_selection_method": "leaf",
+            "cluster_selection_method": "eom",
             **kwargs
         }
 
