@@ -10,6 +10,12 @@ find_cutpoints
 .. autofunction:: pept.tracking.peptml.find_cutpoints
 
 
+find_minpoints
+--------------
+
+.. autofunction:: pept.tracking.peptml.find_minpoints
+
+
 get_cutoffs
 -----------
 
@@ -20,6 +26,16 @@ Cutpoints
 ---------
 
 .. autoclass:: pept.tracking.peptml.Cutpoints
+   :members:
+   :inherited-members:
+   :show-inheritance:
+   :special-members: __init__
+
+
+Minpoints
+---------
+
+.. autoclass:: pept.tracking.peptml.Minpoints
    :members:
    :inherited-members:
    :show-inheritance:

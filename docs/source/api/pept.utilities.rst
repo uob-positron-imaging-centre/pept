@@ -9,6 +9,12 @@ find_cutpoints
 .. autofunction:: pept.utilities.find_cutpoints
 
 
+find_cutpoints
+--------------
+
+.. autofunction:: pept.utilities.find_minpoints
+
+
 group_by_column
 ---------------
 

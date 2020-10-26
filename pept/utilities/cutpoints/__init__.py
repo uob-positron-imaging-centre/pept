@@ -7,10 +7,12 @@
 
 
 from    .find_cutpoints             import  find_cutpoints
+from    .find_minpoints             import  find_minpoints
 
 
 __all__ = [
     "find_cutpoints",
+    "find_minpoints",
 ]
 
 

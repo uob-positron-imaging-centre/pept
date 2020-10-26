@@ -55,10 +55,12 @@ Modules Provided
     │
     Functions imported into the subpackage root:
     ├── find_cutpoints :        Find cutpoints from a NumPy array of lines.
+    ├── find_minpoints :        Find MDPs of combinations from a line array.
     ├── get_cutoffs :           Find cutpoint cutoffs from an array of lines.
     │
     Classes imported into the subpackage root:
     ├── Cutpoints :         Compute cutpoints from samples in a `LineData`.
+    ├── Minpoints :         Compute minpoints from samples in a `LineData`.
     └── HDBSCANClusterer :  Cluster samples of cutpoints in parallel.
 
 References
@@ -71,16 +73,20 @@ References
 
 
 from    .cutpoints  import  find_cutpoints
+from    .minpoints  import  find_minpoints
 from    .cutpoints  import  get_cutoffs
 from    .cutpoints  import  Cutpoints
+from    .minpoints  import  Minpoints
 
 from    .peptml     import  HDBSCANClusterer
 
 
 __all__ = [
     "find_cutpoints",
+    "find_minpoints",
     "get_cutoffs",
     "Cutpoints",
+    "Minpoints",
     "HDBSCANClusterer"
 ]
 
