@@ -353,7 +353,7 @@ class LineData(IterableSamples):
 
         if verbose:
             end = time.time()
-            print(f"Initialising the line data took {end - start} seconds.\n")
+            print(f"Initialised LineData class in {end - start} s.\n")
 
 
     @property

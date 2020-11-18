@@ -59,6 +59,7 @@ hierarchy below:
     Base classes imported into the package root:
     ├── PointData :     Base class encapsulating points.
     ├── LineData :      Base class encapsulating lines (LoRs) w/ one timestamp.
+    ├── Voxels :        Base class managing voxels from a sample of lines.
     ├── VoxelData :     Base class encapsulating voxels.
     │
     Subpackages:
@@ -217,6 +218,7 @@ A more in-depth tutorial is available on
 from    .base.line_data     import  LineData
 from    .base.point_data    import  PointData
 from    .base.voxel_data    import  VoxelData
+from    .base.voxel_data    import  Voxels
 
 # Import subpackages
 from    .                   import  cookbook
@@ -235,6 +237,7 @@ __all__ = [
     'LineData',
     'PointData',
     'VoxelData',
+    'Voxels',
     'cookbook',
     'diagnostics',
     'scanners',

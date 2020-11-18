@@ -352,7 +352,7 @@ class PointData(IterableSamples):
 
         if verbose:
             end = time.time()
-            print(f"Initialising the PEPT data took {end - start} seconds.\n")
+            print(f"Initialised PointData class in {end - start} s.")
 
 
     @property

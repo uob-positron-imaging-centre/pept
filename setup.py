@@ -84,7 +84,7 @@ EXTRAS = {
 cythonize_kw = dict(language_level = 3)
 cy_extension_kw = dict()
 
-extra_compile_args = ['-Ofast']
+extra_compile_args = ['-O3']
 cy_extension_kw['extra_compile_args'] = extra_compile_args
 
 extra_link_args = []

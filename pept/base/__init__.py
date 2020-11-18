@@ -19,6 +19,7 @@ available as ``pept.PointData``, ``pept.LineData``, etc., without going through
     pept.base
     ├── PointData :     Encapsulate points for iteration and visualisation.
     ├── LineData :      Encapsulate lines (LoRs) with a single timestamp.
+    ├── Voxels :        Encapsulate voxels for a single sample of lines.
     └── VoxelData :     Encapsulate voxels for line traversal and manipulation.
 
 '''
@@ -27,12 +28,14 @@ available as ``pept.PointData``, ``pept.LineData``, etc., without going through
 from    .line_data      import  LineData
 from    .point_data     import  PointData
 from    .voxel_data     import  VoxelData
+from    .voxel_data     import  Voxels
 
 
 __all__ = [
     'LineData',
     'PointData',
-    'VoxelData'
+    'VoxelData',
+    'Voxels',
 ]
 
 
@@ -46,5 +49,3 @@ __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
 __status__ = "Stable"
-
-

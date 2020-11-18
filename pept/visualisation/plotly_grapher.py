@@ -54,6 +54,8 @@ If you use the `pept` package, we ask you to cite the following paper:
 '''
 
 
+import  textwrap
+
 import  numpy                   as          np
 
 import  plotly.graph_objects    as          go
@@ -774,6 +776,121 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
+
+
+    def add_voxels(
+        self,
+        voxels,
+        row = 1,
+        col = 1,
+        condition = lambda voxel_data: voxel_data > 0,
+        size = 4,
+        color = None,
+        opacity = 0.4,
+        colorbar = True,
+        colorscale = "Magma",
+        colorbar_title = None,
+    ):
+        '''Create and plot a trace for all the voxels in a `pept.Voxels`
+        instance, with possible filtering.
+
+        Creates a `plotly.graph_objects.Scatter3d` object for the centres of
+        all voxels encapsulated in a `pept.Voxels` instance, colour-coding the
+        voxel value. The trace is added to the subplot determined by `row` and
+        `col`.
+
+        The `condition` parameter is a filtering function that should return
+        a boolean mask (i.e. it is the result of a condition evaluation). For
+        example `lambda x: x > 0` selects all voxels that have a value larger
+        than 0.
+
+        Parameters
+        ----------
+        voxels : pept.Voxels
+            The voxel space, encapsulated in a `pept.Voxels` instance (or
+            subclass thereof). Only `pept.Voxels` are accepted as raw voxels on
+            their own do not contain data about the spatial coordinates of the
+            voxel box.
+
+        row : int, default 1
+            The row of the subplot to add a trace to.
+
+        col : int, default 1
+            The column of the subplot to add a trace to.
+
+        condition : function, default `lambda voxel_data: voxel_data > 0`
+            The filtering function applied to the voxel data before plotting
+            it. It should return a boolean mask (a numpy array of the same
+            shape, filled with True and False), selecting all voxels that
+            should be plotted. The default, `lambda x: x > 0` selects all
+            voxels which have a value larger than 0.
+
+        size : float, default 4
+            The size of the plotted voxel points. Note that due to the large
+            number of voxels in typical applications, the *voxel centres* are
+            plotted as square points, which provides an easy to understand
+            image that is also fast and responsive.
+
+        color : str or list-like, optional
+            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
+
+        opacity : float, default 0.4
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque.
+
+        colorbar : bool, default True
+            If set to True, will color-code the voxel values. Is overridden if
+            `color` is set.
+
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the voxel values in the input
+            data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above it.
+
+        Raises
+        ------
+        TypeError
+            If `voxels` is not an instance of `pept.Voxels` or subclass
+            thereof.
+
+        Examples
+        --------
+        Voxellise an array of lines and add them to a `PlotlyGrapher` instance:
+
+        >>> grapher = PlotlyGrapher()
+        >>> lines = np.array(...)           # shape (N, M >= 7)
+        >>> number_of_voxels = [10, 10, 10]
+        >>> voxels = pept.Voxels(lines, number_of_voxels)
+        >>> grapher.add_lines(lines)
+        >>> grapher.add_voxels(voxels)
+        >>> grapher.show()
+
+        '''
+
+        if not isinstance(voxels, pept.Voxels):
+            raise TypeError(textwrap.fill((
+                "The input `voxels` must be an instance of `pept.Voxels` (or "
+                f"subclass thereof. Received {type(voxels)}."
+            )))
+
+        trace = voxels.voxels_trace(
+            condition = condition,
+            size = size,
+            color = color,
+            opacity = opacity,
+            colorbar = colorbar,
+            colorscale = colorscale,
+            colorbar_title = colorbar_title,
+        )
+
+        self._fig.add_trace(trace, row = row, col = col)
+
 
 
     def add_trace(self, trace, row = 1, col = 1):

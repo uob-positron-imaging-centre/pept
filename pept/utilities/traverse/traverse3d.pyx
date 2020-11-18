@@ -46,45 +46,69 @@
 # cython: cdivision=True
 
 
+from libc.float cimport DBL_MAX
 
 
 cdef inline double fabs(double x) nogil:
     return (x if x >= 0 else -x)
 
 
-cdef int searchindex(double[:] arr, double x) nogil:
-    # Find the voxel index for point `x` in the delimiting grid `arr`
+cdef inline void swap(double *x, double *y) nogil:
+    cdef double aux
 
-    cdef int length = arr.shape[0]
+    aux = x[0]
+    x[0] = y[0]
+    y[0] = aux
 
-    # Special cases: e.g. The delimiting grid is arr = [0, 1, 2, 3, 4]
-    # Then voxel indices go from 0 to 3
-    # If x < 1, then take the index of the first voxel => 0
-    # If x > 3, then take the index of the last voxel  => 3
 
-    if x < arr[1]:
-        return 0
-    if x > arr[length - 2]:
-        return length - 2
+cdef double intersect(
+    double[3] u,
+    double[3] v,
+    double xmin,
+    double xmax,
+    double ymin,
+    double ymax,
+    double zmin,
+    double zmax,
+) nogil:
+    '''Given a 3D line defined as L(t) = U + t V and an axis-aligned bounding
+    box (AABB), find the `t` for which the line intersects the box, if it
+    exists.
 
-    cdef int left = 1
-    cdef int right = length - 2
-    cdef int mid
+    It is assumed that the line starts *outside* the AABB, so that t == 0.0 is
+    only reserved for when the line does not intersect the box.
+    '''
 
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] < x:
-            left = mid + 1
-        elif arr[mid] > x:
-            right = mid - 1
-        else:
-            return mid
+    cdef double tmin, tmax, tymin, tymax, tzmin, tzmax
 
-    return right
+    tmin = (xmin - u[0]) / v[0]     # Relies on IEEE FP behaviour for div by 0
+    tmax = (xmax - u[0]) / v[0]
+
+    tymin = (ymin - u[1]) / v[1]
+    tymax = (ymax - u[1]) / v[1]
+
+    tzmin = (zmin - u[2]) / v[2]
+    tzmax = (zmax - u[2]) / v[2]
+
+    if tmin > tmax: swap(&tmin, &tmax)
+    if tymin > tymax: swap(&tymin, &tymax)
+    if tzmin > tzmax: swap(&tzmin, &tzmax)
+
+    if tmin > tymax or tymin > tmax: return 0.0
+
+    if tymin > tmin: tmin = tymin
+    if tymax < tmax: tmax = tymax
+
+    if tmin > tzmax or tzmin > tmax: return 0.0
+
+    if tzmin > tmin: tmin = tzmin
+    if tzmax < tmax: tmax = tzmax
+
+    return tmin
 
 
 cpdef void traverse3d(
-    long[:, :, :] voxels,       # Initialised to zero!
+    double[:, :, :] voxels,     # Initialised!
     double[:, :] lines,         # Has exactly 7 columns!
     double[:] grid_x,           # Has voxels.shape[0] + 1 elements!
     double[:] grid_y,           # Has voxels.shape[1] + 1 elements!
@@ -96,7 +120,7 @@ cpdef void traverse3d(
 
         Function Signature:
             traverse3d(
-                long[:, :, :] voxels,       # Initialised to zero!
+                long[:, :, :] voxels,       # Initialised!
                 double[:, :] lines,         # Has exactly 7 columns!
                 double[:] grid_x,           # Has voxels.shape[0] + 1 elements!
                 double[:] grid_y,           # Has voxels.shape[1] + 1 elements!
@@ -114,24 +138,28 @@ cpdef void traverse3d(
 
     Parameters
     ----------
-    voxels : numpy.ndarray(dtype = numpy.int64, ndim = 3)
+    voxels : numpy.ndarray(dtype = numpy.float64, ndim = 3)
         The `voxels` parameter is a numpy.ndarray of shape (X, Y, Z) that
         has been initialised to zeros before the function call. The values
         will be modified in-place in the function to reflect the number of
         lines that pass through each voxel.
+
     lines : numpy.ndarray(dtype = numpy.float64, ndim = 2)
         The `lines` parameter is a numpy.ndarray of shape(N, 7), where each
         row is formatted as [time, x1, y1, z1, x2, y2, z2]. Only indices 1:7
         will be used as the two points P1 = [x1, y1, z2] and P2 = [x2, y2, z2]
         defining the line (or LoR).
+
     grid_x : numpy.ndarray(dtype = numpy.float64, ndim = 1)
         The grid_x parameter is a one-dimensional grid that delimits the
         voxels in the x-dimension. It must be *sorted* in ascending order
         with *equally-spaced* numbers and length X + 1 (voxels.shape[0] + 1).
+
     grid_y : numpy.ndarray(dtype = numpy.float64, ndim = 1)
         The grid_y parameter is a one-dimensional grid that delimits the
         voxels in the y-dimension. It must be *sorted* in ascending order
         with *equally-spaced* numbers and length Y + 1 (voxels.shape[1] + 1).
+
     grid_z : numpy.ndarray(dtype = numpy.float64, ndim = 1)
         The grid_z parameter is a one-dimensional grid that delimits the
         voxels in the z-dimension. It must be *sorted* in ascending order
@@ -174,29 +202,40 @@ cpdef void traverse3d(
 
     '''
 
-    n_lines = lines.shape[0]
-    cdef int nx = voxels.shape[0]
-    cdef int ny = voxels.shape[1]
-    cdef int nz = voxels.shape[2]
+    cdef Py_ssize_t n_lines = lines.shape[0]
+    cdef Py_ssize_t nx = voxels.shape[0]
+    cdef Py_ssize_t ny = voxels.shape[1]
+    cdef Py_ssize_t nz = voxels.shape[2]
 
     # Grid size
     cdef double gsize_x = grid_x[1] - grid_x[0]
     cdef double gsize_y = grid_y[1] - grid_y[0]
     cdef double gsize_z = grid_z[1] - grid_z[0]
 
+    # Delimiting grid
+    cdef double xmin = grid_x[0]
+    cdef double xmax = grid_x[nx]
+
+    cdef double ymin = grid_y[0]
+    cdef double ymax = grid_y[ny]
+
+    cdef double zmin = grid_z[0]
+    cdef double zmax = grid_z[nz]
+
     # The current voxel indices [ix, iy, iz] that the line passes
     # through.
-    cdef int ix, iy, iz
+    cdef Py_ssize_t ix, iy, iz
 
     # Define a line as L(t) = U + t V
     # If an LoR is defined as two points P1 and P2, then
     # U = P1 and V = P2 - P1
     cdef double[3] p1, p2, u, v
+    cdef double t
 
     # The step [step_x, step_y, step_z] defines the sense of the LoR.
     # If V[0] is positive, then step_x = 1
     # If V[0] is negative, then step_x = -1
-    cdef int step_x, step_y, step_z
+    cdef Py_ssize_t step_x, step_y, step_z
 
     # The value of t at which the line passes through to the next
     # voxel, for each dimension.
@@ -207,7 +246,7 @@ cpdef void traverse3d(
     # that dimension.
     cdef double deltat_x, deltat_y, deltat_z
 
-    cdef int i, j
+    cdef Py_ssize_t i, j
 
     for i in range(n_lines):
         for j in range(3):
@@ -223,26 +262,38 @@ cpdef void traverse3d(
         step_y = 1 if v[1] >= 0 else -1
         step_z = 1 if v[2] >= 0 else -1
 
+        # If the first point is outside the box, find the first voxel it hits
+        if (u[0] < xmin or u[0] > xmax or
+                u[1] < ymin or u[1] > ymax or
+                u[2] < zmin or u[2] > zmax):
+
+            t = intersect(u, v, xmin, xmax, ymin, ymax, zmin, zmax)
+
+            # No intersection
+            if t == 0.0:
+                continue
+
+            # Overwrite U to correspond to the first intersection point
+            for j in range(3):
+                u[j] = u[j] + t * v[j]
+
+        # Corner case: every voxel is defined as lower boundary (inclusive) and
+        # upper boundary (exclusive). Therefore, at the upper end of the voxel
+        # grid an undefined case occurs. If a point lies right at the upper
+        # boundary of the voxel space, "move it" a bit lower on the line
+        if u[0] == xmax or u[1] == ymax or u[2] == zmax:
+            for j in range(3):
+                u[j] = u[j] + 1e-5 * v[j]
+
         # If, for dimension x, there are 5 voxels between coordinates 0
         # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
         # If the line starts at 1.5, then it is part of the voxel at
         # index 1.
-        ix = <int>(u[0] / gsize_x)
-        iy = <int>(u[1] / gsize_y)
-        iz = <int>(u[2] / gsize_z)
+        ix = <Py_ssize_t>((u[0] - xmin) / gsize_x)
+        iy = <Py_ssize_t>((u[1] - ymin) / gsize_y)
+        iz = <Py_ssize_t>((u[2] - zmin) / gsize_z)
 
-        # Check the indices are inside the voxel grid
-        ''' This gives wrong results
-        if ix < 0: ix = 0
-        if ix >= nx: ix = nx - 1
-
-        if iy < 0: iy = 0
-        if iy >= ny: iy = ny - 1
-
-        if iz < 0: iz = 0
-        if iz >= nz: iz = nz - 1
-        '''
-
+        # Check the indices are inside the voxel grid - just to be sure
         if (ix < 0 or ix >= nx or iy < 0 or iy >= ny or iz < 0 or iz >= nz):
             continue
 
@@ -253,25 +304,25 @@ cpdef void traverse3d(
         elif v[0] < 0:
             tnext_x = (grid_x[ix] - u[0]) / v[0]
         else:
-            tnext_x = 0
+            tnext_x = DBL_MAX
 
         if v[1] > 0:
             tnext_y = (grid_y[iy + 1] - u[1]) / v[1]
         elif v[1] < 0:
             tnext_y = (grid_y[iy] - u[1]) / v[1]
         else:
-            tnext_y = 0
+            tnext_y = DBL_MAX
 
         if v[2] > 0:
             tnext_z = (grid_z[iz + 1] - u[2]) / v[2]
         elif v[2] < 0:
             tnext_z = (grid_z[iz] - u[2]) / v[2]
         else:
-            tnext_z = 0
+            tnext_z = DBL_MAX
 
-        deltat_x = fabs((grid_x[1] - grid_x[0]) / v[0]) if v[0] else 0
-        deltat_y = fabs((grid_y[1] - grid_y[0]) / v[1]) if v[1] else 0
-        deltat_z = fabs((grid_z[1] - grid_z[0]) / v[2]) if v[2] else 0
+        deltat_x = fabs(gsize_x / v[0]) if v[0] else 0
+        deltat_y = fabs(gsize_y / v[1]) if v[1] else 0
+        deltat_z = fabs(gsize_z / v[2]) if v[2] else 0
 
         ###############################################################
         # Incremental traversal stage
@@ -279,7 +330,7 @@ cpdef void traverse3d(
         # Loop until we reach the last voxel in space
         while (ix < nx and iy < ny and iz < nz) and (ix >= 0 and iy >= 0 and iz >= 0):
 
-            voxels[ix, iy, iz] += 1
+            voxels[ix, iy, iz] += 1.
 
             # If p2 is fully bounded by the voxel, stop the algorithm
             if ((grid_x[ix] < p2[0] and grid_y[iy] < p2[1] and grid_z[iz] < p2[2]) and

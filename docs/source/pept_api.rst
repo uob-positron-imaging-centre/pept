@@ -32,6 +32,15 @@ PointData
    :special-members: __init__
 
 
+Voxels
+^^^^^^
+.. autoclass:: pept.Voxels
+   :members:
+   :inherited-members:
+   :show-inheritance:
+   :special-members: __init__
+
+
 Subpackages
 -----------
 
