@@ -94,8 +94,8 @@ cpdef find_minpoints(
     1. Are within the `cutoffs`.
     2. Are closer to all the constituent LoRs than `max_distance`.
 
-    Function parameters
-    -------------------
+    Parameters
+    ----------
     sample_lines: (M, N) numpy.ndarray
         A 2D array of lines, where each line is defined by two points such that
         every row is formatted as `[t, x1, y1, z1, x2, y2, z2, etc.]`. It

@@ -35,10 +35,9 @@ PointData
 Voxels
 ^^^^^^
 .. autoclass:: pept.Voxels
-   :members:
-   :inherited-members:
+   :members: add_lines, get_cutoff, cube_trace, cubes_traces, heatmap_trace
    :show-inheritance:
-   :special-members: __init__
+   :special-members: __new__
 
 
 Subpackages

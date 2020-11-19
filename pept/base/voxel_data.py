@@ -52,7 +52,7 @@ from    pept.utilities.traverse import  traverse3d
 
 
 
-class Voxels:
+class Voxels(np.ndarray):
     '''A class that manages the voxellised representation of a single sample of
     lines, including tools for voxel traversal, manipulation and visualisation.
 
@@ -117,54 +117,45 @@ class Voxels:
     --------
     This class is most often instantiated from a sample of lines to voxellise:
 
-    .. ipython::
+    >>> import pept
+    >>> import numpy as np
 
-        In [1]: import pept
+    >>> lines = np.arange(70).reshape(10, 7)
 
-        In [2]: import numpy as np
+    >>> number_of_voxels = [3, 4, 5]
+    >>> voxels = pept.Voxels(lines, number_of_voxels)
+    >>> Initialised Voxels class in 0.0006861686706542969 s.
 
-        In [3]: lines = np.arange(70).reshape(10, 7)
+    >>> print(voxels)
+    >>> voxels:
+    >>> [[[2. 1. 0. 0. 0.]
+    >>>   [0. 2. 0. 0. 0.]
+    >>>   [0. 0. 0. 0. 0.]
+    >>>   [0. 0. 0. 0. 0.]]
 
-        In [4]: number_of_voxels = [3, 4, 5]
+    >>>  [[0. 0. 0. 0. 0.]
+    >>>   [0. 1. 1. 0. 0.]
+    >>>   [0. 0. 1. 1. 0.]
+    >>>   [0. 0. 0. 0. 0.]]
 
-        In [5]: voxels = pept.Voxels(lines, number_of_voxels)
-        Initialised Voxels class in 0.0006861686706542969 s.
+    >>>  [[0. 0. 0. 0. 0.]
+    >>>   [0. 0. 0. 0. 0.]
+    >>>   [0. 0. 0. 2. 0.]
+    >>>   [0. 0. 0. 1. 2.]]]
 
-        In [6]: voxels
-        Out[6]:
-        Class instance that inherits from `pept.Voxels`.
-        Type:
-        <class 'pept.base.voxel_data.Voxels'>
+    >>> number_of_voxels =    (3, 4, 5)
+    >>> voxel_size =          [22.  16.5 13.2]
 
-        voxels:
-        [[[2. 1. 0. 0. 0.]
-          [0. 2. 0. 0. 0.]
-          [0. 0. 0. 0. 0.]
-          [0. 0. 0. 0. 0.]]
+    >>> xlim =                [ 1. 67.]
+    >>> ylim =                [ 2. 68.]
+    >>> zlim =                [ 3. 69.]
 
-         [[0. 0. 0. 0. 0.]
-          [0. 1. 1. 0. 0.]
-          [0. 0. 1. 1. 0.]
-          [0. 0. 0. 0. 0.]]
+    >>> voxel_grids:
+    >>> [array([ 1., 23., 45., 67.]),
+    >>>  array([ 2. , 18.5, 35. , 51.5, 68. ]),
+    >>>  array([ 3. , 16.2, 29.4, 42.6, 55.8, 69. ])]
 
-         [[0. 0. 0. 0. 0.]
-          [0. 0. 0. 0. 0.]
-          [0. 0. 0. 2. 0.]
-          [0. 0. 0. 1. 2.]]]
-
-        number_of_voxels =    (3, 4, 5)
-        voxel_size =          [22.  16.5 13.2]
-
-        xlim =                [ 1. 67.]
-        ylim =                [ 2. 68.]
-        zlim =                [ 3. 69.]
-
-        voxel_grids:
-        [array([ 1., 23., 45., 67.]),
-         array([ 2. , 18.5, 35. , 51.5, 68. ]),
-         array([ 3. , 16.2, 29.4, 42.6, 55.8, 69. ])]
-
-    Note that it is important to defined the `number_of_voxels`.
+    Note that it is important to define the `number_of_voxels`.
 
     See Also
     --------
@@ -174,8 +165,8 @@ class Voxels:
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
-    def __init__(
-        self,
+    def __new__(
+        cls,
         lines_or_voxels,
         number_of_voxels = None,
         xlim = None,
@@ -183,6 +174,58 @@ class Voxels:
         zlim = None,
         verbose = True,
     ):
+        '''`Voxels` class constructor.
+
+        Parameters
+        ----------
+        lines_or_voxels: 2D or 3D numpy.ndarray
+            A numpy array-like is expected; if it is 2D, it is interpreted to
+            contain the lines to be voxellised, where each line is defined by
+            a timestamp and two points, resulting in at least 7 data columns:
+            `[time, x1, y1, z1, x2, y2, z2]`; in this case, the next parameter,
+            `number_of_voxels` must also be defined. If it is 3D, it is
+            interpreted to be the actual voxel space, pre-computed; in this
+            case, the `xlim`, `ylim` and `zlim` must also be defined; the
+            `number_of_voxels` is inferred as the array shape.
+
+        number_of_voxels: (3,) numpy.ndarray, optional
+            A list-like containing the number of voxels to be created in the
+            x-, y- and z-dimension, respectively. **Must be defined if
+            `lines_or_voxels` is 2D**.
+
+        xlim: (2,) numpy.ndarray, optional
+            The lower and upper boundaries of the voxellised volume in the
+            x-dimension, formatted as [x_min, x_max]. **Must be defined if
+            `lines_of_voxels` is 3D**.
+
+        ylim: (2,) numpy.ndarray, optional
+            The lower and upper boundaries of the voxellised volume in the
+            y-dimension, formatted as [y_min, y_max]. **Must be defined if
+            `lines_of_voxels` is 3D**.
+
+        zlim: (2,) numpy.ndarray, optional
+            The lower and upper boundaries of the voxellised volume in the
+            z-dimension, formatted as [z_min, z_max]. **Must be defined if
+            `lines_of_voxels` is 3D**.
+
+        verbose: bool, default True
+            Time the voxellisation step and print it to the terminal.
+
+        Raises
+        ------
+        ValueError
+            If `lines_or_voxels` is 2D but has fewer than 7 data columns, or
+            `number_of_voxels` does not have exactly 3 values, or it has
+            values smaller than 2. If `lines_or_voxels` is not 2D or 3D. If
+            `xlim`, `ylim` or `zlim`, if defined, do not have exactly 2 values
+            each.
+
+        NameError
+            If `lines_or_voxels` is 2D but `number_of_voxels` was not supplied.
+            Or if `lines_or_voxels` is 3D but `xlim`, `ylim` and `zlim` were
+            not supplied too.
+        '''
+
         if verbose:
             start = time.time()
 
@@ -231,6 +274,14 @@ class Voxels:
                     f"Received parameter with shape {number_of_voxels.shape}."
                 )))
 
+            if (number_of_voxels < 2).any():
+                raise ValueError(textwrap.fill((
+                    "The input `number_of_voxels` must set at least two "
+                    "voxels in each dimension (i.e. all elements in "
+                    "`number_of_elements` must be larger or equal to two). "
+                    f"Received `{number_of_voxels}`."
+                )))
+
         elif lines_or_voxels.ndim == 3:
             # If voxels were given, we require the `xlim`, `ylim` and `zlim` to
             # also be defined
@@ -255,7 +306,7 @@ class Voxels:
             xlim = np.asarray(xlim, dtype = float)
 
             if xlim.ndim != 1 or len(xlim) != 2:
-                raise NameError(textwrap.fill((
+                raise ValueError(textwrap.fill((
                     "The input `xlim` parameter must be a list with exactly "
                     "two values, corresponding to the minimum and maximum "
                     "coordinates of the voxel space in the x-dimension. "
@@ -266,7 +317,7 @@ class Voxels:
             ylim = np.asarray(ylim, dtype = float)
 
             if ylim.ndim != 1 or len(ylim) != 2:
-                raise NameError(textwrap.fill((
+                raise ValueError(textwrap.fill((
                     "The input `ylim` parameter must be a list with exactly "
                     "two values, corresponding to the minimum and maximum "
                     "coordinates of the voxel space in the y-dimension. "
@@ -277,7 +328,7 @@ class Voxels:
             zlim = np.asarray(zlim, dtype = float)
 
             if zlim.ndim != 1 or len(zlim) != 2:
-                raise NameError(textwrap.fill((
+                raise ValueError(textwrap.fill((
                     "The input `zlim` parameter must be a list with exactly "
                     "two values, corresponding to the minimum and maximum "
                     "coordinates of the voxel space in the z-dimension. "
@@ -287,59 +338,69 @@ class Voxels:
 
         # Setting class attributes
         if lines_or_voxels.ndim == 2:
-            self._number_of_voxels = tuple(number_of_voxels)
-            self._voxels = np.zeros(self._number_of_voxels)
+            number_of_voxels = tuple(number_of_voxels)
+
+            voxels = np.zeros(number_of_voxels).view(cls)
+            voxels._number_of_voxels = number_of_voxels
 
         elif lines_or_voxels.ndim == 3:
             # If `lines_or_voxels` was a 3D array, we can infer the number of
             # voxels from its shape
-            self._voxels = lines_or_voxels
-            self._number_of_voxels = self._voxels.shape
+            voxels = lines_or_voxels.view(cls)
+            voxels._number_of_voxels = voxels.shape
 
         if xlim is None:
             # We can only enter this branch if `lines_or_voxels` is 2D,
             # otherwise a NameError was already raised
-            self._xlim = self.get_cutoff(
+            voxels._xlim = cls.get_cutoff(
                 lines_or_voxels[:, 1],
                 lines_or_voxels[:, 4],
             )
         else:
-            self._xlim = xlim
+            voxels._xlim = xlim
 
         if ylim is None:
             # We can only enter this branch if `lines_or_voxels` is 2D,
             # otherwise a NameError was already raised
-            self._ylim = self.get_cutoff(
+            voxels._ylim = cls.get_cutoff(
                 lines_or_voxels[:, 2],
                 lines_or_voxels[:, 5],
             )
         else:
-            self._ylim = ylim
+            voxels._ylim = ylim
 
         if zlim is None:
             # We can only enter this branch if `lines_or_voxels` is 2D,
             # otherwise a NameError was already raised
-            self._zlim = self.get_cutoff(
+            voxels._zlim = cls.get_cutoff(
                 lines_or_voxels[:, 3],
                 lines_or_voxels[:, 6],
             )
         else:
-            self._zlim = zlim
+            voxels._zlim = zlim
 
-        self._voxel_size = np.array([
-            (self._xlim[1] - self._xlim[0]) / self._number_of_voxels[0],
-            (self._ylim[1] - self._ylim[0]) / self._number_of_voxels[1],
-            (self._zlim[1] - self._zlim[0]) / self._number_of_voxels[2],
+        voxels._voxel_size = np.array([
+            (voxels._xlim[1] - voxels._xlim[0]) / voxels._number_of_voxels[0],
+            (voxels._ylim[1] - voxels._ylim[0]) / voxels._number_of_voxels[1],
+            (voxels._zlim[1] - voxels._zlim[0]) / voxels._number_of_voxels[2],
         ])
 
-        self._voxel_grids = [
-            np.linspace(lim[0], lim[1], self._number_of_voxels[i] + 1)
-            for i, lim in enumerate((self._xlim, self._ylim, self._zlim))
-        ]
+        voxels._voxel_grids = tuple([
+            np.linspace(lim[0], lim[1], voxels._number_of_voxels[i] + 1)
+            for i, lim in enumerate((voxels._xlim, voxels._ylim, voxels._zlim))
+        ])
 
         # If a 2D array of lines was given, voxellise them
+        # if lines_or_voxels.ndim == 2:
+        #     self.add_lines(lines_or_voxels, verbose = False)
         if lines_or_voxels.ndim == 2:
-            self.add_lines(lines_or_voxels, verbose = False)
+            traverse3d(
+                voxels,
+                lines_or_voxels,
+                voxels._voxel_grids[0],
+                voxels._voxel_grids[1],
+                voxels._voxel_grids[2]
+            )
 
         if verbose:
             end = time.time()
@@ -347,10 +408,26 @@ class Voxels:
                 f"Initialised Voxels class in {end - start} s."
             ))
 
+        return voxels
+
+
+    def __array_finalize__(self, voxels):
+        if voxels is None:
+            return
+
+        self._number_of_voxels = getattr(voxels, "_number_of_voxels", None)
+        self._voxel_size = getattr(voxels, "_voxel_size", None)
+
+        self._xlim = getattr(voxels, "_xlim", None)
+        self._ylim = getattr(voxels, "_ylim", None)
+        self._zlim = getattr(voxels, "_zlim", None)
+
+        self._voxel_grids = getattr(voxels, "_voxel_grids", None)
+
 
     @property
     def voxels(self):
-        return self._voxels
+        return self.__array__()
 
 
     @property
@@ -401,8 +478,8 @@ class Voxels:
         (2,) numpy.ndarray
             The minimum and maximum value found across `p1` and `p2`.
 
-        Note
-        ----
+        Notes
+        -----
         The input parameters *must* be numpy arrays, otherwise an error will
         be raised.
         '''
@@ -447,7 +524,7 @@ class Voxels:
             start = time.time()
 
         traverse3d(
-            self._voxels,
+            self.voxels,
             lines,
             self._voxel_grids[0],
             self._voxel_grids[1],
@@ -467,9 +544,57 @@ class Voxels:
         colorbar = True,
         colorscale = "magma",
     ):
-        # For a small number of cubes
+        '''Get the Plotly `Mesh3d` trace for a single voxel at `index`.
+
+        This renders the voxel as a cube. While visually accurate, this method
+        is *very* computationally intensive - only use it for fewer than 100
+        cubes. For more voxels, use the `voxels_trace` method.
+
+        Parameters
+        ----------
+        index: (3,) tuple
+            The voxel indices, given as a 3-tuple.
+
+        color : str or list-like, optional
+            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
+
+        opacity : float, default 0.4
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque.
+
+        colorbar : bool, default True
+            If set to True, will color-code the voxel values. Is overridden if
+            `color` is set.
+
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the voxel values in the input
+            data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+
+        Raises
+        ------
+        ValueError
+            If `index` does not contain exactly three values.
+
+        Notes
+        -----
+        If you want to render a small number of voxels as cubes using Plotly,
+        use the `cubes_traces` method, which creates a list of individual cubes
+        for all voxels, using this function.
+        '''
 
         index = np.asarray(index, dtype = int)
+
+        if index.ndim != 1 or len(index) != 3:
+            raise ValueError(textwrap.fill((
+                "The input `index` must contain exactly three values, "
+                "corresponding to the x, y, z indices of the voxel to plot. "
+                f"Received {index}."
+            )))
+
         xyz = self._voxel_size * index + \
             [self._xlim[0], self._ylim[0], self._zlim[0]]
 
@@ -493,7 +618,7 @@ class Voxels:
 
         if colorbar and color is None:
             cmap = matplotlib.cm.get_cmap(colorscale)
-            c = cmap(self._voxels[tuple(index)] / (self._voxels.max() or 1))
+            c = cmap(self[tuple(index)] / (self.max() or 1))
             cube.update(
                 color = "rgb({},{},{})".format(c[0], c[1], c[2])
             )
@@ -509,9 +634,63 @@ class Voxels:
         colorbar = True,
         colorscale = "magma",
     ):
-        # For a small number of cubes
+        '''Get a list of Plotly `Mesh3d` traces for all voxels selected by the
+        `condition` filtering function.
 
-        indices = np.argwhere(condition(self._voxels))
+        The `condition` parameter is a filtering function that should return
+        a boolean mask (i.e. it is the result of a condition evaluation). For
+        example `lambda x: x > 0` selects all voxels that have a value larger
+        than 0.
+
+        This renders each voxel as individual cubes. While visually accurate,
+        this method is *very* computationally intensive - only use it for fewer
+        than 100 cubes. For more voxels, use the `voxels_trace` method.
+
+        Parameters
+        ----------
+        condition : function, default `lambda voxels: voxels > 0`
+            The filtering function applied to the voxel data before plotting
+            it. It should return a boolean mask (a numpy array of the same
+            shape, filled with True and False), selecting all voxels that
+            should be plotted. The default, `lambda x: x > 0` selects all
+            voxels which have a value larger than 0.
+
+        color : str or list-like, optional
+            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
+
+        opacity : float, default 0.4
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque.
+
+        colorbar : bool, default True
+            If set to True, will color-code the voxel values. Is overridden if
+            `color` is set.
+
+        colorscale : str, default "magma"
+            The Plotly scheme for color-coding the voxel values in the input
+            data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+
+        Examples
+        --------
+        Voxellise an array of lines and add them to a `PlotlyGrapher` instance:
+
+        >>> grapher = PlotlyGrapher()
+        >>> lines = np.array(...)           # shape (N, M >= 7)
+
+        >>> number_of_voxels = [10, 10, 10]
+        >>> voxels = pept.Voxels(lines, number_of_voxels)
+
+        >>> grapher.add_lines(lines)
+        >>> grapher.add_traces(voxels.cubes_traces())  # small number of voxels
+        >>> grapher.show()
+
+        '''
+
+        indices = np.argwhere(condition(self))
         traces = [
             self.cube_trace(
                 i,
@@ -604,7 +783,7 @@ class Voxels:
 
         '''
 
-        filtered_indices = np.argwhere(condition(self._voxels))
+        filtered_indices = np.argwhere(condition(self))
         positions = self._voxel_size * (0.5 + filtered_indices) + \
             [self._xlim[0], self._ylim[0], self._zlim[0]]
 
@@ -615,7 +794,7 @@ class Voxels:
         )
 
         if colorbar and color is None:
-            voxel_vals = [self._voxels[tuple(fi)] for fi in filtered_indices]
+            voxel_vals = [self[tuple(fi)] for fi in filtered_indices]
             marker.update(colorscale = "Magma", color = voxel_vals)
 
             if colorbar_title is not None:
@@ -646,29 +825,29 @@ class Voxels:
         if ix is not None:
             x = self._voxel_grids[1]
             y = self._voxel_grids[2]
-            z = self._voxels[ix, :, :]
+            z = self[ix, :, :]
 
             for i in range(1, width + 1):
-                z = z + self._voxels[ix + i, :, :]
-                z = z + self._voxels[ix - i, :, :]
+                z = z + self[ix + i, :, :]
+                z = z + self[ix - i, :, :]
 
         elif iy is not None:
             x = self._voxel_grids[0]
             y = self._voxel_grids[2]
-            z = self._voxels[:, iy, :]
+            z = self[:, iy, :]
 
             for i in range(1, width + 1):
-                z = z + self._voxels[:, iy + i, :]
-                z = z + self._voxels[:, iy - i, :]
+                z = z + self[:, iy + i, :]
+                z = z + self[:, iy - i, :]
 
         elif iz is not None:
             x = self._voxel_grids[0]
             y = self._voxel_grids[1]
-            z = self._voxels[:, :, iz]
+            z = self[:, :, iz]
 
             for i in range(1, width + 1):
-                z = z + self._voxels[:, :, iz + i]
-                z = z + self._voxels[:, :, iz - i]
+                z = z + self[:, :, iz + i]
+                z = z + self[:, :, iz - i]
 
         else:
             raise ValueError(textwrap.fill((
@@ -690,13 +869,16 @@ class Voxels:
     def __str__(self):
         # Shown when calling print(class)
         docstr = (
-            f"voxels:\n{self._voxels}\n\n"
+            f"{self.__array__()}\n\n"
             f"number_of_voxels =    {self._number_of_voxels}\n"
             f"voxel_size =          {self._voxel_size}\n\n"
             f"xlim =                {self._xlim}\n"
             f"ylim =                {self._ylim}\n"
             f"zlim =                {self._zlim}\n\n"
-            f"voxel_grids:\n{self._voxel_grids}"
+            f"voxel_grids:\n"
+            f"([{self._voxel_grids[0][0]} ... {self._voxel_grids[0][-1]}],\n"
+            f" [{self._voxel_grids[1][0]} ... {self._voxel_grids[1][-1]}],\n"
+            f" [{self._voxel_grids[2][0]} ... {self._voxel_grids[2][-1]}])"
         )
 
         return docstr

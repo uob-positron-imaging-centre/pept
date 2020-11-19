@@ -84,7 +84,7 @@ EXTRAS = {
 cythonize_kw = dict(language_level = 3)
 cy_extension_kw = dict()
 
-extra_compile_args = ['-O3']
+extra_compile_args = ['-Ofast']
 cy_extension_kw['extra_compile_args'] = extra_compile_args
 
 extra_link_args = []
@@ -104,7 +104,8 @@ cy_extensions = [
               **cy_extension_kw),
     Extension('pept.utilities.traverse.traverse3d',
               ['pept/utilities/traverse/traverse3d.pyx'],
-              **cy_extension_kw),
+              include_dirs = cy_extension_kw["include_dirs"],
+              extra_compile_args = "-O3"),
     Extension('pept.utilities.traverse.traverse2d',
               ['pept/utilities/traverse/traverse2d.pyx'],
               **cy_extension_kw),
