@@ -104,6 +104,36 @@ class Voxels(np.ndarray):
         delimitations, such that it has length (M + 1), where M is the number
         of voxels in given dimension.
 
+    Methods
+    -------
+    get_cutoff(p1, p2)
+        Return a numpy array containing the minimum and maximum value found
+        across the two input arrays.
+
+    add_lines(lines, verbose = False)
+        Voxellise a sample of lines, adding 1 to each voxel traversed, for
+        each line in the sample.
+
+    cube_trace(index, color = None, opacity = 0.4, colorbar = True,\
+               colorscale = "magma")
+        Get the Plotly `Mesh3d` trace for a single voxel at `index`.
+
+    cubes_traces(condition = lambda voxels: voxels > 0, color = None,\
+                 opacity = 0.4, colorbar = True, colorscale = "magma")
+        Get a list of Plotly `Mesh3d` traces for all voxels selected by the
+        `condition` filtering function.
+
+    voxels_trace(condition = lambda voxel_data: voxel_data > 0, size = 4,\
+                 color = None, opacity = 0.4, colorbar = True,\
+                 colorscale = "Magma", colorbar_title = None)
+        Create and return a trace for all the voxels in this class, with
+        possible filtering.
+
+    heatmap_trace(ix = None, iy = None, iz = None, width = 0,\
+                  colorscale = "Magma", transpose = True)
+        Create and return a Plotly `Heatmap` trace of a 2D slice through the
+        voxels.
+
     Notes
     -----
     The traversed lines do not need to be fully bounded by the voxel space.
@@ -217,13 +247,14 @@ class Voxels(np.ndarray):
             If `lines_or_voxels` is 2D but has fewer than 7 data columns, or
             `number_of_voxels` does not have exactly 3 values, or it has
             values smaller than 2. If `lines_or_voxels` is not 2D or 3D. If
-            `xlim`, `ylim` or `zlim`, if defined, do not have exactly 2 values
-            each.
+            `xlim`, `ylim` or `zlim`, if defined, but do not have exactly 2
+            values each.
 
         NameError
             If `lines_or_voxels` is 2D but `number_of_voxels` was not supplied.
             Or if `lines_or_voxels` is 3D but `xlim`, `ylim` and `zlim` were
             not supplied too.
+
         '''
 
         if verbose:
@@ -467,10 +498,10 @@ class Voxels(np.ndarray):
 
         Parameters
         ----------
-        p1: (N,) numpy.ndarray
+        p1 : (N,) numpy.ndarray
             The first 1D numpy array.
 
-        p2: (N,) numpy.ndarray
+        p2 : (N,) numpy.ndarray
             The second 1D numpy array.
 
         Returns
@@ -482,6 +513,7 @@ class Voxels(np.ndarray):
         -----
         The input parameters *must* be numpy arrays, otherwise an error will
         be raised.
+
         '''
 
         return np.array([
@@ -496,19 +528,20 @@ class Voxels(np.ndarray):
 
         Parameters
         ----------
-        lines: (M, N >= 7) numpy.ndarray
+        lines : (M, N >= 7) numpy.ndarray
             The sample of 3D lines to voxellise. Each line is defined as a
             timestamp followed by two 3D points, such that the data columns are
             `[time, x1, y1, z1, x2, y2, z2, ...]`. Note that there can be extra
             data columns which will be ignored.
 
-        verbose: bool, default False
+        verbose : bool, default False
             Time the voxel traversal and print it to the terminal.
 
         Raises
         ------
         ValueError
             If `lines` has fewer than 7 columns.
+
         '''
 
         lines = np.asarray(lines, order = "C", dtype = float)
@@ -584,6 +617,7 @@ class Voxels(np.ndarray):
         If you want to render a small number of voxels as cubes using Plotly,
         use the `cubes_traces` method, which creates a list of individual cubes
         for all voxels, using this function.
+
         '''
 
         index = np.asarray(index, dtype = int)
@@ -821,6 +855,60 @@ class Voxels(np.ndarray):
         colorscale = "Magma",
         transpose = True
     ):
+        '''Create and return a Plotly `Heatmap` trace of a 2D slice through the
+        voxels.
+
+        The orientation of the slice is defined by the input `ix` (for the YZ
+        plane), `iy` (XZ), `iz` (XY) parameters - which correspond to the
+        voxel index in the x-, y-, and z-dimension. Importantly, at least one
+        of them must be defined.
+
+        Parameters
+        ----------
+        ix : int, optional
+            The index along the x-axis of the voxels at which a YZ slice is to
+            be taken. One of `ix`, `iy` or `iz` must be defined.
+
+        iy: int, optional
+            The index along the y-axis of the voxels at which a XZ slice is to
+            be taken. One of `ix`, `iy` or `iz` must be defined.
+
+        iz : int, optional
+            The index along the z-axis of the voxels at which a XY slice is to
+            be taken. One of `ix`, `iy` or `iz` must be defined.
+
+        width : int, default 0
+            The number of voxel layers around the given slice index to collapse
+            (i.e. accumulate) onto the heatmap.
+
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the voxel values in the input
+            data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+
+        transpose : bool, default True
+            Transpose the heatmap (i.e. flip it across its diagonal).
+
+        Raises
+        ------
+        ValueError
+            If neither of `ix`, `iy` or `iz` was defined.
+
+        Examples
+        --------
+        Voxellise an array of lines and add them to a `PlotlyGrapher` instance:
+
+        >>> lines = np.array(...)           # shape (N, M >= 7)
+        >>> number_of_voxels = [10, 10, 10]
+        >>> voxels = pept.Voxels(lines, number_of_voxels)
+
+        >>> import plotly.graph_objs as go
+        >>> fig = go.Figure()
+        >>> fig.add_trace(voxels.heatmap_trace())
+        >>> fig.show()
+
+        '''
 
         if ix is not None:
             x = self._voxel_grids[1]

@@ -40,10 +40,7 @@ import  numpy                   as      np
 
 import  plotly.graph_objects    as      go
 
-import  matplotlib
 import  matplotlib.pyplot       as      plt
-from    matplotlib.colors       import  Normalize
-from    mpl_toolkits.mplot3d    import  Axes3D
 
 from    .iterable_samples       import  IterableSamples
 import  pept
@@ -381,7 +378,7 @@ class LineData(IterableSamples):
         return self._number_of_lines
 
 
-    def to_csv(self, filepath):
+    def to_csv(self, filepath, delimiter = " "):
         '''Write `lines` to a CSV file.
 
         Write all LoRs stored in the class to a CSV file.
@@ -391,6 +388,10 @@ class LineData(IterableSamples):
         filepath : filename or file handle
             If filepath is a path (rather than file handle), it is relative
             to where python is called.
+
+        delimiter : str, default " "
+            The delimiter used to separate the values in the CSV file.
+
         '''
 
         np.savetxt(filepath, self._lines, delimiter = delimiter)
@@ -446,7 +447,7 @@ class LineData(IterableSamples):
 
         if ax is None:
             fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111, projection = '3d')
         else:
             fig = plt.gcf()
 
@@ -543,7 +544,7 @@ class LineData(IterableSamples):
 
         if ax is None:
             fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111, projection = '3d')
         else:
             fig = plt.gcf()
 
@@ -760,11 +761,9 @@ class LineData(IterableSamples):
             f"{self.__str__()}\n\n"
             "Particular Cases\n----------------\n"
             " > If sample_size == 0, all `lines` are returned as a "
-               "single sample.\n"
+            "single sample.\n"
             " > If overlap >= sample_size, an error is raised.\n"
             " > If overlap < 0, lines are skipped between samples."
         )
 
         return docstr
-
-
