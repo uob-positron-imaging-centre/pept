@@ -105,7 +105,7 @@ cy_extensions = [
     Extension('pept.utilities.traverse.traverse3d',
               ['pept/utilities/traverse/traverse3d.pyx'],
               include_dirs = cy_extension_kw["include_dirs"],
-              extra_compile_args = "-O3"),
+              extra_compile_args = ["-O3"]),
     Extension('pept.utilities.traverse.traverse2d',
               ['pept/utilities/traverse/traverse2d.pyx'],
               **cy_extension_kw),
