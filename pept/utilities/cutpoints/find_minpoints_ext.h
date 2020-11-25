@@ -5,8 +5,8 @@
  * Date   : 20.10.2020
  */
 
-#ifndef BIRMINGHAM_METHOD_EXT
-#define BIRMINGHAM_METHOD_EXT
+#ifndef FIND_MINPOINTS_EXT
+#define FIND_MINPOINTS_EXT
 
 #include <sys/types.h>
 

@@ -46,56 +46,69 @@
 # cython: cdivision=True
 
 
+from libc.float cimport DBL_MAX
 
 
 cdef inline double fabs(double x) nogil:
     return (x if x >= 0 else -x)
 
 
-cdef int searchindex(double[:] arr, double x) nogil:
-    # Find the voxel index for point `x` in the delimiting grid `arr`
+cdef inline void swap(double *x, double *y) nogil:
+    cdef double aux
 
-    cdef int length = arr.shape[0]
+    aux = x[0]
+    x[0] = y[0]
+    y[0] = aux
 
-    # Special cases: e.g. The delimiting grid is arr = [0, 1, 2, 3, 4]
-    # Then voxel indices go from 0 to 3
-    # If x < 1, then take the index of the first voxel => 0
-    # If x > 3, then take the index of the last voxel  => 3
 
-    if x < arr[1]:
-        return 0
-    if x > arr[length - 2]:
-        return length - 2
+cdef double intersect(
+    double[2] u,
+    double[2] v,
+    double xmin,
+    double xmax,
+    double ymin,
+    double ymax,
+) nogil:
+    '''Given a 2D line defined as L(t) = U + t V and an axis-aligned bounding
+    box (AABB), find the `t` for which the line intersects the box, if it
+    exists.
 
-    cdef int left = 1
-    cdef int right = length - 2
-    cdef int mid
+    It is assumed that the line starts *outside* the AABB, so that t == 0.0 is
+    only reserved for when the line does not intersect the box.
+    '''
 
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] < x:
-            left = mid + 1
-        elif arr[mid] > x:
-            right = mid - 1
-        else:
-            return mid
+    cdef double tmin, tmax, tymin, tymax
 
-    return right
+    tmin = (xmin - u[0]) / v[0]     # Relies on IEEE FP behaviour for div by 0
+    tmax = (xmax - u[0]) / v[0]
+
+    tymin = (ymin - u[1]) / v[1]
+    tymax = (ymax - u[1]) / v[1]
+
+    if tmin > tmax: swap(&tmin, &tmax)
+    if tymin > tymax: swap(&tymin, &tymax)
+
+    if tmin > tymax or tymin > tmax: return 0.0
+
+    if tymin > tmin: tmin = tymin
+    if tymax < tmax: tmax = tymax
+
+    return tmin
 
 
 cpdef void traverse2d(
-    long[:, :] pixels,          # Initialised to zero!
+    double[:, :] pixels,        # Initialised to zero!
     double[:, :] lines,         # Has exactly 5 columns!
     double[:] grid_x,           # Has pixels.shape[0] + 1 elements!
     double[:] grid_y,           # Has pixels.shape[1] + 1 elements!
 ) nogil:
-    ''' Fast voxel traversal for 2D lines (or LoRs).
+    ''' Fast pixel traversal for 2D lines (or LoRs).
 
     ::
 
         Function Signature:
             traverse2d(
-                long[:, :] pixels,          # Initialised to zero!
+                double[:, :] pixels,        # Initialised to zero!
                 double[:, :] lines,         # Has exactly 7 columns!
                 double[:] grid_x,           # Has pixels.shape[0] + 1 elements!
                 double[:] grid_y,           # Has pixels.shape[1] + 1 elements!
@@ -112,20 +125,23 @@ cpdef void traverse2d(
 
     Parameters
     ----------
-    pixels : numpy.ndarray(dtype = numpy.int64, ndim = 2)
+    pixels : numpy.ndarray(dtype = numpy.float64, ndim = 2)
         The `pixels` parameter is a numpy.ndarray of shape (X, Y) that has been
         initialised to zeros before the function call. The values will be
         modified in-place in the function to reflect the number of lines that
         pass through each pixel.
+
     lines : numpy.ndarray(dtype = numpy.float64, ndim = 2)
         The `lines` parameter is a numpy.ndarray of shape(N, 5), where each row
         is formatted as [time, x1, y1, x2, y2]. Only indices 1:5 will be used
         as the two points P1 = [x1, y1] and P2 = [x2, y2] defining the line (or
         LoR).
+
     grid_x : numpy.ndarray(dtype = numpy.float64, ndim = 1)
         The grid_x parameter is a one-dimensional grid that delimits the pixels
         in the x-dimension. It must be *sorted* in ascending order with
         *equally-spaced* numbers and length X + 1 (pixels.shape[0] + 1).
+
     grid_y : numpy.ndarray(dtype = numpy.float64, ndim = 1)
         The grid_y parameter is a one-dimensional grid that delimits the pixels
         in the y-dimension. It must be *sorted* in ascending order with
@@ -168,16 +184,23 @@ cpdef void traverse2d(
     '''
 
     n_lines = lines.shape[0]
-    cdef int nx = pixels.shape[0]
-    cdef int ny = pixels.shape[1]
+    cdef Py_ssize_t nx = pixels.shape[0]
+    cdef Py_ssize_t ny = pixels.shape[1]
 
     # Grid size
     cdef double gsize_x = grid_x[1] - grid_x[0]
     cdef double gsize_y = grid_y[1] - grid_y[0]
 
+    # Delimiting grid
+    cdef double xmin = grid_x[0]
+    cdef double xmax = grid_x[nx]
+
+    cdef double ymin = grid_y[0]
+    cdef double ymax = grid_y[ny]
+
     # The current pixel indices [ix, iy] that the line passes
     # through.
-    cdef int ix, iy
+    cdef Py_ssize_t ix, iy
 
     # Define a line as L(t) = U + t V
     # If an LoR is defined as two points P1 and P2, then
@@ -187,18 +210,18 @@ cpdef void traverse2d(
     # The step [step_x, step_y, step_z] defines the sense of the LoR.
     # If V[0] is positive, then step_x = 1
     # If V[0] is negative, then step_x = -1
-    cdef int step_x, step_y
+    cdef Py_ssize_t step_x, step_y
 
     # The value of t at which the line passes through to the next
-    # voxel, for each dimension.
+    # pixel, for each dimension.
     cdef double tnext_x, tnext_y
 
     # deltat indicates how far along the ray we must move (in units of
-    # t) for each component to be equal to the size of the voxel in
+    # t) for each component to be equal to the size of the pixel in
     # that dimension.
     cdef double deltat_x, deltat_y
 
-    cdef int i, j
+    cdef Py_ssize_t i, j
 
     for i in range(n_lines):
 
@@ -215,41 +238,55 @@ cpdef void traverse2d(
         step_x = 1 if v[0] >= 0 else -1
         step_y = 1 if v[1] >= 0 else -1
 
+        # If the first point is outside the box, find the first pixel it hits
+        if (u[0] < xmin or u[0] > xmax or
+                u[1] < ymin or u[1] > ymax):
+
+            t = intersect(u, v, xmin, xmax, ymin, ymax)
+
+            # No intersection
+            if t == 0.0:
+                continue
+
+            # Overwrite U to correspond to the first intersection point
+            for j in range(2):
+                u[j] = u[j] + t * v[j]
+
+        # Corner case: every pixel is defined as lower boundary (inclusive) and
+        # upper boundary (exclusive). Therefore, at the upper end of the pixel
+        # grid an undefined case occurs. If a point lies right at the upper
+        # boundary of the pixel space, "move it" a bit lower on the line
+        if u[0] == xmax or u[1] == ymax:
+            for j in range(2):
+                u[j] = u[j] + 1e-5 * v[j]
+
         # If, for dimension x, there are 5 pixels between coordinates 0
         # and 5, then the delimiting grid is [0, 1, 2, 3, 4, 5].
-        # If the line starts at 1.5, then it is part of the voxel at
+        # If the line starts at 1.5, then it is part of the pixel at
         # index 1
 
         ix = <int>(u[0] / gsize_x)
         iy = <int>(u[1] / gsize_y)
 
-        # Check the indices are inside the voxel grid
-        ''' This gives wrong results
-        if ix < 0: ix = 0
-        if ix >= nx: ix = nx - 1
-
-        if iy < 0: iy = 0
-        if iy >= ny: iy = ny - 1
-        '''
-
+        # Check the indices are inside the pixel grid
         if (ix < 0 or ix >= nx or iy < 0 or iy >= ny):
             continue
 
-        # If the line is going "up", the next voxel is the next one
-        # If the line is going "down", the next voxel is the current one
+        # If the line is going "up", the next pixel is the next one
+        # If the line is going "down", the next pixel is the current one
         if v[0] > 0:
             tnext_x = (grid_x[ix + 1] - u[0]) / v[0]
         elif v[0] < 0:
             tnext_x = (grid_x[ix] - u[0]) / v[0]
         else:
-            tnext_x = 0
+            tnext_x = DBL_MAX
 
         if v[1] > 0:
             tnext_y = (grid_y[iy + 1] - u[1]) / v[1]
         elif v[1] < 0:
             tnext_y = (grid_y[iy] - u[1]) / v[1]
         else:
-            tnext_y = 0
+            tnext_y = DBL_MAX
 
         deltat_x = fabs((grid_x[1] - grid_x[0]) / v[0]) if v[0] else 0
         deltat_y = fabs((grid_y[1] - grid_y[0]) / v[1]) if v[1] else 0
@@ -268,7 +305,7 @@ cpdef void traverse2d(
                 break
 
             # Select the minimum t that makes the line pass
-            # through to the next voxel
+            # through to the next pixel
             if tnext_x < tnext_y:
                 ix = ix + step_x
                 tnext_x = tnext_x + deltat_x

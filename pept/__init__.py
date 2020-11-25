@@ -42,10 +42,10 @@ gamma ray represents a line of response (LoR) .
 
 Subpackages Provided
 --------------------
-The `pept` package provides three base classes at its root - `PointData`,
-`LineData`, and `VoxelData` - acting as common data formats that the rest of
-the package will use for its tracking, analysis and visualisation algorithms.
-Thus any subroutine integrated in the `pept` package can be used
+The `pept` package provides four base classes at its root - `PointData`,
+`LineData`, `Pixels` and `Voxels` - acting as common data formats that the rest
+of the package will use for its tracking, analysis and visualisation
+algorithms. Thus any subroutine integrated in the `pept` package can be used
 interchangeably with new PET / PEPT scanner geometries, data formats or novel
 algorithms.
 
@@ -59,6 +59,7 @@ hierarchy below:
     Base classes imported into the package root:
     ├── PointData :     Base class encapsulating points.
     ├── LineData :      Base class encapsulating lines (LoRs) w/ one timestamp.
+    ├── Pixels :        Base class managing pixels from a sample of lines.
     ├── Voxels :        Base class managing voxels from a sample of lines.
     ├── VoxelData :     Base class encapsulating voxels.
     │
@@ -217,12 +218,14 @@ A more in-depth tutorial is available on
 # Import base data structures
 from    .base.line_data     import  LineData
 from    .base.point_data    import  PointData
-from    .base.voxel_data    import  VoxelData
+from    .base.pixel_data    import  Pixels
 from    .base.voxel_data    import  Voxels
+from    .base.voxel_data    import  VoxelData
 
 # Import subpackages
 from    .                   import  cookbook
 from    .                   import  diagnostics
+from    .                   import  processing
 from    .                   import  scanners
 from    .                   import  simulation
 from    .                   import  tracking
@@ -236,15 +239,17 @@ from    .__version__        import  __version__
 __all__ = [
     'LineData',
     'PointData',
-    'VoxelData',
+    'Pixels',
     'Voxels',
+    'VoxelData',
     'cookbook',
     'diagnostics',
+    'processing',
     'scanners',
     'simulation',
     'tracking',
     'utilities',
-    'visualisation'
+    'visualisation',
 ]
 
 

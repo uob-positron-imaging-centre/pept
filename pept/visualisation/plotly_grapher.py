@@ -778,6 +778,88 @@ class PlotlyGrapher:
         self._fig.add_trace(trace, row = row, col = col)
 
 
+    def add_pixels(
+        self,
+        pixels,
+        row = 1,
+        col = 1,
+        condition = lambda pixels: pixels > 0,
+        opacity = 0.9,
+        colorscale = "Magma",
+    ):
+        '''Create and plot a trace with all the pixels in this class, with
+        possible filtering.
+
+        Creates a `plotly.graph_objects.Surface` object for the centres of
+        all pixels encapsulated in a `pept.Pixels` instance, colour-coding the
+        pixel value.
+
+        The `condition` parameter is a filtering function that should return
+        a boolean mask (i.e. it is the result of a condition evaluation). For
+        example `lambda x: x > 0` selects all pixels that have a value larger
+        than 0.
+
+        Parameters
+        ----------
+        voxels : pept.Pixels
+            The pixel space, encapsulated in a `pept.Pixels` instance (or
+            subclass thereof). Only `pept.Pixels` are accepted as raw pixels on
+            their own do not contain data about the spatial coordinates of the
+            pixel box.
+
+        row : int, default 1
+            The row of the subplot to add a trace to.
+
+        col : int, default 1
+            The column of the subplot to add a trace to.
+
+        condition : function, default `lambda pixels: pixels > 0`
+            The filtering function applied to the pixel data before plotting
+            it. It should return a boolean mask (a numpy array of the same
+            shape, filled with True and False), selecting all pixels that
+            should be plotted. The default, `lambda x: x > 0` selects all
+            pixels which have a value larger than 0.
+
+        opacity : float, default 0.4
+            The opacity of the surface, where 0 is transparent and 1 is fully
+            opaque.
+
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the voxel values in the input
+            data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+
+        Examples
+        --------
+        Pixellise an array of lines and add them to a `PlotlyGrapher` instance:
+
+        >>> grapher = PlotlyGrapher()
+        >>> lines = np.array(...)                   # shape (N, M >= 7)
+        >>> lines2d = lines[:, [0, 1, 2, 4, 5]]     # select x, y of lines
+        >>> number_of_pixels = [10, 10]
+        >>> pixels = pept.Pixels.from_lines(lines2d, number_of_pixels)
+        >>> grapher.add_lines(lines)
+        >>> grapher.add_trace(pixels.pixels_trace())
+        >>> grapher.show()
+
+        '''
+
+        if not isinstance(pixels, pept.Pixels):
+            raise TypeError(textwrap.fill((
+                "The input `pixels` must be an instance of `pept.Pixels` (or "
+                f"subclass thereof. Received {type(pixels)}."
+            )))
+
+        trace = pixels.pixels_trace(
+            condition = condition,
+            opacity = opacity,
+            colorscale = colorscale,
+        )
+
+        self._fig.add_trace(trace, row = row, col = col)
+
+
     def add_voxels(
         self,
         voxels,
@@ -962,8 +1044,8 @@ class PlotlyGrapher:
             used (i.e. automatically use min, max for each dimension).
         '''
 
-        if (equal_axes == True and self.xlim is None and self.ylim is None and
-            self.zlim is None):
+        if (equal_axes is True and self.xlim is None and self.ylim is None and
+                self.zlim is None):
             # Compute min, max for the `x`, `y`, `z` dimensions for every
             # dataset added to `_fig`
             def get_min_max(fig_data):
@@ -1032,5 +1114,3 @@ class PlotlyGrapher:
         )
 
         return docstr
-
-
