@@ -32,10 +32,18 @@ PointData
    :special-members: __init__
 
 
+Pixels
+^^^^^^
+.. autoclass:: pept.Pixels
+   :members: from_lines, empty, add_lines, get_cutoff, pixels_trace, heatmap_trace
+   :show-inheritance:
+   :special-members: __new__
+
+
 Voxels
 ^^^^^^
 .. autoclass:: pept.Voxels
-   :members: add_lines, get_cutoff, cube_trace, cubes_traces, heatmap_trace
+   :members: from_lines, empty, add_lines, get_cutoff, voxels_trace, cube_trace, cubes_traces, heatmap_trace
    :show-inheritance:
    :special-members: __new__
 
@@ -48,6 +56,7 @@ Subpackages
 
    api/pept.cookbook
    api/pept.diagnostics
+   api/pept.processing
    api/pept.scanners
    api/pept.tracking
    api/pept.utilities

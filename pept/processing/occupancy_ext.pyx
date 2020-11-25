@@ -606,6 +606,7 @@ cpdef void occupancy2d_ext(
     '''Compute the 2D occupancy of circles of different radii.
 
     ::
+
         Function signature:
 
             void occupancy2d_ext(
