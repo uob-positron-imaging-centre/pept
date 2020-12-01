@@ -332,25 +332,34 @@ cpdef void traverse3d(
 
             voxels[ix, iy, iz] += 1.
 
-            # If p2 is fully bounded by the voxel, stop the algorithm
-            if ((grid_x[ix] < p2[0] and grid_y[iy] < p2[1] and grid_z[iz] < p2[2]) and
-                (grid_x[ix + 1] > p2[0] and grid_y[iy + 1] > p2[1] and grid_z[iz + 1] > p2[2])):
-                break
-
             # Select the minimum t that makes the line pass
             # through to the next voxel
             if tnext_x < tnext_y:
                 if tnext_x < tnext_z:
+                    # If the next voxel falls beyond the end of the line (that is at
+                    # t = 1), stop the traversal stage
+                    if tnext_x > 1.:
+                        break
+
                     ix = ix + step_x
                     tnext_x = tnext_x + deltat_x
                 else:
+                    if tnext_z > 1.:
+                        break
+
                     iz = iz + step_z
                     tnext_z = tnext_z + deltat_z
             else:
                 if tnext_y < tnext_z:
+                    if tnext_y > 1.:
+                        break
+
                     iy = iy + step_y
                     tnext_y = tnext_y + deltat_y
                 else:
+                    if tnext_z > 1.:
+                        break
+
                     iz = iz + step_z
                     tnext_z = tnext_z + deltat_z
 
