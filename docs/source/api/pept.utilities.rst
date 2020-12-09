@@ -9,7 +9,7 @@ find_cutpoints
 .. autofunction:: pept.utilities.find_cutpoints
 
 
-find_cutpoints
+find_minpoints
 --------------
 
 .. autofunction:: pept.utilities.find_minpoints
