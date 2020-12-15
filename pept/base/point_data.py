@@ -39,11 +39,7 @@ import  time
 import  numpy                   as      np
 
 import  plotly.graph_objects    as      go
-
-import  matplotlib
 import  matplotlib.pyplot       as      plt
-from    matplotlib.colors       import  Normalize
-from    mpl_toolkits.mplot3d    import  Axes3D
 
 from    .iterable_samples       import  IterableSamples
 import  pept
@@ -114,11 +110,8 @@ class PointData(IterableSamples):
     to_csv(filepath)
         Write `points` to a CSV file.
 
-    plot(sample_indices = ..., ax = None, colorbar_col = -1)
+    plot(sample_indices = ..., ax = None, alt_axes = False, colorbar_col = -1)
         Plot points from selected samples using matplotlib.
-
-    plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = -1):
-        Plot points from selected samples using matplotlib on PEPT-style axes.
 
     points_trace(sample_indices = ..., size = 2, color = None, opacity = 0.8,\
                  colorbar = True, colorbar_col = -1, colorscale = "Magma",\
@@ -395,7 +388,13 @@ class PointData(IterableSamples):
         np.savetxt(filepath, self._points)
 
 
-    def plot(self, sample_indices = ..., ax = None, colorbar_col = -1):
+    def plot(
+        self,
+        sample_indices = ...,
+        ax = None,
+        alt_axes = False,
+        colorbar_col = -1,
+    ):
         '''Plot points from selected samples using matplotlib.
 
         Returns matplotlib figure and axes objects containing all points
@@ -411,8 +410,15 @@ class PointData(IterableSamples):
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all points).
 
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
+        ax : mpl_toolkits.mplot3D.Axes3D object, optional
+            The 3D matplotlib-based axis for plotting. If undefined, new
+            Matplotlib figure and axis objects are created.
+
+        alt_axes : bool, default False
+            If `True`, plot using the alternative PEPT-style axes convention:
+            z is horizontal, y points upwards. Because Matplotlib cannot swap
+            axes, this is achieved by swapping the parameters in the plotting
+            call (i.e. `plt.plot(x, y, z)` -> `plt.plot(z, x, y)`).
 
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
@@ -445,7 +451,7 @@ class PointData(IterableSamples):
 
         if ax is None:
             fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111, projection = '3d')
         else:
             fig = plt.gcf()
 
@@ -476,101 +482,19 @@ class PointData(IterableSamples):
         cmap = plt.cm.magma
         color_array = cmap(color / color.max())
 
-        ax.scatter(x, y, z, c = color_array)
+        if alt_axes:
+            ax.scatter(z, x, y, c = color_array)
 
-        return fig, ax
+            ax.set_xlabel("z (mm)")
+            ax.set_ylabel("x (mm)")
+            ax.set_zlabel("y (mm)")
 
-
-    def plot_alt_axes(self, sample_indices = ..., ax = None,
-                      colorbar_col = -1):
-        '''Plot points from selected samples using matplotlib on PEPT-style
-        axes.
-
-        Returns matplotlib figure and axes objects containing all points
-        included in the samples selected by `sample_indices`.
-        `sample_indices` may be a single sample index (e.g. 0), an iterable
-        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
-
-        The points are plotted using the PEPT-style convention: **x** is
-        *parallel and horizontal* to the screens, **y** is
-        *parallel and vertical* to the screens, **z** is *perpendicular* to the
-        screens. The mapping relative to the Cartesian coordinates would then
-        be: (x, y, z) -> (z, x, y).
-
-        Parameters
-        ----------
-        sample_indices : int or iterable or Ellipsis, default Ellipsis
-            The index or indices of the samples of points. An `int` signifies
-            the sample index, an iterable (list-like) signifies multiple sample
-            indices, while an Ellipsis (`...`) signifies all samples. The
-            default is `...` (all points).
-
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
-
-        colorbar_col : int, default -1
-            The column in the data samples that will be used to color the
-            points. The default is -1 (the last column).
-
-        Returns
-        -------
-        fig, ax : matplotlib figure and axes objects
-
-        Notes
-        -----
-        Plotting all points is very computationally-expensive for matplotlib.
-        It is recommended to only plot a couple of samples at a time, or use
-        the faster `pept.visualisation.PlotlyGrapher`.
-
-        Examples
-        --------
-        Plot the points from sample 1 in a `PointData` instance:
-
-        >>> point_data = pept.PointData(...)
-        >>> fig, ax = point_data.plot_alt_axes(1)
-        >>> fig.show()
-
-        Plot the points from samples 0, 1 and 2:
-
-        >>> fig, ax = point_data.plot_alt_axes([0, 1, 2])
-        >>> fig.show()
-
-        '''
-
-        if ax is None:
-            fig = plt.figure()
-            ax  = fig.add_subplot(111, projection='3d')
         else:
-            fig = plt.gcf()
+            ax.scatter(x, y, z, c = color_array)
 
-        # Check if sample_indices is an iterable collection (list-like)
-        # otherwise just "iterate" over the single number or Ellipsis
-        if not hasattr(sample_indices, "__iter__"):
-            sample_indices = [sample_indices]
-
-        if sample_indices[0] == Ellipsis:
-            x = self._points[:, 1],
-            y = self._points[:, 2],
-            z = self._points[:, 3],
-            color = self._points[:, colorbar_col]
-        else:
-            x, y, z, color = [], [], [], []
-            for n in sample_indices:
-                sample = self[n]
-
-                x.extend(sample[:, 1])
-                y.extend(sample[:, 2])
-                z.extend(sample[:, 3])
-
-                color.extend(sample[:, colorbar_col])
-
-        color = np.array(color)
-
-        # Scatter x, y, z, [color]
-        cmap = plt.cm.magma
-        color_array = cmap(color / color.max())
-
-        ax.scatter(z, x, y, c = color_array)
+            ax.set_xlabel("x (mm)")
+            ax.set_ylabel("y (mm)")
+            ax.set_zlabel("z (mm)")
 
         return fig, ax
 
@@ -757,11 +681,9 @@ class PointData(IterableSamples):
             f"{self.__str__()}\n\n"
             "Particular Cases\n----------------\n"
             " > If sample_size == 0, all `points` are returned as a "
-               "single sample.\n"
+            "single sample.\n"
             " > If overlap >= sample_size, an error is raised.\n"
             " > If overlap < 0, points are skipped between samples."
         )
 
         return docstr
-
-

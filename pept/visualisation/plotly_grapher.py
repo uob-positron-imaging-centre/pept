@@ -120,6 +120,17 @@ class PlotlyGrapher:
         Create and plot a trace for all the lines in a numpy array or
         `pept.LineData`, with possible color-coding.
 
+    add_pixels(pixels, row = 1, col = 1, condition = lambda pixels: pixels > 0,
+               opacity = 0.9, colorscale = "Magma")
+        Create and plot a trace with all the pixels in this class, with
+        possible filtering.
+
+    add_voxels(voxels, row = 1, col = 1, condition = lambda voxels: voxels > 0,
+               size = 4, color = None, opacity = 0.4, colorbar = True,
+               colorscale = "Magma", colorbar_title = None)
+        Create and plot a trace for all the voxels in a `pept.Voxels` or
+        `pept.VoxelData` instance, with possible filtering.
+
     add_trace(trace, row = 1, col = 1)
         Add a precomputed Plotly trace to a given subplot.
 
@@ -873,8 +884,8 @@ class PlotlyGrapher:
         colorscale = "Magma",
         colorbar_title = None,
     ):
-        '''Create and plot a trace for all the voxels in a `pept.Voxels`
-        instance, with possible filtering.
+        '''Create and plot a trace for all the voxels in a `pept.Voxels` or
+        `pept.VoxelData` instance, with possible filtering.
 
         Creates a `plotly.graph_objects.Scatter3d` object for the centres of
         all voxels encapsulated in a `pept.Voxels` instance, colour-coding the
@@ -888,11 +899,12 @@ class PlotlyGrapher:
 
         Parameters
         ----------
-        voxels : pept.Voxels
-            The voxel space, encapsulated in a `pept.Voxels` instance (or
-            subclass thereof). Only `pept.Voxels` are accepted as raw voxels on
-            their own do not contain data about the spatial coordinates of the
-            voxel box.
+        voxels : pept.Voxels or pept.VoxelData
+            The voxel space, encapsulated in a `pept.Voxels` or
+            `pept.VoxelData` instance (or subclass thereof). If a `VoxelData`
+            is received, all the voxels will be accumulated / superimpoesd.
+            Only these classes are accepted as raw voxels on their own do not
+            contain data about the spatial coordinates of the voxel box.
 
         row : int, default 1
             The row of the subplot to add a trace to.
@@ -955,10 +967,13 @@ class PlotlyGrapher:
 
         '''
 
-        if not isinstance(voxels, pept.Voxels):
+        if isinstance(voxels, pept.VoxelData):
+            voxels = voxels.accumulate(verbose = False)
+        elif not isinstance(voxels, pept.Voxels):
             raise TypeError(textwrap.fill((
-                "The input `voxels` must be an instance of `pept.Voxels` (or "
-                f"subclass thereof. Received {type(voxels)}."
+                "The input `voxels` must be an instance of `pept.Voxels` or "
+                "`pept.VoxelData` (or subclass thereof). Received "
+                f"{type(voxels)}."
             )))
 
         trace = voxels.voxels_trace(
@@ -972,7 +987,6 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
-
 
 
     def add_trace(self, trace, row = 1, col = 1):

@@ -28,10 +28,14 @@
 # Date   : 20.08.2019
 
 
+import  os
 import  time
-import  numpy   as      np
-from    pept    import  LineData
-from    .extensions.get_pept_event import get_pept_LOR
+import  textwrap
+
+import  numpy                       as      np
+
+from    pept                        import  LineData
+from    .extensions.get_pept_event  import  get_pept_LOR
 
 
 class ModularCamera(LineData):
@@ -121,7 +125,10 @@ class ModularCamera(LineData):
             start = time.time()
 
         if sample_size != 0 and overlap >= sample_size:
-            raise ValueError('\n[ERROR]: overlap = {} must be smaller than sample_size = {}\n'.format(overlap, sample_size))
+            raise ValueError(textwrap.fill((
+                f'\n[ERROR]: overlap = {overlap} must be smaller than '
+                f'sample_size = {sample_size}\n'
+            )))
 
         self._index = 0
         self._sample_size = sample_size
@@ -137,19 +144,20 @@ class ModularCamera(LineData):
         self.n_events = 0
 
         if sample_size == 0:
-            sample_size = int( (os.path.getsize(self.data_file) - header_buffer_size) /4 ) # Set the sample size to the expected number of events
+            sample_size = int(
+                (os.path.getsize(self.data_file) - header_buffer_size) / 4
+            )   # Set the sample size to the expected number of events
             self.overlap = -1
 
 
-        # Modular camera data reader requires 'itag' for timing. We will drop this column at the end of initialisation
+        # Modular camera data reader requires 'itag' for timing. We will drop
+        # this column at the end of initialisation
         # Row: [itag, itime, X1, Y1, Z1, X2, Y2, Z2]
 
         self._lines = np.zeros([sample_size, 8])
 
-        with open(self.data_file,"rb") as f:
-
+        with open(self.data_file, "rb") as f:
             # Skip over the header and handshake word
-
             f.seek(header_buffer_size)
 
             word = f.read(4)
@@ -162,34 +170,37 @@ class ModularCamera(LineData):
             itime = 0
             itag = 0
 
-            BufTime = 0
-            nBuf = 0
+            # BufTime = 0
+            # nBuf = 0
 
             while word != b'' and (self.n_events < sample_size):
 
                 word = f.read(4)
 
-                if word.hex() == 'cefacefa': # Handshake word
+                # Handshake word
+                if word.hex() == 'cefacefa':
                     # Skip two words
                     word = f.read(4)
                     word = f.read(4)
 
-                if word!=b'':
+                if word != b'':
                     word = int.from_bytes(word, "little")
 
-                    self._lines[self.n_events,:] = get_pept_LOR(word,itag,itime) # C function
+                    self._lines[self.n_events, :] = get_pept_LOR(
+                        word, itag, itime
+                    )   # C function
 
-                    itag  = self._lines[self.n_events,1]
-                    itime = self._lines[self.n_events,1]
+                    itag = self._lines[self.n_events, 1]
+                    itime = self._lines[self.n_events, 1]
 
                     self.n_events = self.n_events + 1
 
                     if (self.n_events % x) == 0:
-                        print("Got ", self.n_events,"\n")
+                        print("Got ", self.n_events, "\n")
                         x = x * 10
 
         # Remove 'zero' lines
-        self._lines = self._lines[np.all(self._lines,axis=1)]
+        self._lines = self._lines[np.all(self._lines, axis = 1)]
 
         # Drop itag column
         self._lines = np.delete(self._lines, 0, axis=1)
@@ -209,6 +220,4 @@ class ModularCamera(LineData):
 
         if verbose:
             end = time.time()
-            print("Initialising the PEPT data took {} seconds\n".format(end - start))
-
-
+            print(f"Initialising the PEPT data took {end - start} seconds.\n")
