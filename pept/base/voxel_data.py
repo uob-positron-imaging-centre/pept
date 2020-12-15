@@ -1735,7 +1735,7 @@ class VoxelData:
         while key < 0:
             key += len(self._voxels)
 
-        if key < 0 or key >= len(self._voxels):
+        if key >= len(self._voxels):
             raise IndexError(textwrap.fill((
                 f"The index `{key}` was out of range. There are "
                 f"{len(self._voxels)} samples of lines to be voxellised, "
