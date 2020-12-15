@@ -35,21 +35,14 @@
 # Date   : 07.01.2020
 
 
-import  os
 import  time
 import  textwrap
-from    concurrent.futures      import  ThreadPoolExecutor
 
 import  numpy                   as      np
 
 import  plotly.graph_objects    as      go
-
-import  matplotlib
 import  matplotlib.pyplot       as      plt
-from    matplotlib.colors       import  Normalize
-from    mpl_toolkits.mplot3d    import  Axes3D
 
-import  pept
 from    pept.utilities.traverse import  traverse2d
 
 
@@ -76,9 +69,6 @@ class Pixels(np.ndarray):
 
     It is possible to add multiple samples of lines to the same pixel space
     using the `add_lines` method.
-
-    If you want to pixellise multiple samples of lines, see the `PixelData`
-    class.
 
     Attributes
     ----------
@@ -735,6 +725,63 @@ class Pixels(np.ndarray):
         return go.Heatmap(heatmap)
 
 
+    def plot(self, ax = None):
+        '''Plot pixels as a heatmap using Matplotlib.
+
+        Returns matplotlib figure and axes objects containing the pixel values
+        colour-coded in a Matplotlib image (i.e. heatmap).
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3D.Axes3D object, optional
+            The 3D matplotlib-based axis for plotting. If undefined, new
+            Matplotlib figure and axis objects are created.
+
+        Returns
+        -------
+        fig, ax : matplotlib figure and axes objects
+
+        Examples
+        --------
+        Pixellise an array of lines and plot them with Matplotlib:
+
+        >>> lines = np.array(...)                   # shape (N, M >= 7)
+        >>> lines2d = lines[:, [0, 1, 2, 4, 5]]     # select x, y of lines
+        >>> number_of_pixels = [10, 10]
+        >>> pixels = pept.Pixels.from_lines(lines2d, number_of_pixels)
+
+        >>> fig, ax = pixels.plot()
+        >>> fig.show()
+
+        '''
+
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+        else:
+            fig = plt.gcf()
+
+        # Plot the values in pixels (this class is a numpy array subclass)
+        ax.imshow(self)
+
+        # Compute the pixel centres and set them in the Matplotlib image
+        x = self.pixel_grids[0]
+        x = (x[1:] + x[:-1]) / 2
+
+        y = self.pixel_grids[1]
+        y = (y[1:] + y[:-1]) / 2
+
+        # Matplotlib shows numbers in a long format ("102.000032411"), so round
+        # them to two decimals before plotting
+        ax.set_xticklabels(np.round(x, 2))
+        ax.set_yticklabels(np.round(y, 2))
+
+        ax.set_xlabel("x (mm)")
+        ax.set_ylabel("y (mm)")
+
+        return fig, ax
+
+
     def __str__(self):
         # Shown when calling print(class)
         docstr = (
@@ -761,7 +808,3 @@ class Pixels(np.ndarray):
         )
 
         return docstr
-
-
-
-

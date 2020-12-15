@@ -43,7 +43,6 @@ import time
 import warnings
 
 import  numpy               as      np
-from    scipy.spatial       import  cKDTree
 
 from    joblib              import  Parallel, delayed
 from    tqdm                import  tqdm
@@ -59,7 +58,6 @@ except ImportError:
     import hdbscan
 
 import  pept
-from    pept.utilities      import  find_cutpoints
 
 
 
@@ -334,7 +332,7 @@ class HDBSCANClusterer:
 
         # Create inner clusterers (including clusterer_single if
         # allow_single_cluster == "auto")
-        if allow_single_cluster == True:
+        if allow_single_cluster is True:
             self._allow_single_cluster = allow_single_cluster
             self.clusterer = hdbscan.HDBSCAN(
                 allow_single_cluster = True,
@@ -343,7 +341,7 @@ class HDBSCANClusterer:
 
             self.clusterer_single = None
 
-        elif allow_single_cluster == False:
+        elif allow_single_cluster is False:
             self._allow_single_cluster = allow_single_cluster
             self.clusterer = hdbscan.HDBSCAN(
                 allow_single_cluster = False,
@@ -460,12 +458,12 @@ class HDBSCANClusterer:
 
     @allow_single_cluster.setter
     def allow_single_cluster(self, allow_single_cluster):
-        if allow_single_cluster == True:
+        if allow_single_cluster is True:
             self._allow_single_cluster = allow_single_cluster
             self.clusterer.allow_single_cluster = True
             self.clusterer_single = None
 
-        elif allow_single_cluster == False:
+        elif allow_single_cluster is False:
             self._allow_single_cluster = allow_single_cluster
             self.clusterer.allow_single_cluster = False
             self.clusterer_single = None
@@ -678,9 +676,10 @@ class HDBSCANClusterer:
             sample_labelled = np.append(
                 sample, labels[:, np.newaxis], axis = 1
             )
-            if not as_array and len(samples_labelled) != 0:
+
+            if not as_array and len(sample_labelled) != 0:
                 sample_labelled = pept.PointData(
-                    samples_labelled,
+                    sample_labelled,
                     sample_size = 0,
                     overlap = 0,
                     verbose = False
@@ -1028,8 +1027,8 @@ class HDBSCANClusterer:
         if verbose:
             print((
                 "\n" + "-" * 79 + "\n" +
-                "Optimising HDBSCANClusterer settings against given dataset.\n"
-                + "-" * 79 + "\n"
+                "Optimising HDBSCANClusterer settings against given "
+                "dataset.\n" + "-" * 79 + "\n"
             ))
 
             if self.clusterer_single is not None:
@@ -1305,5 +1304,3 @@ class HDBSCANClusterer:
         )
 
         return docstr
-
-

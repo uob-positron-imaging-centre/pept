@@ -36,26 +36,14 @@
 
 
 import  time
-import  sys
 import  os
 import  warnings
 import  textwrap
 
 import  numpy               as      np
-from    scipy.spatial       import  cKDTree
 
 from    joblib              import  Parallel, delayed
 from    tqdm                import  tqdm
-
-from    concurrent.futures  import  ThreadPoolExecutor, ProcessPoolExecutor
-
-# Fix a deprecation warning inside the sklearn library
-try:
-    sys.modules['sklearn.externals.six'] = __import__('six')
-    sys.modules['sklearn.externals.joblib'] = __import__('joblib')
-    import hdbscan
-except ImportError:
-    import hdbscan
 
 import  pept
 from    pept.tracking       import  peptml
@@ -90,8 +78,8 @@ def find_minpoints(
     num_lines: int
         The number of lines in each combination of LoRs used to compute the
         MDP. This function considers every combination of `numlines` from the
-        input `sample_lines`. It must be smaller or equal to the number of input
-        lines `sample_lines`.
+        input `sample_lines`. It must be smaller or equal to the number of
+        input lines `sample_lines`.
 
     max_distance: float
         The maximum allowed distance between an MDP and its constituent lines.
@@ -569,5 +557,3 @@ class Minpoints(pept.PointData):
         )
 
         return docstr
-
-

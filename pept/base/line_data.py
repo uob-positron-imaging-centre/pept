@@ -39,7 +39,6 @@ import  time
 import  numpy                   as      np
 
 import  plotly.graph_objects    as      go
-
 import  matplotlib.pyplot       as      plt
 
 from    .iterable_samples       import  IterableSamples
@@ -111,11 +110,8 @@ class LineData(IterableSamples):
     to_csv(filepath)
         Write `lines` to a CSV file.
 
-    plot(sample_indices = ..., ax = None, colorbar_col = 0)
+    plot(sample_indices = ..., ax = None, alt_axes = False, colorbar_col = 0)
         Plot lines from selected samples using matplotlib.
-
-    plot_alt_axes(sample_indices = ..., ax = None, colorbar_col = 0):
-        Plot lines from selected samples using matplotlib on PEPT-style axes.
 
     lines_trace(sample_indices = ..., width = 2, color = None, opacity = 0.6,\
                 colorbar = True, colorbar_col = 0, colorbar_title = None)
@@ -397,7 +393,13 @@ class LineData(IterableSamples):
         np.savetxt(filepath, self._lines, delimiter = delimiter)
 
 
-    def plot(self, sample_indices = ..., ax = None, colorbar_col = 0):
+    def plot(
+        self,
+        sample_indices = ...,
+        ax = None,
+        alt_axes = False,
+        colorbar_col = 0,
+    ):
         '''Plot lines from selected samples using matplotlib.
 
         Returns matplotlib figure and axes objects containing all lines
@@ -413,8 +415,15 @@ class LineData(IterableSamples):
             indices, while an Ellipsis (`...`) signifies all samples. The
             default is `...` (all lines).
 
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
+        ax : mpl_toolkits.mplot3D.Axes3D object, optional
+            The 3D matplotlib-based axis for plotting. If undefined, new
+            Matplotlib figure and axis objects are created.
+
+        alt_axes : bool, default False
+            If `True`, plot using the alternative PEPT-style axes convention:
+            z is horizontal, y points upwards. Because Matplotlib cannot swap
+            axes, this is achieved by swapping the parameters in the plotting
+            call (i.e. `plt.plot(x, y, z)` -> `plt.plot(z, x, y)`).
 
         colorbar_col : int, default -1
             The column in the data samples that will be used to color the
@@ -475,111 +484,33 @@ class LineData(IterableSamples):
         cmap = plt.cm.magma
         color_array = cmap(color / color.max())
 
-        for i, line in enumerate(lines):
-            ax.plot(
-                [line[1], line[4]],
-                [line[2], line[5]],
-                [line[3], line[6]],
-                c = color_array[i],
-                alpha = 0.8
-            )
+        if alt_axes:
+            for i, line in enumerate(lines):
+                ax.plot(
+                    [line[3], line[6]],
+                    [line[1], line[4]],
+                    [line[2], line[5]],
+                    c = color_array[i],
+                    alpha = 0.8
+                )
 
-        return fig, ax
+            ax.set_xlabel("z (mm)")
+            ax.set_ylabel("x (mm)")
+            ax.set_zlabel("y (mm)")
 
-
-    def plot_alt_axes(self, sample_indices = ..., ax = None, colorbar_col = 0):
-        '''Plot lines from selected samples using matplotlib on PEPT-style
-        axes.
-
-        Returns matplotlib figure and axes objects containing all lines
-        included in the samples selected by `sample_indices`.
-        `sample_indices` may be a single sample index (e.g. 0), an iterable
-        of indices (e.g. [1,5,6]), or an Ellipsis (`...`) for all samples.
-
-        The lines are plotted using the PEPT-style convention: **x** is
-        *parallel and horizontal* to the screens, **y** is
-        *parallel and vertical* to the screens, **z** is *perpendicular* to the
-        screens. The mapping relative to the Cartesian coordinates would then
-        be: (x, y, z) -> (z, x, y).
-
-        Parameters
-        ----------
-        sample_indices : int or iterable or Ellipsis, default Ellipsis
-            The index or indices of the samples of lines. An `int` signifies
-            the sample index, an iterable (list-like) signifies multiple sample
-            indices, while an Ellipsis (`...`) signifies all samples. The
-            default is `...` (all lines).
-
-        ax : mpl_toolkits.mplot3D.Axes3D object
-            The 3D matplotlib-based axis for plotting.
-
-        colorbar_col : int, default -1
-            The column in the data samples that will be used to color the
-            lines. The default is -1 (the last column).
-
-        Returns
-        -------
-        fig, ax : matplotlib figure and axes objects
-
-        Notes
-        -----
-        Plotting all lines is very computationally-expensive for matplotlib. It
-        is recommended to only plot a couple of samples at a time, or use the
-        faster `pept.visualisation.PlotlyGrapher`.
-
-        Examples
-        --------
-        Plot the lines from sample 1 in a `LineData` instance:
-
-        >>> lors = pept.LineData(...)
-        >>> fig, ax = lors.plot_alt_axes(1)
-        >>> fig.show()
-
-        Plot the lines from samples 0, 1 and 2:
-
-        >>> fig, ax = lors.plot_alt_axes([0, 1, 2])
-        >>> fig.show()
-
-        '''
-
-        if ax is None:
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection = '3d')
         else:
-            fig = plt.gcf()
+            for i, line in enumerate(lines):
+                ax.plot(
+                    [line[1], line[4]],
+                    [line[2], line[5]],
+                    [line[3], line[6]],
+                    c = color_array[i],
+                    alpha = 0.8
+                )
 
-        # Check if sample_indices is an iterable collection (list-like)
-        # otherwise just "iterate" over the single number or Ellipsis
-        if not hasattr(sample_indices, "__iter__"):
-            sample_indices = [sample_indices]
-
-        lines, color = [], []
-        # For each selected sample include all the lines' coordinates
-        for n in sample_indices:
-            # If an Ellipsis was received, then include all lines.
-            if n is Ellipsis:
-                sample = self.lines
-            else:
-                sample = self[n]
-
-            for line in sample:
-                lines.append(line[0:7])
-                color.append(line[colorbar_col])
-
-        color = np.array(color)
-
-        # Scatter x, y, z [color]
-        cmap = plt.cm.magma
-        color_array = cmap(color / color.max())
-
-        for i, line in enumerate(lines):
-            ax.plot(
-                [line[3], line[6]],
-                [line[1], line[4]],
-                [line[2], line[5]],
-                c = color_array[i],
-                alpha = 0.8
-            )
+            ax.set_xlabel("x (mm)")
+            ax.set_ylabel("y (mm)")
+            ax.set_zlabel("z (mm)")
 
         return fig, ax
 

@@ -690,9 +690,9 @@ class PEPTMLUser:
         )
 
         # Create a list of individual trajectories
-        trajectory_list = pept.utilities.group_by_column(
-            trajectories.points, -1
-        )
+        # trajectory_list = pept.utilities.group_by_column(
+        #     trajectories.points, -1
+        # )
 
         # Plot everything using PlotlyGrapher
         grapher = PlotlyGrapher(rows = 2, cols = 3, subplot_titles = [
@@ -760,20 +760,32 @@ class PEPTMLUser:
         # If any of sample_size, overlap, sample_size2, overlap2 were left
         # to the default `None`, set them to the default values. Otherwise
         # type-check them; also set lors.sample_size and lors.overlap.
-        sample_size = 200 * max_tracers if sample_size is None \
-                                        else int(sample_size)
+        if sample_size is None:
+            sample_size = 200 * max_tracers
+        else:
+            sample_size = int(sample_size)
+
         self.sample_size = sample_size
 
-        overlap = 150 * max_tracers if overlap is None \
-                                    else int(overlap)
+        if overlap is None:
+            overlap = 150 * max_tracers
+        else:
+            overlap = int(overlap)
+
         self.overlap = overlap
 
-        sample_size2 = 30 * max_tracers if sample_size2 is None \
-                                        else int(sample_size2)
+        if sample_size2 is None:
+            sample_size2 = 30 * max_tracers
+        else:
+            sample_size2 = int(sample_size2)
+
         self.sample_size2 = sample_size2
 
-        overlap2 = sample_size2 - 1 if overlap2 is None \
-                                    else int(overlap2)
+        if overlap2 is None:
+            overlap2 = sample_size2 - 1
+        else:
+            int(overlap2)
+
         self.overlap2 = overlap2
 
         # Type-check max_distance (for cutpoints), k1 (for 1-pass clusterer)
@@ -1143,8 +1155,11 @@ class PEPTMLFindParameters:
         self.grapher = PlotlyGrapher(
             rows = 2,
             cols = self.iterations,
-            subplot_titles = [f"k1 = {k}, labelled cutpoints" for k in self.ks]
-                              + [f"k1 = {k}, cluster centres" for k in self.ks]
+            subplot_titles = [
+                f"k1 = {k}, labelled cutpoints" for k in self.ks
+            ] + [
+                f"k1 = {k}, cluster centres" for k in self.ks
+            ]
         )
 
         # For every value of k1 we used, on the first row plot the labelled
@@ -1237,8 +1252,11 @@ class PEPTMLFindParameters:
         grapher = PlotlyGrapher(
             rows = 2,
             cols = iterations,
-            subplot_titles = [f"k1 = {k}, labelled cutpoints" for k in ks] +
-                             [f"k1 = {k}, cluster centres" for k in ks]
+            subplot_titles = [
+                f"k1 = {k}, labelled cutpoints" for k in ks
+            ] + [
+                f"k1 = {k}, cluster centres" for k in ks
+            ]
         )
 
         for i in range(iterations):
@@ -1291,12 +1309,12 @@ class PEPTMLFindParameters:
         # If any of sample_size, overlap, sample_size2, overlap2 were left
         # to the default `None`, set them to the default values. Otherwise
         # type-check them; also set lors.sample_size and lors.overlap.
-        sample_size = 200 * max_tracers if sample_size is None \
-                                        else int(sample_size)
+        if sample_size is None:
+            sample_size = 200 * max_tracers
         self.sample_size = sample_size
 
-        overlap = 150 * max_tracers if overlap is None \
-                                    else int(overlap)
+        if overlap is None:
+            overlap = 150 * max_tracers
         self.overlap = overlap
 
         # Type-check max_distance (for cutpoints), k1 (for 1-pass clusterer)
@@ -1312,5 +1330,3 @@ class PEPTMLFindParameters:
         self.k1 = k1
 
         self.iterations = int(iterations)
-
-
