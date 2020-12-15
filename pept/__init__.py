@@ -42,12 +42,12 @@ gamma ray represents a line of response (LoR) .
 
 Subpackages Provided
 --------------------
-The `pept` package provides four base classes at its root - `PointData`,
-`LineData`, `Pixels` and `Voxels` - acting as common data formats that the rest
-of the package will use for its tracking, analysis and visualisation
-algorithms. Thus any subroutine integrated in the `pept` package can be used
-interchangeably with new PET / PEPT scanner geometries, data formats or novel
-algorithms.
+The `pept` package provides five base classes at its root - `PointData`,
+`LineData`, `Pixels`, `Voxels` and `VoxelData` - acting as common data formats
+that the rest of the package will use for its tracking, analysis and
+visualisation algorithms. Thus any subroutine integrated in the `pept` package
+can be used interchangeably with new PET / PEPT scanner geometries, data
+formats or novel algorithms.
 
 The rest of the package is grouped into subpackages and modules following the
 hierarchy below:
@@ -61,12 +61,13 @@ hierarchy below:
     ├── LineData :      Base class encapsulating lines (LoRs) w/ one timestamp.
     ├── Pixels :        Base class managing pixels from a sample of lines.
     ├── Voxels :        Base class managing voxels from a sample of lines.
-    ├── VoxelData :     Base class encapsulating voxels.
+    ├── VoxelData :     Base class asynchronously managing multiple `Voxels`.
     │
     Subpackages:
     ├── base :                  Base classes (above).
     ├── cookbook :              Pre-made PEPT analysis scripts, or recipes.
     ├── diagnostics :           PET/PEPT scanner diagnostics.
+    ├── processing :            PEPT-oriented post-processing algorithms.
     ├── scanners :              Transform other data formats into base classes.
     │   ├── modular_camera :    Birmingham modular cameras binary data.
     │   └── parallel_screens :  Birmingham parallel screens PEPT detector.
