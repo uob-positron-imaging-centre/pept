@@ -35,7 +35,7 @@ unsigned short int bitrev(unsigned short int i1, int length)
 {
     unsigned short int j,k,dum,bit1,bit2,out;
     out=0;
-    for(j=0;j<length;j++){
+    for(j=0;(int)j<length;j++){
         k=length-1-j;
         dum=1<<j;
         bit1=dum&i1;
@@ -53,22 +53,22 @@ unsigned short int bitrev(unsigned short int i1, int length)
 void get_pept_event_ext(double* result, unsigned int word, int itag, int itime)
 {  
     int MPnum[112] = 
-            {   0,5,  0,6,  0,7,  0,8,  0,9,  0,10, 0,11, 
-                1,6,  1,7,  1,8,  1,9,  1,10, 1,11, 1,12,
-                2,7,  2,8,  2,9,  2,10, 2,11, 2,12, 2,13,
-                3,8,  3,9,  3,10, 3,11, 3,12, 3,13, 3,14,
-                4,9,  4,10, 4,11, 4,12, 4,13, 4,14, 4,15,
-                5,10, 5,11, 5,12, 5,13, 5,14, 5,15,
-                6,11, 6,12, 6,13, 6,14, 6,15, 
-                7,12, 7,13, 7,14, 7,15, 
-                8,13, 8,14, 8,15,
-                9,14, 9,15,
-                10,15                       
-            };
+    {   0,5,  0,6,  0,7,  0,8,  0,9,  0,10, 0,11, 
+        1,6,  1,7,  1,8,  1,9,  1,10, 1,11, 1,12,
+        2,7,  2,8,  2,9,  2,10, 2,11, 2,12, 2,13,
+        3,8,  3,9,  3,10, 3,11, 3,12, 3,13, 3,14,
+        4,9,  4,10, 4,11, 4,12, 4,13, 4,14, 4,15,
+        5,10, 5,11, 5,12, 5,13, 5,14, 5,15,
+        6,11, 6,12, 6,13, 6,14, 6,15, 
+        7,12, 7,13, 7,14, 7,15, 
+        8,13, 8,14, 8,15,
+        9,14, 9,15,
+        10,15                       
+    };
 
     unsigned short int short1,short2,word1,word2;
     int dtime, modpair,BoardAddr,Bucket[2],Block[2],Seg[2],Plane[2],itagold;
-    
+
     short1 = (word&0xffff);
     word1=bitrev(short1,16);   //reverse bit ordering for PJ card
     short2 = (word&0xffff0000)>>16;
@@ -84,7 +84,7 @@ void get_pept_event_ext(double* result, unsigned int word, int itag, int itime)
 
     Bucket[0] = MPnum[2*modpair-2];   //check whether starts from 0 or 1
     Bucket[1] = MPnum[2*modpair-1];
-    
+
     Block[0] = (word2&0x180)>>7;
     Block[1] = (word2&0x6000)>>13;
 
@@ -99,7 +99,7 @@ void get_pept_event_ext(double* result, unsigned int word, int itag, int itime)
     if(BoardAddr == 0);
     else if(BoardAddr == 1) 
     {   
-        
+
         Bucket[1] += 16;
     }
     else if(BoardAddr == 2)
@@ -121,9 +121,9 @@ void get_pept_event_ext(double* result, unsigned int word, int itag, int itime)
     if (modpair>28) // should be 56 but for modular camera we cop out at 28
     {
         for (it=0; it<12; it++)
-            {
-                result[it] = 0;   
-            }
+        {
+            result[it] = 0;   
+        }
     }
     else
     {
@@ -146,23 +146,23 @@ void get_pept_event_ext(double* result, unsigned int word, int itag, int itime)
 void get_pept_LOR_ext(double* result, unsigned int word, int itag, int itime)
 {  
     int MPnum[112] = 
-            {   0,5,  0,6,  0,7,  0,8,  0,9,  0,10, 0,11, 
-                1,6,  1,7,  1,8,  1,9,  1,10, 1,11, 1,12,
-                2,7,  2,8,  2,9,  2,10, 2,11, 2,12, 2,13,
-                3,8,  3,9,  3,10, 3,11, 3,12, 3,13, 3,14,
-                4,9,  4,10, 4,11, 4,12, 4,13, 4,14, 4,15,
-                5,10, 5,11, 5,12, 5,13, 5,14, 5,15,
-                6,11, 6,12, 6,13, 6,14, 6,15, 
-                7,12, 7,13, 7,14, 7,15, 
-                8,13, 8,14, 8,15,
-                9,14, 9,15,
-                10,15                       
-            };
+    {   0,5,  0,6,  0,7,  0,8,  0,9,  0,10, 0,11, 
+        1,6,  1,7,  1,8,  1,9,  1,10, 1,11, 1,12,
+        2,7,  2,8,  2,9,  2,10, 2,11, 2,12, 2,13,
+        3,8,  3,9,  3,10, 3,11, 3,12, 3,13, 3,14,
+        4,9,  4,10, 4,11, 4,12, 4,13, 4,14, 4,15,
+        5,10, 5,11, 5,12, 5,13, 5,14, 5,15,
+        6,11, 6,12, 6,13, 6,14, 6,15, 
+        7,12, 7,13, 7,14, 7,15, 
+        8,13, 8,14, 8,15,
+        9,14, 9,15,
+        10,15                       
+    };
 
     unsigned short int short1,short2,word1,word2;
-    
+
     int dtime, modpair,BoardAddr,Bucket[2],Block[2],Seg[2],Plane[2],itagold;
-    
+
     float x[2],y[2],z[2];
 
     float modHeight=95.;
@@ -187,7 +187,7 @@ void get_pept_LOR_ext(double* result, unsigned int word, int itag, int itime)
 
     Bucket[0] = MPnum[2*modpair-2];   //check whether starts from 0 or 1
     Bucket[1] = MPnum[2*modpair-1];
-    
+
     Block[0] = (word2&0x180)>>7;
     Block[1] = (word2&0x6000)>>13;
 
@@ -202,7 +202,7 @@ void get_pept_LOR_ext(double* result, unsigned int word, int itag, int itime)
     if(BoardAddr == 0);
     else if(BoardAddr == 1) 
     {   
-        
+
         Bucket[1] += 16;
     }
     else if(BoardAddr == 2)
@@ -246,19 +246,19 @@ void get_pept_LOR_ext(double* result, unsigned int word, int itag, int itime)
         }
         else
         {
-        continue;
+            continue;
         }
 
-}
+    }
 
     int it;
 
     if (modpair>28) // should be 56 but for modular camera we cop out at 28
     {
         for (it=0; it<8; it++)
-            {
-                result[it] = 0;   
-            }
+        {
+            result[it] = 0;   
+        }
     }
     else
     {

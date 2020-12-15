@@ -48,6 +48,15 @@ Voxels
    :special-members: __new__
 
 
+VoxelData
+^^^^^^^^^
+.. autoclass:: pept.VoxelData
+   :members:
+   :inherited-members:
+   :show-inheritance:
+   :special-members: __init__
+
+
 Subpackages
 -----------
 

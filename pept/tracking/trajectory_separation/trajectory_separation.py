@@ -36,14 +36,10 @@
 
 
 import  os
-import  time
 
 import  numpy                       as      np
 from    scipy.spatial               import  cKDTree
-from    scipy.sparse                import  csr_matrix
 from    scipy.sparse.csgraph        import  minimum_spanning_tree
-
-from    tqdm                        import  tqdm
 
 import  pept
 import  hdbscan
@@ -78,7 +74,7 @@ def trajectory_errors(
 
     # Find closest true point to each tracked point.
     for i, pos in enumerate(tracked_positions[:, 1:4]):
-        dist, index = tree.query(pos, k = 1,  n_jobs = max_workers)
+        dist, index = tree.query(pos, k = 1, n_jobs = max_workers)
 
         errors[i, 0] = np.linalg.norm(pos - true_positions[index])
         errors[i, 1:4] = np.abs(pos - true_positions[index, 0:3])
@@ -470,8 +466,7 @@ def connect_trajectories(
 
 
 
-# Use tail-call optimisation from tco.py
-@with_continuations()
+@with_continuations()       # Use tail-call optimisation from tco.py
 def _connect_trajectories(
     trajectory_list,
     max_time_difference,
@@ -498,8 +493,9 @@ def _connect_trajectories(
 
                 # Check the signature difference of the last `points_to_check`
                 # points is small enough
-                if signature_difference(t1, t2, points_to_check,
-                    signature_col) < max_signature_difference:
+                if signature_difference(
+                    t1, t2, points_to_check, signature_col
+                ) < max_signature_difference:
 
                     # Assimilate the column labels
                     t1[:, label_col] = t2[0, label_col]
@@ -527,8 +523,9 @@ def _connect_trajectories(
             # Try to connect End12 with End21
             elif time_difference(t2, t1) < max_time_difference:
 
-                if signature_difference(t2, t1, points_to_check,
-                    signature_col) < max_signature_difference:
+                if signature_difference(
+                    t2, t1, points_to_check, signature_col
+                ) < max_signature_difference:
 
                     t2[:, label_col] = t1[0, label_col]
                     connected_trajectory = np.append(t1, t2, axis = 0)
@@ -557,7 +554,7 @@ def signature_difference(
     signature_col
 ):
     return np.abs(
-        np.average(traj1[:points_to_check, signature_col]) - \
+        np.average(traj1[:points_to_check, signature_col]) -
         np.average(traj2[-points_to_check:, signature_col])
     )
 
@@ -566,5 +563,3 @@ def signature_difference(
 
 def time_difference(traj1, traj2):
     return np.abs(traj1[0, 0] - traj2[-1, 0])
-
-

@@ -36,26 +36,15 @@
 
 
 import  time
-import  sys
 import  os
 import  warnings
 import  textwrap
 
 import  numpy               as      np
-from    scipy.spatial       import  cKDTree
 
-from    joblib              import  Parallel, delayed
 from    tqdm                import  tqdm
 
-from    concurrent.futures  import  ThreadPoolExecutor, ProcessPoolExecutor
-
-# Fix a deprecation warning inside the sklearn library
-try:
-    sys.modules['sklearn.externals.six'] = __import__('six')
-    sys.modules['sklearn.externals.joblib'] = __import__('joblib')
-    import hdbscan
-except ImportError:
-    import hdbscan
+from    concurrent.futures  import  ThreadPoolExecutor
 
 import  pept
 
@@ -188,7 +177,7 @@ def get_cutoffs(sample):
     if sample.ndim != 2 or sample.shape[1] < 7:
         raise ValueError((
             "\n[ERROR]: `sample_lines` should have dimensions (M, N), "
-            f" where N >= 7. Received {sample_lines.shape}.\n"
+            f" where N >= 7. Received {sample.shape}.\n"
         ))
 
     # Compute cutoffs for cutpoints as the (min, max) values of the lines
@@ -522,5 +511,3 @@ class Cutpoints(pept.PointData):
         )
 
         return docstr
-
-
