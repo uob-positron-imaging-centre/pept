@@ -5,6 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pept/badge/?version=latest&style=flat-square)](https://pept.readthedocs.io/en/latest/?badge=latest)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G8XHP9zWMMDVu23PXzANLCOKNP_RjBEO)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/uob-positron-imaging-centre/pept.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/uob-positron-imaging-centre/pept/context:python)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/uob-positron-imaging-centre/pept.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/uob-positron-imaging-centre/pept/context:cpp)
 [![Azure Status](https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/pept-feedstock?branchName=master)](https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10178&branchName=master)
 [![PyPI download month](https://img.shields.io/pypi/dm/pept.svg?style=flat-square&label=pypi%20downloads)](https://pypi.python.org/pypi/pept/)
 [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/pept.svg?style=flat-square&label=conda%20downloads)](https://anaconda.org/conda-forge/pept)
