@@ -13,7 +13,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2020 Andrei Leonard Nicusan
+#    Copyright (C) 2019-2021 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -285,6 +285,7 @@ class Pixels(np.ndarray):
 
 
     def __array_finalize__(self, pixels):
+        # Required method for numpy subclassing
         if pixels is None:
             return
 
@@ -296,6 +297,44 @@ class Pixels(np.ndarray):
         self._zlim = getattr(pixels, "_zlim", None)
 
         self._pixel_grids = getattr(pixels, "_pixel_grids", None)
+
+
+    def __reduce__(self):
+        # __reduce__ and __setstate__ ensure correct pickling behaviour. See
+        # https://stackoverflow.com/questions/26598109/preserve-custom-
+        # attributes-when-pickling-subclass-of-numpy-array
+
+        # Get the parent's __reduce__ tuple
+        pickled_state = super(Pixels, self).__reduce__()
+
+        # Create our own tuple to pass to __setstate__
+        new_state = pickled_state[2] + (
+            self._number_of_pixels,
+            self._xlim,
+            self._ylim,
+            self._pixel_size,
+            self._pixel_grids,
+        )
+
+        # Return a tuple that replaces the parent's __setstate__ tuple with
+        # our own
+        return (pickled_state[0], pickled_state[1], new_state)
+
+
+    def __setstate__(self, state):
+        # __reduce__ and __setstate__ ensure correct pickling behaviour
+        # https://stackoverflow.com/questions/26598109/preserve-custom-
+        # attributes-when-pickling-subclass-of-numpy-array
+
+        # Set the class attributes
+        self._pixel_grids = state[-1]
+        self._pixel_size = state[-2]
+        self._ylim = state[-3]
+        self._xlim = state[-4]
+        self._number_of_pixels = state[-5]
+
+        # Call the parent's __setstate__ with the other tuple elements.
+        super(Pixels, self).__setstate__(state[0:-5])
 
 
     @property

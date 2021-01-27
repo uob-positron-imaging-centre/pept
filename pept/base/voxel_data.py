@@ -13,7 +13,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2020 Andrei Leonard Nicusan
+#    Copyright (C) 2019-2021 Andrei Leonard Nicusan
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 
 
 # File   : voxel_data.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 07.01.2020
 
@@ -327,6 +327,46 @@ class Voxels(np.ndarray):
         self._zlim = getattr(voxels, "_zlim", None)
 
         self._voxel_grids = getattr(voxels, "_voxel_grids", None)
+
+
+    def __reduce__(self):
+        # __reduce__ and __setstate__ ensure correct pickling behaviour. See
+        # https://stackoverflow.com/questions/26598109/preserve-custom-
+        # attributes-when-pickling-subclass-of-numpy-array
+
+        # Get the parent's __reduce__ tuple
+        pickled_state = super(Voxels, self).__reduce__()
+
+        # Create our own tuple to pass to __setstate__
+        new_state = pickled_state[2] + (
+            self._number_of_voxels,
+            self._voxel_size,
+            self._xlim,
+            self._ylim,
+            self._zlim,
+            self._voxel_grids,
+        )
+
+        # Return a tuple that replaces the parent's __setstate__ tuple with
+        # our own
+        return (pickled_state[0], pickled_state[1], new_state)
+
+
+    def __setstate__(self, state):
+        # __reduce__ and __setstate__ ensure correct pickling behaviour
+        # https://stackoverflow.com/questions/26598109/preserve-custom-
+        # attributes-when-pickling-subclass-of-numpy-array
+
+        # Set the class attributes
+        self._voxel_grids = state[-1]
+        self._zlim = state[-2]
+        self._ylim = state[-3]
+        self._xlim = state[-4]
+        self._voxel_size = state[-5]
+        self._number_of_voxels = state[-6]
+
+        # Call the parent's __setstate__ with the other tuple elements.
+        super(Voxels, self).__setstate__(state[0:-6])
 
 
     @property
