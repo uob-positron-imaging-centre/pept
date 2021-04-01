@@ -12,7 +12,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2020 Andrei Leonard Nicusan
+#    Copyright (C) 2021 the pept developers
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -229,5 +229,3 @@ class ParallelScreens(LineData):
         if verbose:
             end = time.time()
             print(f"Initialising the PEPT data took {end - start} seconds.\n")
-
-
