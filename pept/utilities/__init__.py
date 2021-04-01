@@ -54,15 +54,7 @@ from    .parallel   import  *
 from    .misc       import  *
 
 
-__author__ = "Andrei Leonard Nicusan"
-__credits__ = [
-    "Andrei Leonard Nicusan",
-    "Kit Windows-Yule",
-    "Sam Manger"
-]
 __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
-__status__ = "Development"
-
-
+__status__ = "Beta"

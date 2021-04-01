@@ -128,7 +128,3 @@ def parallel_map_file(
         results = [r.get() for r in results]
 
     return results
-
-
-
-

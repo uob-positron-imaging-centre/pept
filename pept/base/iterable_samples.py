@@ -6,13 +6,13 @@
 #    and visualisation tools.
 #
 #    If you used this codebase or any software making use of it in a scientific
-#    publication, you must cite the following paper:
+#    publication, you should cite the following paper:
 #        Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
 #        using machine learning. Review of Scientific Instruments.
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2020 Andrei Leonard Nicusan
+#    Copyright (C) 2019-2021 the pept developers
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -308,5 +308,3 @@ class IterableSamples(ABC):
             raise StopIteration
 
         return self.data_samples[(self._index - self._sample_size):self._index]
-
-

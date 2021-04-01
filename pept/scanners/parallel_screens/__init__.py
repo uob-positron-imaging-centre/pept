@@ -2,27 +2,23 @@
 # -*- coding: utf-8 -*-
 
 # File   : __init__.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 20.08.2019
 
 
 from    .parallel_screens   import  ParallelScreens
+from    .adac_forte         import  ADACForte
+from    .extensions         import  convert_adac_forte
+
 
 __all__ = [
-    'ParallelScreens',
+    "ParallelScreens",
+    "ADACForte",
+    "convert_adac_forte",
 ]
 
 
-__author__ = "Andrei Leonard Nicusan"
-__credits__ = [
-    "Andrei Leonard Nicusan",
-    "Kit Windows-Yule",
-    "Sam Manger"
-]
 __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
-__status__ = "Development"
-
-

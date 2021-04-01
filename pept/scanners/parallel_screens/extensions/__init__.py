@@ -3,14 +3,14 @@
 # File   : __init__.py
 # License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
-# Date   : 03.02.2020
+# Date   : 01.04.2021
 
 
-from    .parallel_map   import  parallel_map_file
+from    .binary_converter   import  convert_adac_forte
 
 
 __all__ = [
-    "parallel_map_file"
+    "convert_adac_forte",
 ]
 
 

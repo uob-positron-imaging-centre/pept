@@ -39,12 +39,14 @@ Subpackages Provided
     Classes imported into subpackage root:
     ├── ModularCamera :    Convert modular cameras data into `LineData`.
     ├── ParallelScreens :  Initialise parallel screens data as `LineData`.
+    ├── ADACForte :        Initialise `LineData` from an ADAC binary file.
     │
     Subpackages
     ├── modular_camera
     │   └── ModularCamera
     └── parallel_screens
-        └── ParallelScreens
+        ├── ParallelScreens
+        └── ADACForte
 
 '''
 
@@ -63,5 +65,3 @@ __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
 __status__ = "Development"
-
-

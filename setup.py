@@ -5,7 +5,7 @@
 #    Tracking (PEPT) research, including tracking, simulation, data analysis
 #    and visualisation tools
 #
-#    Copyright (C) 2020 Andrei Leonard Nicusan
+#    Copyright (C) 2019-2021 the pept developers
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -93,6 +93,9 @@ cy_extension_kw['extra_link_args'] = extra_link_args
 cy_extension_kw['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
+    Extension('pept.scanners.parallel_screens.extensions.binary_converter',
+              ['pept/scanners/parallel_screens/extensions/binary_converter.pyx'],
+              **cy_extension_kw),
     Extension('pept.utilities.cutpoints.find_cutpoints',
               ['pept/utilities/cutpoints/find_cutpoints.pyx'],
               **cy_extension_kw),
@@ -202,7 +205,7 @@ setup(
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'Natural Language :: English',
         'Programming Language :: Python',
