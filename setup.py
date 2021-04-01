@@ -93,6 +93,9 @@ cy_extension_kw['extra_link_args'] = extra_link_args
 cy_extension_kw['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
+    Extension('pept.scanners.parallel_screens.extensions.binary_converter',
+              ['pept/scanners/parallel_screens/extensions/binary_converter.pyx'],
+              **cy_extension_kw),
     Extension('pept.utilities.cutpoints.find_cutpoints',
               ['pept/utilities/cutpoints/find_cutpoints.pyx'],
               **cy_extension_kw),
