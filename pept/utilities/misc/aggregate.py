@@ -66,5 +66,3 @@ def group_by_column(data_array, column_to_separate):
 
     groups = [data_array[data_col == label] for label in labels]
     return groups
-
-

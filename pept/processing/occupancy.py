@@ -1,9 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+
+#    pept is a Python library that unifies Positron Emission Particle
+#    Tracking (PEPT) research, including tracking, simulation, data analysis
+#    and visualisation tools.
+#
+#    If you used this codebase or any software making use of it in a scientific
+#    publication, you should cite the following paper:
+#        Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
+#        using machine learning. Review of Scientific Instruments.
+#        2020 Jan 1;91(1):013329.
+#        https://doi.org/10.1063/1.5129251
+#
+#    Copyright (C) 2019-2021 the pept developers
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 # File   : occupancy.py
 # License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 23.11.2020
+
+
 
 
 import  time

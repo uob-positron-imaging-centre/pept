@@ -12,7 +12,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2020 Andrei Leonard Nicusan
+#    Copyright (C) 2019-2021 the pept developers
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 
 
 # File              : find_cutpoints.pyx
-# License           : License: GNU v3.0
+# License           : GNU v3.0
 # Author            : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date              : 03.02.2019
 
@@ -211,6 +211,3 @@ cpdef find_cutpoints(
     cutpoints_truncated = cutpoints_truncated[cutpoints_truncated[:, 0].argsort()]
 
     return cutpoints_truncated
-
-
-

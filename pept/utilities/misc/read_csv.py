@@ -577,5 +577,3 @@ class ChunkReader:
         )
 
         return docstr
-
-

@@ -53,19 +53,11 @@ from    .birmingham_method    import BirminghamMethod
 
 
 __all__ = [
-   'BirminghamMethod'
+    'BirminghamMethod',
 ]
 
 
-__author__ = "Sam Manger"
-__credits__ = [
-    "Sam Manger",
-    "Andrei Leonard Nicusan",
-    "Kit Windows-Yule",
-]
 __license__ = "GNU v3.0"
 __maintainer__ = "Sam Manger"
 __email__ = "s.manger@bham.ac.uk"
-__status__ = "Development"
-
-
+__status__ = "Beta"

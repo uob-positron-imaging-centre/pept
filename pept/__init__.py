@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # File   : __init__.py
-# License: License: GNU v3.0
+# License: GNU v3.0
 # Author : Andrei Leonard Nicusan <a.l.nicusan@bham.ac.uk>
 # Date   : 19.08.2019
 
@@ -254,15 +254,18 @@ __all__ = [
 ]
 
 
-__author__ = ["Andrei Leonard Nicusan", "Sam Manger"]
+__author__ = ["The pept developers"]
 __credits__ = [
-    "Andrei Leonard Nicusan",
-    "Kit Windows-Yule",
-    "Sam Manger"
+    "Andrei Leonard Nicusan (University of Birmingham)",
+    "Dr. Kit Windows-Yule (University of Birmingham)",
+    "Dr. Sam Manger (University of Birmingham)",
+    "Matthew Herald (University of Birmingham)",
+    "Chris Jones (University of Birmingham)",
+    "Prof. David Parker (University of Birmingham)",
+    "Dr. Antoine Renaud (University of Edinburgh)",
+    "Dr. Cody Wiggins (Virginia Commonwealth University",
 ]
 __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
-__status__ = "Development"
-
-
+__status__ = "Beta"
