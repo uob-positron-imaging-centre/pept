@@ -35,7 +35,9 @@
 # Date   : 19.08.2019
 
 
+import  pickle
 import  time
+
 import  numpy                   as      np
 
 import  plotly.graph_objects    as      go
@@ -109,6 +111,12 @@ class PointData(IterableSamples):
 
     to_csv(filepath)
         Write `points` to a CSV file.
+
+    save(filepath)
+        Save a `PointData` instance as a binary `pickle` object.
+
+    load(filepath)
+        Load a saved / pickled `PointData` object from `filepath`.
 
     plot(sample_indices = ..., ax = None, alt_axes = False, colorbar_col = -1)
         Plot points from selected samples using matplotlib.
@@ -386,6 +394,66 @@ class PointData(IterableSamples):
         '''
 
         np.savetxt(filepath, self._points)
+
+
+    def save(self, filepath):
+        '''Save a `PointData` instance as a binary `pickle` object.
+
+        Saves the full object state, including the inner `.points` NumPy array,
+        `sample_size`, etc. in a fast, portable binary format. Load back the
+        object using the `load` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Examples
+        --------
+        Save a `PointData` instance, then load it back:
+
+        >>> points = pept.PointData([[1, 2, 3, 4]])
+        >>> points.save("points.pickle")
+
+        >>> points_reloaded = pept.PointData.load("points.pickle")
+
+        '''
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(filepath):
+        '''Load a saved / pickled `PointData` object from `filepath`.
+
+        Most often the full object state was saved using the `.save` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Returns
+        -------
+        pept.PointData
+            The loaded `pept.PointData` instance.
+
+        Examples
+        --------
+        Save a `PointData` instance, then load it back:
+
+        >>> points = pept.PointData([[1, 2, 3, 4]])
+        >>> points.save("points.pickle")
+
+        >>> points_reloaded = pept.PointData.load("points.pickle")
+
+        '''
+        with open(filepath, "rb") as f:
+            obj = pickle.load(f)
+
+        return obj
 
 
     def plot(

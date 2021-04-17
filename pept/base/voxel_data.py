@@ -36,6 +36,7 @@
 
 
 import  os
+import  pickle
 import  time
 import  textwrap
 from    concurrent.futures      import  ThreadPoolExecutor
@@ -94,6 +95,9 @@ class Voxels(np.ndarray):
     voxel_size: (3,) numpy.ndarray
         The lengths of a voxel in the x-, y- and z-dimensions, respectively.
 
+    time: numpy.float64
+        The timestamp associated with this voxellised space.
+
     xlim: (2,) numpy.ndarray
         The lower and upper boundaries of the voxellised volume in the
         x-dimension, formatted as [x_min, x_max].
@@ -114,6 +118,12 @@ class Voxels(np.ndarray):
 
     Methods
     -------
+    save(filepath)
+        Save a `Voxels` instance as a binary `pickle` object.
+
+    load(filepath)
+        Load a saved / pickled `Voxels` object from `filepath`.
+
     from_lines(lines, number_of_voxels, xlim = None, ylim = None, zlim = None,\
                verbose = True)
         Create a voxel space and traverse / voxellise a given sample of
@@ -218,6 +228,7 @@ class Voxels(np.ndarray):
         xlim,
         ylim,
         zlim,
+        time = 0.,
     ):
         '''`Voxels` class constructor.
 
@@ -292,10 +303,13 @@ class Voxels(np.ndarray):
                 f"Received parameter with shape {zlim.shape}."
             )))
 
+        time = float(time)
 
         # Setting class attributes
         voxels = voxels_array.view(cls)
         voxels._number_of_voxels = voxels.shape
+
+        voxels._time = time
 
         voxels._xlim = xlim
         voxels._ylim = ylim
@@ -322,6 +336,8 @@ class Voxels(np.ndarray):
         self._number_of_voxels = getattr(voxels, "_number_of_voxels", None)
         self._voxel_size = getattr(voxels, "_voxel_size", None)
 
+        self._time = getattr(voxels, "_time", None)
+
         self._xlim = getattr(voxels, "_xlim", None)
         self._ylim = getattr(voxels, "_ylim", None)
         self._zlim = getattr(voxels, "_zlim", None)
@@ -341,6 +357,7 @@ class Voxels(np.ndarray):
         new_state = pickled_state[2] + (
             self._number_of_voxels,
             self._voxel_size,
+            self._time,
             self._xlim,
             self._ylim,
             self._zlim,
@@ -362,11 +379,12 @@ class Voxels(np.ndarray):
         self._zlim = state[-2]
         self._ylim = state[-3]
         self._xlim = state[-4]
-        self._voxel_size = state[-5]
-        self._number_of_voxels = state[-6]
+        self._time = state[-5]
+        self._voxel_size = state[-6]
+        self._number_of_voxels = state[-7]
 
         # Call the parent's __setstate__ with the other tuple elements.
-        super(Voxels, self).__setstate__(state[0:-6])
+        super(Voxels, self).__setstate__(state[0:-7])
 
 
     @property
@@ -377,6 +395,16 @@ class Voxels(np.ndarray):
     @property
     def number_of_voxels(self):
         return self._number_of_voxels
+
+
+    @property
+    def time(self):
+        return self._time
+
+
+    @time.setter
+    def time(self, timestamp):
+        self._time = float(timestamp)
 
 
     @property
@@ -546,7 +574,7 @@ class Voxels(np.ndarray):
             zlim = zlim,
         )
 
-        voxels.add_lines(lines, verbose = False)
+        voxels.add_lines(lines, set_time = True, verbose = False)
 
         if verbose:
             end = time.time()
@@ -558,7 +586,7 @@ class Voxels(np.ndarray):
 
 
     @staticmethod
-    def empty(number_of_voxels, xlim, ylim, zlim):
+    def empty(number_of_voxels, xlim, ylim, zlim, time = 0.):
         '''Create an empty voxel space for the 3D cube bounded by `xlim`,
         `ylim` and `zlim`.
 
@@ -579,6 +607,9 @@ class Voxels(np.ndarray):
         zlim: (2,) numpy.ndarray
             The lower and upper boundaries of the voxellised volume in the
             z-dimension, formatted as [z_min, z_max].
+
+        time: numpy.float64, default 0.
+            The timestamp associated with this voxellised space.
 
         Raises
         ------
@@ -619,8 +650,8 @@ class Voxels(np.ndarray):
             xlim = xlim,
             ylim = ylim,
             zlim = zlim,
+            time = time,
         )
-
 
 
     @staticmethod
@@ -654,7 +685,67 @@ class Voxels(np.ndarray):
         ])
 
 
-    def add_lines(self, lines, verbose = False):
+    def save(self, filepath):
+        '''Save a `Voxels` instance as a binary `pickle` object.
+
+        Saves the full object state, including the inner `.voxels` NumPy array,
+        `xlim`, etc. in a fast, portable binary format. Load back the object
+        using the `load` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Examples
+        --------
+        Save a `Voxels` instance, then load it back:
+
+        >>> voxels = pept.Voxels.empty((64, 48, 32), [0, 20], [0, 10], [0, 5])
+        >>> voxels.save("voxels.pickle")
+
+        >>> voxels_reloaded = pept.Voxels.load("voxels.pickle")
+
+        '''
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(filepath):
+        '''Load a saved / pickled `Voxels` object from `filepath`.
+
+        Most often the full object state was saved using the `.save` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Returns
+        -------
+        pept.Voxels
+            The loaded `pept.Voxels` instance.
+
+        Examples
+        --------
+        Save a `Voxels` instance, then load it back:
+
+        >>> voxels = pept.Voxels.empty((64, 48, 32), [0, 20], [0, 10], [0, 5])
+        >>> voxels.save("voxels.pickle")
+
+        >>> voxels_reloaded = pept.Voxels.load("voxels.pickle")
+
+        '''
+        with open(filepath, "rb") as f:
+            obj = pickle.load(f)
+
+        return obj
+
+
+    def add_lines(self, lines, set_time = True, verbose = False):
         '''Voxellise a sample of lines, adding 1 to each voxel traversed, for
         each line in the sample.
 
@@ -665,6 +756,10 @@ class Voxels(np.ndarray):
             timestamp followed by two 3D points, such that the data columns are
             `[time, x1, y1, z1, x2, y2, z2, ...]`. Note that there can be extra
             data columns which will be ignored.
+
+        set_time : bool, default True
+            If `True`, set the "time" attribute to the mean timestamp of the
+            input `lines`.
 
         verbose : bool, default False
             Time the voxel traversal and print it to the terminal.
@@ -695,6 +790,9 @@ class Voxels(np.ndarray):
             self._voxel_grids[1],
             self._voxel_grids[2]
         )
+
+        if set_time:
+            self.time = lines[:, 0].mean()
 
         if verbose:
             end = time.time()
@@ -1180,6 +1278,7 @@ class Voxels(np.ndarray):
             f"{self.__array__()}\n\n"
             f"number_of_voxels =    {self._number_of_voxels}\n"
             f"voxel_size =          {self._voxel_size}\n\n"
+            f"time =                {self._time}\n\n"
             f"xlim =                {self._xlim}\n"
             f"ylim =                {self._ylim}\n"
             f"zlim =                {self._zlim}\n\n"
@@ -1276,6 +1375,12 @@ class VoxelData:
 
     Methods
     -------
+    save(filepath)
+        Save a `VoxelData` instance as a binary `pickle` object.
+
+    load(filepath)
+        Load a saved / pickled `VoxelData` object from `filepath`.
+
     traverse(sample_indices = ..., verbose = True)
         Voxellise the samples in `line_data` at indices `samples_indices`.
 
@@ -1569,6 +1674,68 @@ class VoxelData:
         return self._executor
 
 
+    def save(self, filepath):
+        '''Save a `VoxelData` instance as a binary `pickle` object.
+
+        Saves the full object state, including the inner `.voxels` NumPy array,
+        `xlim`, etc. in a fast, portable binary format. Load back the object
+        using the `load` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Examples
+        --------
+        Save a `VoxelData` instance (created from lines), then load it back:
+
+        >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+        >>> voxel_data = pept.VoxelData(lines, (64, 48, 32))
+        >>> voxel_data.save("voxel_data.pickle")
+
+        >>> voxel_data_reloaded = pept.VoxelData.load("voxel_data.pickle")
+
+        '''
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(filepath):
+        '''Load a saved / pickled `VoxelData` object from `filepath`.
+
+        Most often the full object state was saved using the `.save` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Returns
+        -------
+        pept.VoxelData
+            The loaded `pept.VoxelData` instance.
+
+        Examples
+        --------
+        Save a `VoxelData` instance (created from lines), then load it back:
+
+        >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+        >>> voxel_data = pept.VoxelData(lines, (64, 48, 32))
+        >>> voxel_data.save("voxel_data.pickle")
+
+        >>> voxel_data_reloaded = pept.VoxelData.load("voxel_data.pickle")
+
+        '''
+        with open(filepath, "rb") as f:
+            obj = pickle.load(f)
+
+        return obj
+
+
     def traverse(
         self,
         sample_indices = ...,
@@ -1767,6 +1934,26 @@ class VoxelData:
         return vox
 
 
+    def __getstate__(self):
+        # Ensure correct pickling behaviour: exclude `self.executor` as it is
+        # tied to the OS
+        state = self.__dict__.copy()
+
+        # Remove the unpicklable entries.
+        del state['_executor']
+        return state
+
+
+    def __setstate__(self, state):
+        # Ensure correct unpickling behaviour: set `self.executor` again as it
+        # was excluded when pickling
+        self.__dict__.update(state)
+
+        self.__dict__['_executor'] = ThreadPoolExecutor(
+            max_workers = self.__dict__['_max_workers'],
+        )
+
+
     def __getitem__(self, key):
         # For accessing voxels using subscript notation
         key = int(key)
@@ -1783,15 +1970,22 @@ class VoxelData:
             )))
 
         if self._voxels[key] is None:
-            raise IndexError(textwrap.fill((
-                f"The requested index `{key}` exists, but the corresponding "
-                "sample of lines was not traversed (or it was not saved / "
-                "cached). You should set `save = True` when instantiating the "
-                "class, then run the `traverse()` method before trying to "
-                "access the voxels."
-            )))
+            vox = pept.Voxels.from_lines(
+                self._line_data[key],
+                self._number_of_voxels,
+                xlim = self._xlim,
+                ylim = self._ylim,
+                zlim = self._zlim,
+                verbose = False,
+            )
 
-        return self._voxels[key]
+            if self._save:
+                self._voxels[key] = vox
+
+            return vox
+
+        else:
+            return self._voxels[key]
 
 
     def __iter__(self):
@@ -1805,7 +1999,7 @@ class VoxelData:
 
             raise StopIteration
 
-        # Optimisation: if we already traversed this sample, return it directly
+        # If we already traversed and saved this sample, return it directly
         if self._voxels[self._voxels_index] is not None:
             self._voxels_index += 1
             return self._voxels[self._voxels_index - 1]
@@ -1829,16 +2023,14 @@ class VoxelData:
                     verbose = False,
                 )
 
+        self._voxels_index += 1
+        vox = self._futures[self._voxels_index - 1].result()
+        self._futures[self._voxels_index - 1] = None
+
         if self._save:
-            self._voxels_index += 1
-            self._voxels[self._voxels_index - 1] = \
-                self._futures[self._voxels_index - 1].result()
+            self._voxels[self._voxels_index - 1] = vox
 
-            return self._voxels[self._voxels_index - 1]
-
-        else:
-            self._voxels_index += 1
-            return self._futures[self._voxels_index - 1].result()
+        return vox
 
 
     def __len__(self):

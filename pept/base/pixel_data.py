@@ -35,6 +35,7 @@
 # Date   : 07.01.2020
 
 
+import  pickle
 import  time
 import  textwrap
 
@@ -101,6 +102,12 @@ class Pixels(np.ndarray):
 
     Methods
     -------
+    save(filepath)
+        Save a `Pixels` instance as a binary `pickle` object.
+
+    load(filepath)
+        Load a saved / pickled `Pixels` object from `filepath`.
+
     from_lines(lines, number_of_pixels, xlim = None, ylim = None, \
                verbose = True)
         Create a pixel space and traverse / pixellise a given sample of
@@ -557,7 +564,6 @@ class Pixels(np.ndarray):
         )
 
 
-
     @staticmethod
     def get_cutoff(p1, p2):
         '''Return a numpy array containing the minimum and maximum value found
@@ -587,6 +593,66 @@ class Pixels(np.ndarray):
             min(p1.min(), p2.min()),
             max(p1.max(), p2.max()),
         ])
+
+
+    def save(self, filepath):
+        '''Save a `Pixels` instance as a binary `pickle` object.
+
+        Saves the full object state, including the inner `.pixels` NumPy array,
+        `xlim`, etc. in a fast, portable binary format. Load back the object
+        using the `load` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Examples
+        --------
+        Save a `Pixels` instance, then load it back:
+
+        >>> pixels = pept.Pixels.empty((640, 480), [0, 20], [0, 10])
+        >>> pixels.save("pixels.pickle")
+
+        >>> pixels_reloaded = pept.Pixels.load("pixels.pickle")
+
+        '''
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(filepath):
+        '''Load a saved / pickled `Pixels` object from `filepath`.
+
+        Most often the full object state was saved using the `.save` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Returns
+        -------
+        pept.Pixels
+            The loaded `pept.Pixels` instance.
+
+        Examples
+        --------
+        Save a `Pixels` instance, then load it back:
+
+        >>> pixels = pept.Pixels.empty((640, 480), [0, 20], [0, 10])
+        >>> pixels.save("pixels.pickle")
+
+        >>> pixels_reloaded = pept.Pixels.load("pixels.pickle")
+
+        '''
+        with open(filepath, "rb") as f:
+            obj = pickle.load(f)
+
+        return obj
 
 
     def add_lines(self, lines, verbose = False):
