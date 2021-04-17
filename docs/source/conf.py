@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.abspath('../../pept'))
 # -- Project information -----------------------------------------------------
 
 project = 'pept'
-copyright = '2020, University of Birmingham Positron Imaging Centre'
+copyright = '2021, University of Birmingham Positron Imaging Centre'
 author = 'University of Birmingham Positron Imaging Centre'
 
 # The full version, including alpha/beta/rc tags

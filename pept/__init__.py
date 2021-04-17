@@ -108,10 +108,12 @@ publication, we ask you to cite the following paper:
 Licensing
 ---------
 The `pept` package is GNU v3.0 licensed.
-Copyright (C) 2020 Andrei Leonard Nicusan.
+Copyright (C) 2019-2021 the pept developers.
 
 References
 ----------
+Papers presenting PEPT algorithms included in this library: [1]_, [2]_, [3]_.
+
 .. [1] Parker DJ, Broadbent CJ, Fowles P, Hawkesworth MR, McNeil P. Positron
    emission particle tracking-a technique for studying flow within engineering
    equipment. Nuclear Instruments and Methods in Physics Research Section A:
