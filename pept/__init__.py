@@ -69,12 +69,11 @@ hierarchy below:
     ├── diagnostics :           PET/PEPT scanner diagnostics.
     ├── processing :            PEPT-oriented post-processing algorithms.
     ├── scanners :              Transform other data formats into base classes.
-    │   ├── modular_camera :    Birmingham modular cameras binary data.
-    │   └── parallel_screens :  Birmingham parallel screens PEPT detector.
     ├── simulation :            Simulate radioactively-labeled tracers.
     ├── tests :                 Package unit tests.
     ├── tracking :              Tracer identification and tracking algorithms.
     │   ├── birmingham_method : The original Birmingham Method [1].
+    │   ├── fpi :               The Feature Point Identification algorithm [3].
     │   ├── peptml :            The PEPT-ML algorithm [2].
     │   └── trajectory_separation : Trajectory separation of tracked tracers.
     ├── utilities :             Utility functions such as fast CSV-readers.
@@ -120,6 +119,10 @@ References
    Mar 10;326(3):592-607.
 .. [2] Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using
    machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+.. [3] Wiggins C, Santos R, Ruggles A. A feature point identification method
+   for positron emission particle tracking with multiple tracers. Nuclear
+   Instruments and Methods in Physics Research Section A: Accelerators,
+   Spectrometers, Detectors and Associated Equipment. 2017 Jan 21;843:22-8.
 
 Examples
 --------
