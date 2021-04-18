@@ -184,6 +184,19 @@ struct clusterTime{
         }
         nLikely=point.size();
     }
+    clusterTime& operator=(clusterTime& a) // copy assignment operator
+    {
+        if (this != &a)
+        {
+            for (ssize_t i=0; i<(ssize_t)a.point.size(); i++){
+                point.push_back(a.point[i]);
+            }
+            nLikely=a.nLikely;
+        }
+
+        return *this;
+    }
+
 };
 
 
