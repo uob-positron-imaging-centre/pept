@@ -24,19 +24,27 @@ Modules Provided
     pept.processing
     │
     Functions imported into the subpackage root:
-    ├── occupancy2d :           Pixellised occupancy grid from points.
-    └── occupancy2d_ext :       Occupancy grid low-level Cython extension.
+    ├── circles2d :             Pixellise circles onto occupancy grid.
+    ├── occupancy2d :           Pixellise trajectories onto occupancy grid.
+    ├── circles2d_ext :         Circle pixellisation low-level Cython routine.
+    └── occupancy2d_ext :       Trajectory pixellisation low-level C routine.
 
 '''
 
 
+from    .occupancy      import  circles2d
 from    .occupancy      import  occupancy2d
+
+from    .circles_ext    import  circles2d_ext
 from    .occupancy_ext  import  occupancy2d_ext
 
 
+
 __all__ = [
+    "circles2d",
     "occupancy2d",
-    "occupancy2d_ext"
+    "circles2d_ext",
+    "occupancy2d_ext",
 ]
 
 

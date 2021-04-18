@@ -72,6 +72,7 @@ class BirminghamMethod:
     fit_sample(sample, get_used = False, as_array = True, verbose = False)
         Use the Birmingham method to track a tracer location from a numpy
         array (i.e. one sample) of LoRs.
+
     fit(line_data, max_error = 10, get_used = False, max_workers = None,\
         verbose = True)
         Fit lines of response (an instance of 'LineData') and return the
@@ -110,6 +111,7 @@ class BirminghamMethod:
         fopt : float, default 0.5
             Float number between 0 and 1, representing the fraction of
             remaining LORs in a sample used to locate the particle.
+
         verbose : bool, default False
             Print extra information when initialising this class.
         '''
@@ -164,15 +166,18 @@ class BirminghamMethod:
             The sample of LORs that will be clustered. Each LoR is expressed as
             a timestamps and a line defined by two points; the data columns are
             then `[time, x1, y1, z1, x2, y2, z2, extra...]`.
+
         get_used : bool, default False
             If `True`, the function will also return a boolean mask of the LoRs
             used to compute the tracer location - that is, a vector of the same
             length as `sample`, containing 1 for the rows that were used, and 0
             otherwise.
+
         as_array : bool, default True
             If set to True, the tracked locations are returned as numpy arrays.
             If set to False, they are returned inside an instance of
             `pept.PointData` for ease of iteration and plotting.
+
         verbose : bool, default False
             Provide extra information when tracking a location: time the
             operation and show a progress bar.
@@ -181,6 +186,7 @@ class BirminghamMethod:
         -------
         locations : numpy.ndarray or pept.PointData
             The tracked locations found.
+
         used : numpy.ndarray, optional
             If `get_used` is true, then also return a boolean mask of the LoRs
             used to compute the tracer location - that is, a vector of the same
@@ -254,20 +260,24 @@ class BirminghamMethod:
             is too low, the tracer might not be found; if it is too high,
             temporal resolution is decreased. If the `overlap` is too small,
             the tracked points might be very "sparse".
+
         max_error : float, default = 10
             The maximum error allowed to return a 'valid' tracked location. All
             tracer locations with an error larger than `max_error` will be
             discarded.
+
         get_used : bool, default False
             If `True`, the function will also return a list of boolean masks of
             the LoRs used to compute the tracer location for each sample - that
             is, a vector of the same length as `sample`, containing 1 for the
             rows that were used, and 0 otherwise.
+
         max_workers : int, optional
             The maximum number of threads that will be used for asynchronously
             clustering the samples in `cutpoints`. If unset (`None`), the
             number of threads available on the machine (as returned by
             `os.cpu_count()`) will be used.
+
         verbose : bool, default True
             Provide extra information when tracking: time the operation and
             show a progress bar.
@@ -276,6 +286,7 @@ class BirminghamMethod:
         -------
         locations : pept.PointData
             The tracer locations found.
+
         used : list of numpy.ndarray
             A list of boolean masks of the LoRs used to compute the tracer
             location for each corresponding sample in `line_data` - that is, a

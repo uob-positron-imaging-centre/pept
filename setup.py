@@ -84,44 +84,72 @@ EXTRAS = {
 cythonize_kw = dict(language_level = 3)
 cy_extension_kw = dict()
 
-extra_compile_args = ['-Ofast']
+extra_compile_args = ['-Ofast', '-flto']
 cy_extension_kw['extra_compile_args'] = extra_compile_args
 
-extra_link_args = []
+extra_link_args = ['-flto']
 cy_extension_kw['extra_link_args'] = extra_link_args
 
 cy_extension_kw['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
-    Extension('pept.scanners.parallel_screens.extensions.binary_converter',
-              ['pept/scanners/parallel_screens/extensions/binary_converter.pyx'],
+    Extension(
+        'pept.scanners.parallel_screens.extensions.binary_converter',
+        ['pept/scanners/parallel_screens/extensions/binary_converter.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
+        'pept.utilities.cutpoints.find_cutpoints',
+        ['pept/utilities/cutpoints/find_cutpoints.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
+        'pept.utilities.cutpoints.find_minpoints',
+        ['pept/utilities/cutpoints/find_minpoints.pyx'],
+        **cy_extension_kw
+    ),
+    Extension('pept.processing.circles_ext',
+              ['pept/processing/circles_ext.pyx'],
               **cy_extension_kw),
-    Extension('pept.utilities.cutpoints.find_cutpoints',
-              ['pept/utilities/cutpoints/find_cutpoints.pyx'],
-              **cy_extension_kw),
-    Extension('pept.utilities.cutpoints.find_minpoints',
-              ['pept/utilities/cutpoints/find_minpoints.pyx'],
-              **cy_extension_kw),
-    Extension('pept.processing.occupancy_ext',
-              ['pept/processing/occupancy_ext.pyx'],
-              **cy_extension_kw),
-    Extension('pept.scanners.modular_camera.extensions.get_pept_event',
-              ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
-              **cy_extension_kw),
-    Extension('pept.utilities.traverse.traverse3d',
-              ['pept/utilities/traverse/traverse3d.pyx'],
-              include_dirs = cy_extension_kw["include_dirs"],
-              extra_compile_args = ["-O3"]),
-    Extension('pept.utilities.traverse.traverse2d',
-              ['pept/utilities/traverse/traverse2d.pyx'],
-              include_dirs = cy_extension_kw["include_dirs"],
-              extra_compile_args = ["-O3"]),
-    Extension('pept.tracking.trajectory_separation.distance_matrix_reachable',
-              ['pept/tracking/trajectory_separation/distance_matrix_reachable.pyx'],
-              **cy_extension_kw),
-    Extension('pept.tracking.birmingham_method.extensions.birmingham_method',
-              ['pept/tracking/birmingham_method/extensions/birmingham_method.pyx'],
-              **cy_extension_kw)
+    Extension(
+        'pept.processing.occupancy_ext',
+        ['pept/processing/occupancy_ext.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
+        'pept.scanners.modular_camera.extensions.get_pept_event',
+        ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
+        'pept.utilities.traverse.traverse3d',
+        ['pept/utilities/traverse/traverse3d.pyx'],
+        include_dirs = cy_extension_kw["include_dirs"],
+        extra_compile_args = ["-O3", "-flto"],
+        extra_link_args = ["-flto"]
+    ),
+    Extension(
+        'pept.utilities.traverse.traverse2d',
+        ['pept/utilities/traverse/traverse2d.pyx'],
+        include_dirs = cy_extension_kw["include_dirs"],
+        extra_compile_args = ["-O3", "-flto"],
+        extra_link_args = ["-flto"]
+    ),
+    Extension(
+        'pept.tracking.trajectory_separation.distance_matrix_reachable',
+        ['pept/tracking/trajectory_separation/distance_matrix_reachable.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
+        'pept.tracking.birmingham_method.extensions.birmingham_method',
+        ['pept/tracking/birmingham_method/extensions/birmingham_method.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
+        'pept.tracking.fpi.fpi_ext',
+        ['pept/tracking/fpi/fpi_ext.pyx'],
+        **cy_extension_kw
+    ),
 ]
 
 extensions = cythonize(cy_extensions, **cythonize_kw)
