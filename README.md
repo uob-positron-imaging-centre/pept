@@ -62,45 +62,13 @@ pip install --upgrade git+https://github.com/uob-positron-imaging-centre/pept
 ```
 
 
-### A Minimal Example Script
+## Tutorials
 
-A minimal analysis script using the PEPT-ML algorithm from the `pept.tracking.peptml` package, transforming captured LoRs (Lines of Response, the gamma rays emitted by the tracer) into tracer locations:
-
-```python
-import pept
-from pept.tracking import peptml
-
-# Read in LoRs from a web-hosted CSV file into a NumPy array.
-lors_raw = pept.utilities.read_csv(
-    "https://raw.githubusercontent.com/uob-positron-imaging-centre/example_data/master/sample_2p_42rpm.csv",
-    skiprows = 16,
-)
-
-# Transform LoRs into the general `pept.LineData` format using a `pept.scanners`
-# converter and define a `sample_size` - i.e. the number of LoRs used to compute
-# the tracer locations in a single frame.
-lors = pept.scanners.ParallelScreens(
-	lors_raw,
-	screen_separation = 712,
-    sample_size = 200,
-)
-
-# Transform LoRs into cutpoints
-cutpoints = peptml.Cutpoints(lors, max_distance = 0.15)
-
-# Cluster cutpoints using HDBSCAN and extract tracer locations.
-clusterer = peptml.HDBSCANClusterer()
-centres = clusterer.fit(cutpoints)
-
-# Plot tracer locations using Plotly.
-grapher = pept.visualisation.PlotlyGrapher()
-grapher.add_points(centres)
-grapher.show()
-```
-
-Running the above code initialises 80,000 lines of PEPT data from an online location (containing the same experiment as before - two tracers rotating at 42 RPM), transforms lines of response into accurate tracer locations and plots them in a browser-based interactive 3D graph (live version available [here](https://uob-positron-imaging-centre.github.io/live/sample_42rpm)):
+Some PEPT analysis example scripts are available on [pept.readthedocs.io](https://pept.readthedocs.io/en/latest/). A minimal script can read PEPT from an online location (e.g. the experiment shown above - two radioactive tracers rotating at 42 RPM), transform the lines of response into accurate tracer locations and plot them in a browser-based interactive 3D graph (live version available [here](https://uob-positron-imaging-centre.github.io/live/sample_42rpm)):
 
 ![LoRs analysed using the PEPT-ML minimal script](https://github.com/uob-positron-imaging-centre/misc-hosting/blob/master/pept_centres.png?raw=true)
+
+A more complete PEPT analysis script can track multiple tracers at the same time, produce "tight", separate trajectories and create multiple interactive Plotly subplots that are opened in a webpage (example live graph [here](https://uob-positron-imaging-centre.github.io/live/sample_full_42rpm)). The resulting trajectories can then be post-processed to extract system-specific data - e.g. residence time distributions.
 
 You can download some PEPT data samples from the [UoB Positron Imaging Centre's Repository](https://github.com/uob-positron-imaging-centre/example_data):
 
@@ -108,102 +76,9 @@ You can download some PEPT data samples from the [UoB Positron Imaging Centre's 
 $> git clone https://github.com/uob-positron-imaging-centre/example_data
 ```
 
+### Documentation
 
-### A Complete Example Script
-
-A complete PEPT analysis script, tracking multiple particles using the PEPT-ML algorithm, running two passes of clustering and separating out individual tracer trajectories; finally, it creates six interactive Plotly subplots that are opened in a webpage (live graph [here](https://uob-positron-imaging-centre.github.io/live/sample_full_42rpm)):
-
-```python
-import pept
-from pept.tracking import peptml
-import pept.tracking.trajectory_separation as tsp
-
-from pept.visualisation import PlotlyGrapher
-
-
-# Maximum number of tracers visible at any one point
-max_tracers = 2
-
-# Read in LoRs from a web-hosted CSV file into a NumPy array
-lors_raw = pept.utilities.read_csv(
-    "https://raw.githubusercontent.com/uob-positron-imaging-centre/example_data/master/sample_2p_42rpm.csv",
-    skiprows = 16,
-)
-
-# 1. Transform LoRs into the general `pept.LineData` format using a `pept.scanners` converter and
-#    set a `sample_size` - i.e. the number of LoRs used to compute the tracer locations in one frame
-lors = pept.scanners.ParallelScreens(
-	lors_raw,
-	screen_separation = 712,
-    sample_size = 200 * max_tracers,
-    overlap = 100 * max_tracers,
-)
-
-# 2. Transform LoRs into cutpoints
-cutpoints = peptml.Cutpoints(lors, max_distance = 0.15)
-
-# 3. Cluster cutpoints to find particle locations (first pass of clustering)
-clusterer = peptml.HDBSCANClusterer(
-    0.15 * cutpoints.sample_size / max_tracers,
-    select_exemplars = True,
-)
-
-# Optionally find the best HDBSCAN settings for a given dataset using evolutionary optimisation
-# clusterer.optimise(cutpoints)
-
-centres, clustered_cutpoints = clusterer.fit(cutpoints, get_labels = True)
-
-# 4. Apply second pass of clustering to "tighten" trajectories
-centres.sample_size = 30 * max_tracers
-centres.overlap = centres.sample_size - 1
-
-clusterer2 = peptml.HDBSCANClusterer(
-    0.7 * centres.sample_size / max_tracers,
-    select_exemplars = True,
-)
-
-# Optionally find the best HDBSCAN settings for a given dataset using evolutionary optimisation
-# clusterer2.optimise(centres)
-
-centres2 = clusterer2.fit(centres)
-
-# 5. Separate out trajectories from the points found
-points_window = 20 * max_tracers
-trajectory_cut_distance = 10
-
-trajectories = tsp.segregate_trajectories(
-    centres2,
-    points_window,
-    trajectory_cut_distance,
-)
-
-# 6. Plotting time!
-grapher = PlotlyGrapher(rows = 2, cols = 3, subplot_titles = [
-    "First sample of LoRs",
-    "First sample of cutpoints",
-    "First sample of clustered cutpoints",
-    "First pass of clustering",
-    "Second pass of clustering",
-    "Segregated trajectories",
-])
-
-# Plot the first sample of lines and cutpoints
-grapher.add_lines(lors[0])
-grapher.add_points(cutpoints[0], col = 2)
-
-grapher.add_points(clustered_cutpoints[0], col = 3)
-grapher.add_points(centres, row = 2)
-
-grapher.add_points(centres2, row = 2, col = 2, colorbar_col = -2)
-grapher.add_points(trajectories, row = 2, col = 3)
-
-grapher.show()
-```
-
-The output graph is available [online here](https://uob-positron-imaging-centre.github.io/live/sample_full_42rpm).
-
-
-## Tutorials and Documentation
+An absurd amount of time was spent making sure than *every* function and class in the `pept` library is well-documented (and most have examples) and all code is explained through comments - no dragons shall be dwelling in the `pept` source code. The library API / reference can be found [here](https://pept.readthedocs.io/en/latest/pept_api.html) - including a search function for quickly finding what you need.
 
 A very fast-paced introduction to Python is available [here](https://colab.research.google.com/drive/1Uq8Ppiv8jR-XSVsKZMcCUNuXW-l6n_RI?usp=sharing); it is aimed at engineers whose background might be a few lines written MATLAB, as well as moderate C/C++ programmers.
 
@@ -211,7 +86,31 @@ A beginner-friendly tutorial for using the `pept` package is available [here](ht
 
 The links above point to Google Colaboratory, a Jupyter notebook-hosting website that lets you combine text with Python code, executing it on Google servers. Pretty neat, isn't it?
 
-Full documentation for the `pept` package is available [here](https://pept.readthedocs.io/en/latest/).
+
+## Library Architecture
+
+The main purpose of the `pept` library is to provide a common, consistent foundation for PEPT-related algorithms, including tracer tracking, visualisation and post-processing tools - such that they can be used interchangeably, mixed and matched for different systems. Virtually *any* PEPT processing routine follows these steps:
+
+1. Convert raw gamma camera / scanner data into *3D lines* (i.e. the captured gamma rays, or lines of response - LoRs).
+2. Take a *sample* of lines, locate tracer locations, then repeat for the next samples.
+3. Separate out individual tracer trajectories.
+4. Visualise and post-process trajectories.
+
+For these algorithm-agnostic steps, `pept` provides five base data structures upon which the rest of the library is built:
+
+1. [`pept.LineData`](https://pept.readthedocs.io/en/latest/pept_api.html#linedata): general 3D line samples, formatted as *[time, x1, y1, z1, x2, y2, z2, extra...]*.
+2. [`pept.PointData`](https://pept.readthedocs.io/en/latest/pept_api.html#pointdata): general 3D point samples, formatted as *[time, x, y, z, extra...]*.
+3. [`pept.Pixels`](https://pept.readthedocs.io/en/latest/pept_api.html#pixels): single 2D pixellised space with physical dimensions, including fast line traversal.
+4. [`pept.Voxels`](https://pept.readthedocs.io/en/latest/pept_api.html#voxels): single 3D voxellised space with physical dimensions, including fast line traversal.
+5. [`pept.VoxelData`](https://pept.readthedocs.io/en/latest/pept_api.html#voxeldata): multiple samples of voxels, generated on demand, in parallel.
+
+All the data structures above are built on top of NumPy and integrate natively with the rest of the Python / SciPy ecosystem. The rest of the `pept` library is organised into submodules:
+
+- [`pept.scanners`](https://pept.readthedocs.io/en/latest/api/pept.scanners.html): converters between native scanner data and the base classes.
+- [`pept.tracking`](https://pept.readthedocs.io/en/latest/api/pept.tracking.html): radioactive tracer tracking algorithms, e.g. the Birmingham method, PEPT-ML, FPI.
+- [`pept.visualisation`](https://pept.readthedocs.io/en/latest/api/pept.visualisation.html): PEPT data visualisation subroutines.
+- [`pept.utilities`](https://pept.readthedocs.io/en/latest/api/pept.utilities.html): general-purpose helpers, e.g. `read_csv`, `traverse3d`.
+- [`pept.processing`](https://pept.readthedocs.io/en/latest/api/pept.processing.html): PEPT-oriented post-processing algorithms, e.g. `occupancy2d`.
 
 
 ## Performance
@@ -227,7 +126,14 @@ We recommend you check out [our tutorials](https://colab.research.google.com/dri
 
 
 ## Contributing
-
+- Andrei Leonard Nicusan (University of Birmingham)
+- Dr. Kit Windows-Yule (University of Birmingham)
+- Dr. Sam Manger (University of Birmingham)
+- Matthew Herald (University of Birmingham)
+- Chris Jones (University of Birmingham)
+- Prof. David Parker (University of Birmingham)
+- Dr. Antoine Renaud (University of Edinburgh)
+- Dr. Cody Wiggins (Virginia Commonwealth University)
 The `pept` library is not a one-man project; it is being built, improved and extended continuously (directly or indirectly) by an international team of researchers of diverse backgrounds - including programmers, mathematicians and chemical / mechanical / nuclear engineers. Want to contribute and become a PEPTspert yourself? Great, join the team!
 
 There are multiple ways to help:
@@ -246,10 +152,18 @@ If you used this codebase or any software making use of it in a scientific publi
 
 > Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
 
-> https://doi.org/10.1063/1.5129251
+As `pept` is a project bringing together the expertise of many people, it hosts multiple algorithms that were developed and published in other papers. Please check the documentation of the `pept` algorithms you are using in your research and cite the original papers mentioned accordingly.
 
 
-Because `pept` is a project bringing together the expertise of many people, it hosts multiple algorithms that were developed and published in other papers. Please check the documentation of the `pept` algorithms you are using in your research and cite the original papers mentioned accordingly.
+## References
+
+Papers presenting PEPT algorithms included in this library:
+
+> [1] Parker DJ, Broadbent CJ, Fowles P, Hawkesworth MR, McNeil P. Positron emission particle tracking-a technique for studying flow within engineering equipment. Nuclear Instruments and Methods in Physics Research Section A: Accelerators, Spectrometers, Detectors and Associated Equipment. 1993 Mar 10;326(3):592-607.
+
+> [2] Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+
+> [3] Wiggins C, Santos R, Ruggles A. A feature point identification method for positron emission particle tracking with multiple tracers. Nuclear Instruments and Methods in Physics Research Section A: Accelerators, Spectrometers, Detectors and Associated Equipment. 2017 Jan 21;843:22-8.
 
 
 ## Licensing

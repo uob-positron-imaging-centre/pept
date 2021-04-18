@@ -1,5 +1,5 @@
-pept.visualisation package
-==========================
+pept.visualisation
+==================
 
 .. automodule:: pept.visualisation
 
