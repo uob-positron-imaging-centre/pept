@@ -16,7 +16,13 @@ visualisation tools.
    :maxdepth: 3
    :caption: Contents:
 
+   installation
    pept_tutorials
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Reference:
+
    pept_api
 
 
@@ -46,50 +52,8 @@ two tracers rotating at 42 RPM, imaged using the University of Birmingham
 Positron Imaging Centre's parallel screens PEPT camera.
 
 
-Getting Started
-===============
-These instructions will help you get started with PEPT data analysis.
-
-
-Prerequisites
--------------
-This package supports Python 3.6 and above - it is built and tested for Python
-3.6, 3.7 and 3.8 on Windows, Linux and macOS (thanks to conda-forge_, which is
-awesome!).
-
-You can install it using the batteries-included Anaconda_ distribution or the
-bare-bones Python_ interpreter. You can also check out our Python and `pept`
-tutorials_.
-
-.. _conda-forge: https://conda-forge.org/
-.. _Anaconda: https://www.anaconda.com/products/individual
-.. _Python: https://www.python.org/downloads/
-.. _tutorials: https://github.com/uob-positron-imaging-centre/tutorials
-
-
-Installation
-------------
-The easiest and quickest installation, if you are using Anaconda:
-
-::
-
-    conda install -c conda-forge pept
-
-You can also install the latest release version of `pept` from PyPI:
-
-::
-
-    pip install --upgrade pept
-
-Or you can install the development version from the GitHub repository:
-
-::
-
-    pip install -U git+https://github.com/uob-positron-imaging-centre/pept
-
-
 A Minimal Example Script
-~~~~~~~~~~~~~~~~~~~~~~~~
+========================
 
 A minimal analysis script using the PEPT-ML algorithm from the `pept.tracking.peptml` package, transforming captured LoRs (Lines of Response, the gamma rays emitted by the tracer) into tracer locations:
 
@@ -145,7 +109,7 @@ repository_:
 
 
 A Complete Example Script
-~~~~~~~~~~~~~~~~~~~~~~~~~
+=========================
 
 A complete PEPT analysis script, tracking multiple particles using the PEPT-ML algorithm, running two passes of clustering and separating out individual tracer trajectories; finally, it creates six interactive Plotly subplots that are opened in a webpage (`live graph here
 <https://uob-positron-imaging-centre.github.io/live/sample_full_42rpm>`_):
@@ -322,6 +286,8 @@ Copyright (C) 2021 the `pept` developers. Until now, this library was built dire
 
 References
 ----------
+Papers presenting PEPT algorithms included in this library: [1]_, [2]_, [3]_.
+
 .. [1] Parker DJ, Broadbent CJ, Fowles P, Hawkesworth MR, McNeil P. Positron
    emission particle tracking-a technique for studying flow within engineering
    equipment. Nuclear Instruments and Methods in Physics Research Section A:
@@ -329,6 +295,12 @@ References
    Mar 10;326(3):592-607.
 .. [2] Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using
    machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.
+.. [3] Wiggins C, Santos R, Ruggles A. A feature point identification method
+   for positron emission particle tracking with multiple tracers. Nuclear
+   Instruments and Methods in Physics Research Section A: Accelerators,
+   Spectrometers, Detectors and Associated Equipment. 2017 Jan 21;843:22-8.
+
+
 
 
 Indices and tables

@@ -33,6 +33,9 @@ Subpackages Provided
     Subpackages:
     ├── birmingham_method
     │   └── BirminghamMethod
+    ├── fpi
+    │   ├── fpi_ext
+    │   └── FPI
     ├── peptml
     │   ├── find_cutpoints
     │   ├── get_cutoffs
@@ -43,25 +46,19 @@ Subpackages Provided
         ├── connect_trajectories
         └── trajectory_errors
 
-Notes
------
-At the moment, the subpackages in `pept.tracking` are biased towards PEPT-ML,
-as there aren't many algorithms integrated into package *yet*. New algorithms
-and/or recommendations for the package are more than welcome! `pept` aims to be
-a community effort, be it academic, industrial, medical, or just from PEPT
-enthusiasts - so it is open to help with documentation, algorithms, utilities
-or analysis scripts, tutorials, and pull requests in general!
 '''
 
 
-from    .   import  peptml
 from    .   import  birmingham_method
+from    .   import  peptml
+from    .   import  fpi
 from    .   import  trajectory_separation
 
 
 __all__ = [
-    "peptml",
     "birmingham_method",
+    "peptml",
+    "fpi",
     "trajectory_separation"
 ]
 

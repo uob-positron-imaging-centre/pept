@@ -36,6 +36,8 @@
 
 
 import  time
+import  pickle
+
 import  numpy                   as      np
 
 import  plotly.graph_objects    as      go
@@ -109,6 +111,12 @@ class LineData(IterableSamples):
 
     to_csv(filepath)
         Write `lines` to a CSV file.
+
+    save(filepath)
+        Save a `LineData` instance as a binary `pickle` object.
+
+    load(filepath)
+        Load a saved / pickled `LineData` object from `filepath`.
 
     plot(sample_indices = ..., ax = None, alt_axes = False, colorbar_col = 0)
         Plot lines from selected samples using matplotlib.
@@ -391,6 +399,66 @@ class LineData(IterableSamples):
         '''
 
         np.savetxt(filepath, self._lines, delimiter = delimiter)
+
+
+    def save(self, filepath):
+        '''Save a `LineData` instance as a binary `pickle` object.
+
+        Saves the full object state, including the inner `.lines` NumPy array,
+        `sample_size`, etc. in a fast, portable binary format. Load back the
+        object using the `load` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Examples
+        --------
+        Save a `LineData` instance, then load it back:
+
+        >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+        >>> lines.save("lines.pickle")
+
+        >>> lines_reloaded = pept.LineData.load("lines.pickle")
+
+        '''
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(filepath):
+        '''Load a saved / pickled `LineData` object from `filepath`.
+
+        Most often the full object state was saved using the `.save` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Returns
+        -------
+        pept.LineData
+            The loaded `pept.LineData` instance.
+
+        Examples
+        --------
+        Save a `LineData` instance, then load it back:
+
+        >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+        >>> lines.save("lines.pickle")
+
+        >>> lines_reloaded = pept.LineData.load("lines.pickle")
+
+        '''
+        with open(filepath, "rb") as f:
+            obj = pickle.load(f)
+
+        return obj
 
 
     def plot(
