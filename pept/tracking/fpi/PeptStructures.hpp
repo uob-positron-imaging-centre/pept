@@ -48,6 +48,17 @@ struct point3{
     {
         u[0]=x; u[1]=y; u[2]=z;
     }
+    point3& operator=(point3& rhs) // copy assignment operator
+    {
+        if (this != &rhs)
+        {
+            u[0] = rhs.u[0];
+            u[1] = rhs.u[1];
+            u[2] = rhs.u[2];
+        }
+
+        return *this;
+    }
 };
 
 
@@ -72,6 +83,14 @@ struct cluster{
         {
             point.push_back(a[i]);
         }
+    }
+    cluster& operator=(cluster& rhs) // copy assignment operator
+    {
+        if (this != &rhs)
+            for (ssize_t i=0; i<(ssize_t)rhs.point.size(); i++)
+                point.push_back(rhs.point[i]);
+
+        return *this;
     }
 };
 
@@ -118,6 +137,22 @@ struct point3time{
         u[2]=x.u[2]; err[2]=dx.u[2];
         t=time;
         nLOR=nLines;
+    }
+    point3time& operator=(point3time& a) // copy assignment operator
+    {
+        if (this != &a)
+        {
+            u[0]=a.u[0];
+            u[1]=a.u[1];
+            u[2]=a.u[2];
+            t=a.t;
+            err[0]=a.err[0];
+            err[1]=a.err[1];
+            err[2]=a.err[2];
+            nLOR=a.nLOR;
+        }
+
+        return *this;
     }
 };
 

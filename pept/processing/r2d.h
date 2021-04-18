@@ -45,6 +45,16 @@ extern "C" {
 
 
 /**
+ * \brief Use the single precision power function if `SINGLE_PRECISION` is defined.
+ */
+#ifdef SINGLE_PRECISION
+    #define R2D_POW(x, y) powf((x), (y))
+#else 
+    #define R2D_POW(x, y) pow((x), (y))
+#endif
+
+
+/**
  * \file r2d.h
  * \author Devon Powell
  * \date 31 August 2015
@@ -765,7 +775,7 @@ static inline void r2d_shift_moments(r2d_real* moments, r2d_int polyorder, r2d_r
 				for(mi = mcorder; mi >= 0; --mi, ++mm) {
 					mj = mcorder - mi;
 					if (mi <= i && mj <= j ) {
-						moments2[m] += B[mi][i] * B[mj][j] * pow(vc.x,(i-mi)) * pow(vc.y,(j-mj)) * moments[mm];
+						moments2[m] += B[mi][i] * B[mj][j] * R2D_POW(vc.x,(i-mi)) * R2D_POW(vc.y,(j-mj)) * moments[mm];
 					}
 				}
 			}

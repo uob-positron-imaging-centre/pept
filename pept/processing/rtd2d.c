@@ -190,7 +190,7 @@ void            rtd2d_occupancy(r2d_real        *pixels,
     r2d_rvec2   grid_size = {{xsize / dims[0], ysize / dims[1]}};
 
     // Local grid which will be used for rasterising
-    r2d_real    *lgrid = (r2d_real*)calloc(dims[0] * dims[1], sizeof(r2d_real));
+    r2d_real    *lgrid = (r2d_real*)calloc((size_t)dims[0] * dims[1], sizeof(r2d_real));
 
     // Polygonal shapes used for the particle trajectories
     r2d_poly    cylinder;
