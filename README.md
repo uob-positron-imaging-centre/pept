@@ -126,14 +126,6 @@ We recommend you check out [our tutorials](https://colab.research.google.com/dri
 
 
 ## Contributing
-- Andrei Leonard Nicusan (University of Birmingham)
-- Dr. Kit Windows-Yule (University of Birmingham)
-- Dr. Sam Manger (University of Birmingham)
-- Matthew Herald (University of Birmingham)
-- Chris Jones (University of Birmingham)
-- Prof. David Parker (University of Birmingham)
-- Dr. Antoine Renaud (University of Edinburgh)
-- Dr. Cody Wiggins (Virginia Commonwealth University)
 The `pept` library is not a one-man project; it is being built, improved and extended continuously (directly or indirectly) by an international team of researchers of diverse backgrounds - including programmers, mathematicians and chemical / mechanical / nuclear engineers. Want to contribute and become a PEPTspert yourself? Great, join the team!
 
 There are multiple ways to help:
