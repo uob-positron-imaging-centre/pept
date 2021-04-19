@@ -43,14 +43,6 @@ for PEPT data visualisation. The PEPT 3D axes convention has the *y*-axis
 pointing upwards, such that the vertical screens of a PEPT scanner represent
 the *xy*-plane. The class provides functionality for plotting 3D scatter or
 line plots, with optional colorbars.
-
-If you use the `pept` package, we ask you to cite the following paper:
-
-    Nicuşan AL, Windows-Yule CR. Positron emission particle tracking
-    using machine learning. Review of Scientific Instruments.
-    2020 Jan 1;91(1):013329.
-    https://doi.org/10.1063/1.5129251
-
 '''
 
 

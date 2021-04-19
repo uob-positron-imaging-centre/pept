@@ -26,6 +26,7 @@ Modules Provided
     │
     Classes imported into the subpackage root:
     ├── PlotlyGrapher :     Plotly-based interactive 3D graphs with subplots.
+    ├── PlotlyGrapher2D :   Plotly-based interactive 2D graphs with subplots.
     │
     Modules provided:
     └── plotly_grapher
@@ -34,10 +35,12 @@ Modules Provided
 
 
 from    .plotly_grapher     import  PlotlyGrapher
+from    .plotly_grapher2d   import  PlotlyGrapher2D
 
 
 __all__ = [
-    "PlotlyGrapher"
+    "PlotlyGrapher",
+    "PlotlyGrapher2D",
 ]
 
 

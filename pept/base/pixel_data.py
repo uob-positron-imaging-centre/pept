@@ -796,12 +796,19 @@ class Pixels(np.ndarray):
 
         Examples
         --------
-        Pixellise an array of lines and add them to a `PlotlyGrapher` instance:
+        Pixellise an array of lines and add them to a `PlotlyGrapher2D`
+        instance:
 
         >>> lines = np.array(...)                   # shape (N, M >= 7)
         >>> lines2d = lines[:, [0, 1, 2, 4, 5]]     # select x, y of lines
         >>> number_of_pixels = [10, 10]
         >>> pixels = pept.Pixels.from_lines(lines2d, number_of_pixels)
+
+        >>> grapher = pept.visualisation.PlotlyGrapher2D()
+        >>> grapher.add_pixels(pixels)
+        >>> grapher.show()
+
+        Or add them directly to a raw `plotly.graph_objs` figure:
 
         >>> import plotly.graph_objs as go
         >>> fig = go.Figure()
