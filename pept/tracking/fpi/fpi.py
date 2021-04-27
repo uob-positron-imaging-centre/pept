@@ -161,6 +161,7 @@ class FPI:
     def fit_sample(
         self,
         voxels,
+        timestamp = 0.,
         as_array = False,
         verbose = False,
     ):
@@ -175,6 +176,10 @@ class FPI:
         voxels: pept.Voxels
             A single voxellised space (i.e. from a single sample of LoRs) for
             which the tracers' locations will be found using the FPI method.
+
+        timestamp: float, default 0.
+            The timestamp to associate with the tracer positions found in this
+            voxel space.
 
         as_array: bool, default False
             If `True`, return the found tracers' locations as a NumPy array.
@@ -212,7 +217,7 @@ class FPI:
 
         # Insert the time column and translate the coordinates from the voxel
         # space to the physical space
-        points = np.insert(points, 0, voxels.time, axis = 1)
+        points = np.insert(points, 0, timestamp, axis = 1)
         points[:, 1:4] *= voxels.voxel_size
         points[:, 1:4] += [voxels.xlim[0], voxels.ylim[0], voxels.zlim[0]]
 
@@ -220,6 +225,22 @@ class FPI:
             return points
 
         return pept.PointData(points)
+
+
+    def _fit_voxel_data(self, voxel_data, index):
+        # The voxellisation step is only computed when indexing `voxel_data`
+        voxels = voxel_data[index]
+        points = fpi_ext(voxels, self.w, self.r, self.lld_counts)
+
+        # Insert the time column and translate the coordinates from the voxel
+        # space to the physical space
+        timestamp = voxel_data.line_data[index][:, 0].mean()
+        points = np.insert(points, 0, timestamp, axis = 1)
+
+        points[:, 1:4] *= voxels.voxel_size
+        points[:, 1:4] += [voxels.xlim[0], voxels.ylim[0], voxels.zlim[0]]
+
+        return points
 
 
     def fit(
@@ -277,22 +298,14 @@ class FPI:
         with ThreadPoolExecutor(max_workers = max_workers) as executor:
             futures = []
 
-            if verbose:
-                voxel_data = tqdm(voxel_data)
-                time_start = time.time()
-
-            for voxels in tqdm(voxel_data):
+            for index in range(len(voxel_data)):
                 futures.append(executor.submit(
-                    self.fit_sample,
-                    voxels,
-                    as_array = True,
-                    verbose = False,
+                    self._fit_voxel_data,
+                    voxel_data,
+                    index,
                 ))
 
             if verbose:
-                time_end = time.time()
-                print(f"Voxellised data in {time_end - time_start} s")
-
                 futures = tqdm(futures)
                 time_start = time.time()
 
