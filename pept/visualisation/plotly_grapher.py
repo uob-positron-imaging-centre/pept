@@ -35,17 +35,6 @@
 # Date   : 23.08.2019
 
 
-'''The *plotly_grapher* module implements Plotly-based visualisation tools
-to aid PEPT data analysis and to create publication-ready figures.
-
-The *PlotlyGrapher* class can create and automatically configure 3D subplots
-for PEPT data visualisation. The PEPT 3D axes convention has the *y*-axis
-pointing upwards, such that the vertical screens of a PEPT scanner represent
-the *xy*-plane. The class provides functionality for plotting 3D scatter or
-line plots, with optional colorbars.
-'''
-
-
 import  textwrap
 
 import  numpy                   as          np
@@ -128,6 +117,12 @@ class PlotlyGrapher:
 
     add_traces(traces, row = 1, col = 1)
         Add a list of precomputed Plotly traces to a given subplot.
+
+    equalise_axes()
+        Equalise the axes' limits of all subplots.
+
+    to_html(filepath, equal_axes = True, include_plotlyjs = True)
+        Save the current Plotly figure as a self-contained HTML webpage.
 
     show(equal_axes = True)
         Show the Plotly figure, optionally setting equal axes limits.
@@ -1027,6 +1022,54 @@ class PlotlyGrapher:
         )
 
 
+    def equalise_axes(self):
+        '''Equalise the axes of all subplots by setting the system limits
+        `xlim` and `ylim` to equal values, such that all data plotted is
+        within the plotted bounds.
+        '''
+        # Compute min, max for the `x`, `y`, `z` dimensions for every
+        # dataset added to `_fig`
+        def get_min_max(fig_data):
+            # Convert x, y, z attributes of `fig_data` to numpy arrays with
+            # `dtype = float`, such that `None` entries are casted to
+            # np.nan. Then find min, max for each dimension.
+            x = np.asarray(fig_data.x, dtype = float)
+            y = np.asarray(fig_data.y, dtype = float)
+            z = np.asarray(fig_data.z, dtype = float)
+
+            # Find min, max, ignoring np.nans
+            xmin = np.nanmin(x)
+            xmax = np.nanmax(x)
+
+            ymin = np.nanmin(y)
+            ymax = np.nanmax(y)
+
+            zmin = np.nanmin(z)
+            zmax = np.nanmax(z)
+
+            return [xmin, xmax, ymin, ymax, zmin, zmax]
+
+        # `lims` columns: [xmin, xmax, ymin, ymax, zmin, zmax].
+        lims = [get_min_max(fig_data) for fig_data in self._fig.data]
+        lims = np.array(lims, order = "F")
+
+        # Find global min and max for each dimension.
+        mins = lims[:, [0, 2, 4]].min(axis = 0)
+        maxs = lims[:, [1, 3, 5]].max(axis = 0)
+
+        # Find greatest range in all dimensions.
+        max_range = (maxs - mins).max()
+
+        # Find mean for each dimension to centre plot around it.
+        mean = (maxs + mins) / 2
+
+        # Finally, set xlim, ylim, zlim to be centred around their mean,
+        # with a span of max_range.
+        self.xlim = [mean[0] - max_range / 2, mean[0] + max_range / 2]
+        self.ylim = [mean[1] - max_range / 2, mean[1] + max_range / 2]
+        self.zlim = [mean[2] - max_range / 2, mean[2] + max_range / 2]
+
+
     def show(self, equal_axes = True):
         '''Show the Plotly figure, optionally setting equal axes limits.
 
@@ -1052,49 +1095,52 @@ class PlotlyGrapher:
 
         if (equal_axes is True and self.xlim is None and self.ylim is None and
                 self.zlim is None):
-            # Compute min, max for the `x`, `y`, `z` dimensions for every
-            # dataset added to `_fig`
-            def get_min_max(fig_data):
-                # Convert x, y, z attributes of `fig_data` to numpy arrays with
-                # `dtype = float`, such that `None` entries are casted to
-                # np.nan. Then find min, max for each dimension.
-                x = np.asarray(fig_data.x, dtype = float)
-                y = np.asarray(fig_data.y, dtype = float)
-                z = np.asarray(fig_data.z, dtype = float)
-
-                # Find min, max, ignoring np.nans
-                xmin = np.nanmin(x)
-                xmax = np.nanmax(x)
-
-                ymin = np.nanmin(y)
-                ymax = np.nanmax(y)
-
-                zmin = np.nanmin(z)
-                zmax = np.nanmax(z)
-
-                return [xmin, xmax, ymin, ymax, zmin, zmax]
-
-            # `lims` columns: [xmin, xmax, ymin, ymax, zmin, zmax].
-            lims = [get_min_max(fig_data) for fig_data in self._fig.data]
-            lims = np.array(lims, order = "F")
-
-            # Find global min and max for each dimension.
-            mins = lims[:, [0, 2, 4]].min(axis = 0)
-            maxs = lims[:, [1, 3, 5]].max(axis = 0)
-
-            # Find greatest range in all dimensions.
-            max_range = (maxs - mins).max()
-
-            # Find mean for each dimension to centre plot around it.
-            mean = (maxs + mins) / 2
-
-            # Finally, set xlim, ylim, zlim to be centred around their mean,
-            # with a span of max_range.
-            self.xlim = [mean[0] - max_range / 2, mean[0] + max_range / 2]
-            self.ylim = [mean[1] - max_range / 2, mean[1] + max_range / 2]
-            self.zlim = [mean[2] - max_range / 2, mean[2] + max_range / 2]
+            self.equalise_axes()
 
         self._fig.show()
+
+
+    def to_html(
+        self,
+        filepath,
+        equal_axes = True,
+        include_plotlyjs = True,
+    ):
+        '''Save the current Plotly figure as a self-contained HTML webpage.
+
+        Parameters
+        ----------
+        filepath : str or writeable
+            Path or open file descriptor to save the HTML file to.
+
+        equal_axes : bool, default True
+            Set `xlim`, `ylim` to equal ranges such that the axes limits are
+            equalised. Only has an effect if both `xlim` and `ylim` are `None`.
+            If `False`, the default Plotly behaviour is used (i.e.
+            automatically use min, max for each dimension).
+
+        include_plotlyjs : True or "cdn", default True
+            If `True`, embed the Plotly.JS library in the HTML file, allowing
+            the graph to be shown offline, but adding 3 MB. If "cdn", the
+            Plotly.JS library will be downloaded dynamically.
+
+        Examples
+        --------
+        Add 10 random points to a `PlotlyGrapher2D` instance and save the
+        figure as an HTML webpage:
+
+        >>> fig = pept.visualisation.PlotlyGrapher2D()
+        >>> fig.add_points(np.random.random((10, 3)))
+        >>> fig.to_html("random_points.html")
+
+        '''
+        if equal_axes is True and self.xlim is None and self.ylim is None:
+            self.equalise_axes()
+
+        self._fig.write_html(
+            filepath,
+            include_plotlyjs = include_plotlyjs,
+        )
 
 
     def __str__(self):

@@ -12,10 +12,14 @@
 
 Summary
 -------
-This subpackage hosts visualisation functions and classes for PEPT data. At the
-moment, there is only one module, `plotly_grapher`, which implements
-Plotly-based visualisation tools to aid PEPT data analysis, creating 3D
-interactive, publication-ready figures.
+Visualisation functions and classes for PEPT data, transparently working with
+both `pept` base classes and raw NumPy arrays (e.g. `PlotlyGrapher.add_lines`
+handles both `pept.LineData` and (N, 7) NumPy arrays).
+
+The `PlotlyGrapher` class creates interactive, publication-ready 3D figures
+with optional subplots which can also be exported to portable HTML files. The
+`PlotlyGrapher2D` class is its two-dimensional counterpart, handling e.g.
+`pept.Pixels`.
 
 Modules Provided
 ----------------
