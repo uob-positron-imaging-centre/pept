@@ -41,6 +41,7 @@ extern "C" {
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 
@@ -674,8 +675,11 @@ static inline void r2d_reduce(r2d_poly* poly, r2d_real* moments, r2d_int polyord
 	// keep two layers of the triangle of coefficients
 	r2d_int prevlayer = 0;
 	r2d_int curlayer = 1;
-	r2d_real D[polyorder+1][2];
-	r2d_real C[polyorder+1][2];
+    r2d_rvec2 *D = (r2d_rvec2*)malloc(sizeof(r2d_rvec2) * (polyorder + 1));
+    r2d_rvec2 *C = (r2d_rvec2*)malloc(sizeof(r2d_rvec2) * (polyorder + 1));
+
+	// r2d_real D[polyorder+1][2];
+	// r2d_real C[polyorder+1][2];
 
 	// iterate over edges and compute a sum over simplices 
 	for(vcur = 0; vcur < *nverts; ++vcur) {
@@ -698,26 +702,26 @@ static inline void r2d_reduce(r2d_poly* poly, r2d_real* moments, r2d_int polyord
 		// essentially building a set of Pascal's triangles, one layer at a time
 
 		// base case
-		D[0][prevlayer] = 1.0;
-		C[0][prevlayer] = 1.0;
+		D[0].xy[prevlayer] = 1.0;
+		C[0].xy[prevlayer] = 1.0;
 		moments[0] += 0.5*twoa;
 
 		// build up successive polynomial orders
 		for(corder = 1, m = 1; corder <= polyorder; ++corder) {
 			for(i = corder; i >= 0; --i, ++m) {
 				j = corder - i;
-				C[i][curlayer] = 0; 
-				D[i][curlayer] = 0;  
+				C[i].xy[curlayer] = 0; 
+				D[i].xy[curlayer] = 0;  
 				if(i > 0) {
-					C[i][curlayer] += v1.x*C[i-1][prevlayer];
-					D[i][curlayer] += v0.x*D[i-1][prevlayer]; 
+					C[i].xy[curlayer] += v1.x*C[i-1].xy[prevlayer];
+					D[i].xy[curlayer] += v0.x*D[i-1].xy[prevlayer]; 
 				}
 				if(j > 0) {
-					C[i][curlayer] += v1.y*C[i][prevlayer];
-					D[i][curlayer] += v0.y*D[i][prevlayer]; 
+					C[i].xy[curlayer] += v1.y*C[i].xy[prevlayer];
+					D[i].xy[curlayer] += v0.y*D[i].xy[prevlayer]; 
 				}
-				D[i][curlayer] += C[i][curlayer]; 
-				moments[m] += twoa*D[i][curlayer];
+				D[i].xy[curlayer] += C[i].xy[curlayer]; 
+				moments[m] += twoa*D[i].xy[curlayer];
 			}
 			curlayer = 1 - curlayer;
 			prevlayer = 1 - prevlayer;
@@ -725,14 +729,14 @@ static inline void r2d_reduce(r2d_poly* poly, r2d_real* moments, r2d_int polyord
 	}
 
 	// reuse C to recursively compute the leading multinomial coefficients
-	C[0][prevlayer] = 1.0;
+	C[0].xy[prevlayer] = 1.0;
 	for(corder = 1, m = 1; corder <= polyorder; ++corder) {
 		for(i = corder; i >= 0; --i, ++m) {
 			j = corder - i;
-			C[i][curlayer] = 0.0; 
-			if(i > 0) C[i][curlayer] += C[i-1][prevlayer];
-			if(j > 0) C[i][curlayer] += C[i][prevlayer];
-			moments[m] /= C[i][curlayer]*(corder+1)*(corder+2);
+			C[i].xy[curlayer] = 0.0; 
+			if(i > 0) C[i].xy[curlayer] += C[i-1].xy[prevlayer];
+			if(j > 0) C[i].xy[curlayer] += C[i].xy[prevlayer];
+			moments[m] /= C[i].xy[curlayer]*(corder+1)*(corder+2);
 		}
 		curlayer = 1 - curlayer;
 		prevlayer = 1 - prevlayer;
@@ -740,6 +744,8 @@ static inline void r2d_reduce(r2d_poly* poly, r2d_real* moments, r2d_int polyord
 
 	if(shift_poly) r2d_shift_moments(moments, polyorder, vc);
 
+    free(D);
+    free(C);
 }
 
 static inline void r2d_shift_moments(r2d_real* moments, r2d_int polyorder, r2d_rvec2 vc) {
@@ -749,11 +755,15 @@ static inline void r2d_shift_moments(r2d_real* moments, r2d_int polyorder, r2d_r
 	r2d_int mm, mi, mj, mcorder;
 
 	// store moments of a shifted polygon
-	r2d_real moments2[R2D_NUM_MOMENTS(polyorder)];
+	r2d_real *moments2 = (r2d_real*)malloc(sizeof(r2d_real) * (R2D_NUM_MOMENTS(polyorder)));
 	for(m = 0; m < R2D_NUM_MOMENTS(polyorder); ++m) moments2[m] = 0.0;
 
 	// calculate and save Pascal's triangle
-	r2d_real B[polyorder+1][polyorder+1];
+	r2d_real **B = (r2d_real**)malloc(sizeof(r2d_real*) * (polyorder+1));
+    for(i = 0; i < polyorder+1; ++i) {
+        B[i] = (r2d_real*)malloc(sizeof(r2d_real) * (polyorder+1));
+    }
+
 	B[0][0] = 1.0;
 	for(corder = 1, m = 1; corder <= polyorder; ++corder) {
 		for(i = corder; i >= 0; --i, ++m) {
@@ -785,6 +795,11 @@ static inline void r2d_shift_moments(r2d_real* moments, r2d_int polyorder, r2d_r
 	// assign shifted moments
 	for(m = 1; m < R2D_NUM_MOMENTS(polyorder); ++m)
 		moments[m] = moments2[m];
+
+    free(moments2);
+    for(i = 0; i < polyorder+1; ++i)
+        free(B[i]);
+    free(B);
 }
 
 static inline r2d_rvec2 r2d_poly_center(r2d_poly* poly) {
@@ -989,7 +1004,6 @@ static inline void r2d_rasterize(r2d_poly* poly, r2d_dvec2 ibox[2], r2d_real* de
 
 	r2d_int i, m, spax, dmax, nstack, siz;
 	r2d_int nmom = R2D_NUM_MOMENTS(polyorder);
-	r2d_real moments[nmom];
 	r2d_poly* children[2];
 	r2d_dvec2 gridsz;
 
@@ -998,13 +1012,19 @@ static inline void r2d_rasterize(r2d_poly* poly, r2d_dvec2 ibox[2], r2d_real* de
 	if(!poly || poly->nverts <= 0 || !dest_grid || 
 			gridsz.i <= 0 || gridsz.j <= 0) return;
 	
+	r2d_real *moments = (r2d_real*)malloc(sizeof(r2d_real) * nmom);
+
 	// explicit stack-based implementation
 	// stack size should never overflow in this implementation, 
 	// even for large input grids (up to ~512^2) 
-	struct {
+	typedef struct {
 		r2d_poly poly;
 		r2d_dvec2 ibox[2];
-	} stack[(r2d_int)(ceil(log2(gridsz.i))+ceil(log2(gridsz.j))+1)];
+	} stack_elem;
+
+    stack_elem *stack = (stack_elem*)malloc(sizeof(stack_elem) * (
+        (r2d_int)(ceil(log2(gridsz.i))+ceil(log2(gridsz.j))+1)
+    ));
 
 	// push the original polyhedron onto the stack
 	// and recurse until child polyhedra occupy single rasters
@@ -1053,6 +1073,9 @@ static inline void r2d_rasterize(r2d_poly* poly, r2d_dvec2 ibox[2], r2d_real* de
 
 		nstack += 2;
 	}
+
+    free(moments);
+    free(stack);
 }
 
 static inline void r2d_split_coord(r2d_poly* inpoly, r2d_poly** outpolys, r2d_real coord, r2d_int ax) {

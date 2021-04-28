@@ -169,7 +169,7 @@ class BuildExtCompilerSpecific(build_ext):
     used - e.g. MSVC expects "/O2", while GCC and Clang expect "-O3".
     '''
     def build_extensions(self):
-        # If compiling under MSVC, remove the Unix-specific compiler arguments
+        # If compiling under MSVC, only allow "/*" compiler arguments
         if "msvc" in self.compiler.compiler_type.lower():
             for ext in self.extensions:
                 ext.extra_compile_args = [
@@ -180,7 +180,7 @@ class BuildExtCompilerSpecific(build_ext):
                     la for la in ext.extra_link_args if la.startswith("/")
                 ]
 
-        # Otherwise remove the MSVC-specific compiler arguments
+        # Otherwise only allow compiler arguments starting with "-"
         else:
             for ext in self.extensions:
                 ext.extra_compile_args = [
