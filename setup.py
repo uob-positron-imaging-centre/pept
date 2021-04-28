@@ -81,16 +81,27 @@ EXTRAS = {
     'docs': requirements('requirements_docs.txt'),
 }
 
+# Cythonize keyword arguments
 cythonize_kw = dict(language_level = 3)
+
+# Compiler arguments for each extension - with *full* optimisations.
+# Unix-specific compiler args are followed by MSVC ones; they will be filtered
+# based on the compiler used in `BuildExtCompilerSpecific`
 cy_extension_kw = dict()
-
-extra_compile_args = ['-Ofast', '-flto']
-cy_extension_kw['extra_compile_args'] = extra_compile_args
-
-extra_link_args = ['-flto']
-cy_extension_kw['extra_link_args'] = extra_link_args
-
+cy_extension_kw['extra_compile_args'] = [
+    '-Ofast', '-flto', '/O2', '/fp:fast', '/GL'
+]
+cy_extension_kw['extra_link_args'] = ['-flto', '/LTCG']
 cy_extension_kw['include_dirs'] = [np.get_include()]
+
+# Compiler arguments for each extension - with *strict floating point*
+# optimisations.
+cy_extension_kw_strict = dict()
+cy_extension_kw_strict['extra_compile_args'] = [
+    '-O3', '-flto', '/O2', '/GL'
+]
+cy_extension_kw_strict['extra_link_args'] = ['-flto', '/LTCG']
+cy_extension_kw_strict['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
     Extension(
@@ -108,9 +119,11 @@ cy_extensions = [
         ['pept/utilities/cutpoints/find_minpoints.pyx'],
         **cy_extension_kw
     ),
-    Extension('pept.processing.circles_ext',
-              ['pept/processing/circles_ext.pyx'],
-              **cy_extension_kw),
+    Extension(
+        'pept.processing.circles_ext',
+        ['pept/processing/circles_ext.pyx'],
+        **cy_extension_kw
+    ),
     Extension(
         'pept.processing.occupancy_ext',
         ['pept/processing/occupancy_ext.pyx'],
@@ -124,16 +137,12 @@ cy_extensions = [
     Extension(
         'pept.utilities.traverse.traverse3d',
         ['pept/utilities/traverse/traverse3d.pyx'],
-        include_dirs = cy_extension_kw["include_dirs"],
-        extra_compile_args = ["-O3", "-flto"],
-        extra_link_args = ["-flto"]
+        **cy_extension_kw_strict
     ),
     Extension(
         'pept.utilities.traverse.traverse2d',
         ['pept/utilities/traverse/traverse2d.pyx'],
-        include_dirs = cy_extension_kw["include_dirs"],
-        extra_compile_args = ["-O3", "-flto"],
-        extra_link_args = ["-flto"]
+        **cy_extension_kw_strict
     ),
     Extension(
         'pept.tracking.trajectory_separation.distance_matrix_reachable',
@@ -153,6 +162,36 @@ cy_extensions = [
 ]
 
 extensions = cythonize(cy_extensions, **cythonize_kw)
+
+
+class BuildExtCompilerSpecific(build_ext):
+    '''Before compiling extensions, ensure only valid compiler arguments are
+    used - e.g. MSVC expects "/O2", while GCC and Clang expect "-O3".
+    '''
+    def build_extensions(self):
+        # If compiling under MSVC, remove the Unix-specific compiler arguments
+        if "msvc" in self.compiler.compiler_type.lower():
+            for ext in self.extensions:
+                ext.extra_compile_args = [
+                    ca for ca in ext.extra_compile_args if ca.startswith("/")
+                ]
+
+                ext.extra_link_args = [
+                    la for la in ext.extra_link_args if la.startswith("/")
+                ]
+
+        # Otherwise remove the MSVC-specific compiler arguments
+        else:
+            for ext in self.extensions:
+                ext.extra_compile_args = [
+                    ca for ca in ext.extra_compile_args if ca.startswith("-")
+                ]
+
+                ext.extra_link_args = [
+                    la for la in ext.extra_link_args if la.startswith("-")
+                ]
+
+        build_ext.build_extensions(self)
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -241,20 +280,22 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Cython',
         'Programming Language :: C',
+        'Programming Language :: C++',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Physics',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Scientific/Engineering :: Visualization',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     # $ setup.py publish support.
     cmdclass = {
         'upload': UploadCommand,
-        'build_ext': build_ext
+        'build_ext': BuildExtCompilerSpecific,
     },
-    ext_modules = extensions
+    ext_modules = extensions,
 )
