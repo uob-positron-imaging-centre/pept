@@ -38,11 +38,8 @@ typedef struct {
 
 
 
-void            error_not_found(const char *word_tried)
-{
-    fprintf(stderr, "Expected word `%s` not found!\n", word_tried);
-    exit(EXIT_FAILURE);
-}
+#define CLEAR_LORS free(lors); *lors_elements = 0;
+#define ERROR_NOT_FOUND(word) fprintf(stderr, "Expected word `%s` not found!\n", (word));
 
 
 FILE*           open_file(const char *filepath)
@@ -51,30 +48,34 @@ FILE*           open_file(const char *filepath)
 
     file = fopen(filepath, "r");
     if (file == NULL)
-    {
         fprintf(stderr, "File `%s` not found!\n", filepath);
-        exit(EXIT_FAILURE);
-    }
 
     return file;
 }
 
 
-Detector        init_detector(FILE *file)
+uint_fast8_t    init_detector(FILE *file, Detector *detector)
 {
-    Detector    detector;
-
     // `fread` returns the number of elements read; check it is not zero
-    if (fread(&detector.separation, sizeof(detector.separation), 1, file) != 1)
-        error_not_found("screen separation");
+    if (fread(&detector->separation, sizeof(detector->separation), 1, file) != 1)
+    {
+        ERROR_NOT_FOUND("screen separation");
+        return 0;
+    }
 
-    if (fread(&detector.angle, sizeof(detector.angle), 1, file) != 1)
-        error_not_found("gantry angle");
+    if (fread(&detector->angle, sizeof(detector->angle), 1, file) != 1)
+    {
+        ERROR_NOT_FOUND("gantry angle");
+        return 0;
+    }
 
-    if (fread(&detector.header, sizeof(char), HEADER_LEN, file) != HEADER_LEN)
-        error_not_found("header info");
+    if (fread(&detector->header, sizeof(char), HEADER_LEN, file) != HEADER_LEN)
+    {
+        ERROR_NOT_FOUND("header info");
+        return 0;
+    }
 
-    return detector;
+    return 1;
 }
 
 
@@ -102,36 +103,38 @@ EventCache      init_event_cache()
 
 /**
  *  Bit twiddling magic, taken from the old ADAC list mode binary format decoder used at
- *  the University of Birmingham
+ *  the University of Birmingham, developed by Dr. Tom Leadbeater.
  */
 void            update_event_cache(EventCache *ec, const uint32_t word)
 {
     uint32_t    word_cut;
     uint32_t    word_p1;
     uint32_t    word_p2;
-    double      value;
+    uint32_t    value;
 
     word_cut = word & 0xFFFFFFA0;
     word_p1 = (word_cut & 0X0000FF00) >> 8;
     word_p2 = (word_cut & 0X00FF0000) >> 16;
 
-    value = (double)(
+    value = (uint32_t)(
         16383 -
-        (uint32_t)((word_p2 & 16) / 16) -       // Fix clang-tidy's bugprone-integer-division
-        (uint32_t)((word_p2 & 64) / 32) -       // warning for dividing integers in float context
-        (word_p2 & 2) * 2 -
-        (uint32_t)((word_p1 & 128) / 16) -
-        (uint32_t)((word_p1 & 32) / 2) -
-        (word_p1 & 8) * 4 -
-        (word_p2 & 4) * 16 -
-        (word_p2 & 8) * 16 -
-        (word_p2 & 32) * 8 -
-        (word_p2 & 1) * 512 -
-        (word_p1 & 64) * 16 -
-        (word_p1 & 16) * 128 -
-        (word_p1 & 4) * 1024 -
-        (word_p1 & 1) * 8192
+        ((word_p2 & 16) >> 4) -
+        ((word_p2 & 64) >> 5) -
+        ((word_p2 & 2) << 1) -
+        ((word_p1 & 128) >> 4) -
+        ((word_p1 & 32) >> 1) -
+        ((word_p1 & 8) << 2) -
+        ((word_p2 & 4) << 4) -
+        ((word_p2 & 8) << 4) -
+        ((word_p2 & 32) << 3) -
+        ((word_p2 & 1) << 9) -
+        ((word_p1 & 64) << 4) -
+        ((word_p1 & 16) << 7) -
+        ((word_p1 & 4) << 10) -
+        ((word_p1 & 1) << 13)
     );
+
+    value = value >> 4;
 
     ec->trg_x = 1 - ((word_cut & 0x80) >> 7);
     ec->trg_y = 1 - ((word_cut & 0x200) >> 9);
@@ -159,12 +162,12 @@ void            update_event_cache(EventCache *ec, const uint32_t word)
 
         if (ec->trg_h == 1)
         {
-            ec->ix2 = value / 16;
+            ec->ix2 = (double)value * 0.59;
             ec->got_xb = 1;
         }
         else
         {
-            ec->ix1 = value / 16;
+            ec->ix1 = (double)value * 0.59;
             ec->got_xa = 1;
         }
     }
@@ -173,12 +176,12 @@ void            update_event_cache(EventCache *ec, const uint32_t word)
     {
         if (ec->trg_h == 1)
         {
-            ec->iy2 = 1024.0 - (value / 16);
+            ec->iy2 = (double)(1024 - value) * 0.59;
             ec->got_yb = 1;
         }
         else
         {
-            ec->iy1 = value / 16;
+            ec->iy1 = (double)value * 0.59;
             ec->got_ya = 1;
         }
     }
@@ -305,7 +308,11 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
 
     // Initialise file handler and read in header data into a `Detector` struct
     file = open_file(filepath);
-    detector = init_detector(file);
+    if (file == NULL || !init_detector(file, &detector))
+    {
+        *lors_elements = 0;
+        return NULL;
+    }
 
     // Initialise event cache
     event_cache = init_event_cache();
@@ -321,11 +328,17 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
 
     // Read in the first recorded CPU timestamp
     if (fread(&word, sizeof(word), 1, file) != 1 || word != 0xFACEFACE)
-        error_not_found("timing flag 0xFACEFACE after header");
+    {
+        CLEAR_LORS; ERROR_NOT_FOUND("timing flag 0xFACEFACE after header");
+        return NULL;
+    }
     else
     {
         if (fread(&word, sizeof(word), 1, file) != 1)
-            error_not_found("CPU time start");
+        {
+            CLEAR_LORS; ERROR_NOT_FOUND("CPU time start");
+            return NULL;
+        }
 
         time_start = word;
         time = time_start;
@@ -351,7 +364,7 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
 
             current_lor[4] = (double)(event_cache.ix2);
             current_lor[5] = (double)(event_cache.iy2);
-            current_lor[6] = (double)(detector.separation);
+            current_lor[6] = (double)(detector.separation) + 20.0;
 
             lors_idx += 1;
 
@@ -399,9 +412,7 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
     // If no LoRs were read in, free allocated data and return NULL
     if (lors_idx == 0)
     {
-        free(lors);
-        *lors_elements = 0;
-
+        CLEAR_LORS;
         return NULL;
     }
 
