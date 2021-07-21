@@ -15,6 +15,8 @@
 
 
 #define HEADER_LEN 1000
+#define ERROR_NOT_FOUND(word) fprintf(stderr, "Expected word `%s` not found!\n", (word));
+#define CHECK_ALLOC(m) if ((m) == NULL) { perror("memory allocation failed"); return NULL; }
 
 
 
@@ -36,10 +38,6 @@ typedef struct {
 } EventCache;
 
 
-
-
-#define CLEAR_LORS free(lors); *lors_elements = 0;
-#define ERROR_NOT_FOUND(word) fprintf(stderr, "Expected word `%s` not found!\n", (word));
 
 
 FILE*           open_file(const char *filepath)
@@ -79,25 +77,21 @@ uint_fast8_t    init_detector(FILE *file, Detector *detector)
 }
 
 
-EventCache      init_event_cache()
+void            init_event_cache(EventCache *ec)
 {
-    EventCache  ec;
+    ec->trg_x = 0;
+    ec->trg_y = 0;
+    ec->trg_z = 0;
+    ec->trg_h = 0;
+    ec->trg_p = 0;
 
-    ec.trg_x = 0;
-    ec.trg_y = 0;
-    ec.trg_z = 0;
-    ec.trg_h = 0;
-    ec.trg_p = 0;
-
-    ec.pair =          0;
-    ec.got_xa =        0;
-    ec.got_ya =        0;
-    ec.got_xb =        0;
-    ec.got_yb =        0;
-    ec.got_first =     0;
-    ec.got_second =    0;
-
-    return ec;
+    ec->pair =          0;
+    ec->got_xa =        0;
+    ec->got_ya =        0;
+    ec->got_xb =        0;
+    ec->got_yb =        0;
+    ec->got_first =     0;
+    ec->got_second =    0;
 }
 
 
@@ -269,7 +263,7 @@ void            reallocate_lors(double **lors, size_t *lors_rows)
  *
  *  Returns
  *  -------
- *  lors: double*
+ *  lors: double* or NULL
  *      A flattened 2D array of `double`s containing the time and coordinates of the first and
  *      second point defining a 3D line, respectively: [time, x1, y1, z1, x2, y2, z2]. The
  *      total number of elements (number_of_lors * 7) is saved in the `lors_elements` input
@@ -282,12 +276,10 @@ void            reallocate_lors(double **lors, size_t *lors_rows)
  *  This array is heap-allocated and its ownership is returned to the caller - do not forget to
  *  deallocate it (or encapsulate it in a reference-counted container like a Python object)!
  *
- *  Undefined Behaviour
- *  -------------------
- *  This function assumes you have enough memory to load all the LoRs in the file into the RAM.
- *  If the OS cannot allocate enough memory for the LoRs being read, calls to `malloc` will fail.
- *
- *  Otherwise, this function should be safe to run, even with inexistent or corrupted files.
+ *  Errors
+ *  ------
+ *  If OS memory allocation fails, or the file at `filepath` is corrupted or inexistent, NULL is
+ *  returned and `*lors_elements` is set to zero.
  */
 double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
 {
@@ -306,37 +298,25 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
     uint32_t    word;
     double      time_increment;         // Time increment between LoRs per buffer
 
+    // Initialise the output number of LoRs to zero in case NULL is returned on error
+    *lors_elements = 0;
+
     // Initialise file handler and read in header data into a `Detector` struct
     file = open_file(filepath);
     if (file == NULL || !init_detector(file, &detector))
-    {
-        *lors_elements = 0;
         return NULL;
-    }
-
-    // Initialise event cache
-    event_cache = init_event_cache();
-
-    // Initialise the LoRs flattened array with seven columns [time, x1, y1, z1, x2, y2, z2]
-    lors_rows = 40000;
-    lors = (double*)malloc(sizeof(double) * lors_rows * 7);
-
-    lors_idx = 0;
-    lors_idx_prev = 0;
-
-    time_increment = 0;
 
     // Read in the first recorded CPU timestamp
     if (fread(&word, sizeof(word), 1, file) != 1 || word != 0xFACEFACE)
     {
-        CLEAR_LORS; ERROR_NOT_FOUND("timing flag 0xFACEFACE after header");
+        ERROR_NOT_FOUND("timing flag 0xFACEFACE after header");
         return NULL;
     }
     else
     {
         if (fread(&word, sizeof(word), 1, file) != 1)
         {
-            CLEAR_LORS; ERROR_NOT_FOUND("CPU time start");
+            ERROR_NOT_FOUND("CPU time start");
             return NULL;
         }
 
@@ -345,6 +325,19 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
         time_prev = time_start;
     }
 
+    // Initialise event cache
+    init_event_cache(&event_cache);
+
+    // Initialise the LoRs flattened array with seven columns [time, x1, y1, z1, x2, y2, z2]
+    lors_rows = 40000;
+    lors = (double*)malloc(sizeof(double) * lors_rows * 7);
+    CHECK_ALLOC(lors);
+
+    lors_idx = 0;
+    lors_idx_prev = 0;
+
+    time_increment = 0;
+
     while (fread(&word, sizeof(word), 1, file))
     {
         // If a full LoR was read in, save it in `lors`
@@ -352,7 +345,10 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
         {
             // If `lors` is full, reallocate it to a larger size
             if (lors_idx >= lors_rows)
+            {
                 reallocate_lors(&lors, &lors_rows);
+                CHECK_ALLOC(lors);
+            }
 
             // Move pointer to current LoR index
             current_lor = lors + lors_idx * 7;
@@ -360,11 +356,11 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
             // Time will be set when the timestamp of the next buffer is found
             current_lor[1] = (double)(event_cache.ix1);
             current_lor[2] = (double)(event_cache.iy1);
-            current_lor[3] = 0.0;
+            current_lor[3] = -10.0;
 
             current_lor[4] = (double)(event_cache.ix2);
             current_lor[5] = (double)(event_cache.iy2);
-            current_lor[6] = (double)(detector.separation) + 20.0;
+            current_lor[6] = (double)(detector.separation) + 10.0;
 
             lors_idx += 1;
 
@@ -412,7 +408,7 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
     // If no LoRs were read in, free allocated data and return NULL
     if (lors_idx == 0)
     {
-        CLEAR_LORS;
+        free(lors);
         return NULL;
     }
 

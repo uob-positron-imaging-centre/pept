@@ -95,6 +95,13 @@ cpdef convert_adac_forte(filepath):
         the first and second point defining a 3D line, respectively:
         `[time, x1, y1, z1, x2, y2, z2]`.
 
+    Raises
+    ------
+    FileNotFoundError
+        If the `filepath` does not exist or points to an invalid ADAC binary
+        file, in which case the C converter subroutine (binary_converter_ext.c)
+        prints a specific message.
+
     Examples
     --------
 
@@ -127,7 +134,9 @@ cpdef convert_adac_forte(filepath):
         void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
 
     if lors is NULL:
-        lors_arr = np.PyArray_Empty(2, shape, np.NPY_FLOAT64, 0)
+        raise FileNotFoundError(
+            "Could not convert binary file - see above for error message"
+        )
     else:
         lors_arr = np.PyArray_SimpleNewFromData(2, shape, np.NPY_FLOAT64, lors)
 
