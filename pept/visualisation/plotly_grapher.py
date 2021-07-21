@@ -595,7 +595,7 @@ class PlotlyGrapher:
                         row = row,
                         col = col
                     )
-                return
+                return self
 
             # Otherwise just use a typical continuous colorbar for all the
             # values in colorbar_col.
@@ -615,6 +615,7 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
+        return self
 
 
     def add_lines(
@@ -774,6 +775,7 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
+        return self
 
 
     def add_pixels(
@@ -856,6 +858,7 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
+        return self
 
 
     def add_voxels(
@@ -974,6 +977,7 @@ class PlotlyGrapher:
         )
 
         self._fig.add_trace(trace, row = row, col = col)
+        return self
 
 
     def add_trace(self, trace, row = 1, col = 1):
@@ -995,6 +999,7 @@ class PlotlyGrapher:
 
         # Add precomputed trace
         self._fig.add_trace(trace, row = row, col = col)
+        return self
 
 
     def add_traces(self, traces, row = 1, col = 1):
@@ -1020,6 +1025,8 @@ class PlotlyGrapher:
             rows = [row] * len(traces),
             cols = [col] * len(traces)
         )
+
+        return self
 
 
     def equalise_axes(self):
