@@ -20,6 +20,9 @@ over the individual samples of lines / points being used.
 
 Subpackages Provided
 --------------------
+All functions from the subpackages are also imported into the `pept.tracking`
+root, so you can use both `pept.tracking.fpi.FPI` and `pept.tracking.FPI`
+depending on how verbose you want to be.
 
 ::
 
@@ -28,6 +31,7 @@ Subpackages Provided
     Modules imported into the subpackage root:
     ├── birmingham_method :     The Birmingham method for single-tracers.
     ├── peptml :                The PEPT-ML multi-tracer tracking algorithm.
+    ├── fpi :                   The FPI multi-tracer tracking algorithm.
     ├── trajectory_separation : Separate located points into distinct tracks.
     │
     Subpackages:
@@ -49,10 +53,10 @@ Subpackages Provided
 '''
 
 
-from    .   import  birmingham_method
-from    .   import  peptml
-from    .   import  fpi
-from    .   import  trajectory_separation
+from    .birmingham_method      import  *
+from    .peptml                 import  *
+from    .fpi                    import  *
+from    .trajectory_separation  import  *
 
 
 __all__ = [
