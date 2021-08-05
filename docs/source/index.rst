@@ -38,7 +38,7 @@ optically opaque systems - making it ideal for industrial as well as scientific
 applications [1]_.
 
 PEPT is performed by radioactively labelling a particle with a positron-
-emitting radioisotope such as fluorine-18 (18F) or gallium-66 (66Ga), and using
+emitting radioisotope such as fluorine-18 (18F) or gallium-68 (68Ga), and using
 the back-to-back gamma rays produced by electron-positron annihilation events
 in and around the tracer to triangulate its spatial position. Each detected
 gamma ray represents a line of response (LoR).
