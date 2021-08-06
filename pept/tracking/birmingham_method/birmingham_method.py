@@ -136,7 +136,7 @@ class BirminghamMethod:
         if new_fopt > 1 or new_fopt <= 0:
             raise ValueError(textwrap.fill(
                 "[ERROR]: fopt should be set between 0 and 1. Received "
-                f"{new_fopts}."
+                f"{new_fopt}."
             ))
 
         self._fopt = new_fopt
