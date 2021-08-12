@@ -8,7 +8,7 @@
 # Date   : 22.08.2019
 
 
-'''PEPT-oriented visualisation tools.
+'''PEPT-oriented visulisation tools.
 
 Visualisation functions and classes for PEPT data, transparently working with
 both `pept` base classes and raw NumPy arrays (e.g. `PlotlyGrapher.add_lines`
@@ -24,6 +24,7 @@ with optional subplots which can also be exported to portable HTML files. The
 
 from    .plotly_grapher     import  PlotlyGrapher
 from    .plotly_grapher2d   import  PlotlyGrapher2D
+from    .plotly_grapher2d   import  timeseries
 
 
 __license__ = "GNU v3.0"
