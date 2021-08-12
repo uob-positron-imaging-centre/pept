@@ -36,7 +36,7 @@
 
 
 import  pickle
-import  time
+from    textwrap                import  indent
 
 import  numpy                   as      np
 
@@ -44,7 +44,9 @@ import  plotly.graph_objects    as      go
 import  matplotlib.pyplot       as      plt
 
 from    .iterable_samples       import  IterableSamples
-import  pept
+from    .utilities              import  check_homogeneous_types
+
+
 
 
 class PointData(IterableSamples):
@@ -96,41 +98,6 @@ class PointData(IterableSamples):
         values between samples. It is required to be smaller than
         `sample_size`. The default is 0.
 
-    number_of_points : int
-        An `int` that corresponds to len(`points`), or the number of points
-        stored by `points`.
-
-    number_of_samples : int
-        An `int` that corresponds to the number of samples that can be accessed
-        from the class, taking the `overlap` into consideration.
-
-    Methods
-    -------
-    sample(n)
-        Get sample number n (indexed from 0).
-
-    to_csv(filepath)
-        Write `points` to a CSV file.
-
-    save(filepath)
-        Save a `PointData` instance as a binary `pickle` object.
-
-    load(filepath)
-        Load a saved / pickled `PointData` object from `filepath`.
-
-    plot(sample_indices = ..., ax = None, alt_axes = False, colorbar_col = -1)
-        Plot points from selected samples using matplotlib.
-
-    points_trace(sample_indices = ..., size = 2, color = None, opacity = 0.8,\
-                 colorbar = True, colorbar_col = -1, colorscale = "Magma",\
-                 colorbar_title = None)
-        Get a Plotly trace for all points in selected samples, with possible
-        color-coding.
-
-    copy()
-        Create a deep copy of an instance of this class, including a new inner
-        numpy array `points`.
-
     Raises
     ------
     ValueError
@@ -149,145 +116,128 @@ class PointData(IterableSamples):
     Initialise a `PointData` instance containing 10 points with a `sample_size`
     of 3.
 
-    .. ipython::
+    >>> import numpy as np
+    >>> import pept
 
-        In [1]: import numpy as np
+    >>> points_raw = np.arange(40).reshape(10, 4)
+    >>> print(points_raw)
+    [[ 0  1  2  3]
+     [ 4  5  6  7]
+     [ 8  9 10 11]
+     [12 13 14 15]
+     [16 17 18 19]
+     [20 21 22 23]
+     [24 25 26 27]
+     [28 29 30 31]
+     [32 33 34 35]
+     [36 37 38 39]]
 
-        In [2]: import pept
-
-        In [3]: points_raw = np.arange(40).reshape(10, 4)
-
-        In [4]: print(points_raw)
-        [[ 0  1  2  3]
-         [ 4  5  6  7]
-         [ 8  9 10 11]
-         [12 13 14 15]
-         [16 17 18 19]
-         [20 21 22 23]
-         [24 25 26 27]
-         [28 29 30 31]
-         [32 33 34 35]
-         [36 37 38 39]]
-
-        In [5]: point_data = pept.PointData(points_raw, sample_size = 3)
-
-        In [6]: print(point_data)
-        number_of_points =  10
-        sample_size =       3
-        overlap =           0
-        number_of_samples = 3
-        points =
-        [[ 0.  1.  2.  3.]
-         [ 4.  5.  6.  7.]
-         [ 8.  9. 10. 11.]
-         [12. 13. 14. 15.]
-         [16. 17. 18. 19.]
-         [20. 21. 22. 23.]
-         [24. 25. 26. 27.]
-         [28. 29. 30. 31.]
-         [32. 33. 34. 35.]
-         [36. 37. 38. 39.]]
+    >>> point_data = pept.PointData(points_raw, sample_size = 3)
+    >>> print(point_data)
+    PointData
+    ---------
+    sample_size = 3
+    overlap =     0
+    samples =     3
+    points =
+      [[ 0.  1.  2.  3.]
+       [ 4.  5.  6.  7.]
+       [ 8.  9. 10. 11.]
+       [12. 13. 14. 15.]
+       [16. 17. 18. 19.]
+       [20. 21. 22. 23.]
+       [24. 25. 26. 27.]
+       [28. 29. 30. 31.]
+       [32. 33. 34. 35.]
+       [36. 37. 38. 39.]]
+    points.shape = (10, 4)
+    columns = ['t', 'x', 'y', 'z']
 
     Access samples using subscript notation. Notice how the samples are
     consecutive, as `overlap` is 0 by default.
 
-    .. ipython::
+    >>> point_data[0]
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.]])
 
-        In [7]: point_data[0]
-        Out[7]:
-        array([[ 0.,  1.,  2.,  3.],
-               [ 4.,  5.,  6.,  7.],
-               [ 8.,  9., 10., 11.]])
-
-        In [8]: point_data[1]
-        Out[8]:
-        array([[12., 13., 14., 15.],
-               [16., 17., 18., 19.],
-               [20., 21., 22., 23.]])
+    >>> point_data[1]
+    array([[12., 13., 14., 15.],
+           [16., 17., 18., 19.],
+           [20., 21., 22., 23.]])
 
     Now set an overlap of 2; notice how the number of samples changes:
 
-    .. ipython::
+    >>> len(point_data)         # Number of samples
+    3
 
-        In [9]: len(point_data)         # Number of samples
-        Out[9]: 3
-
-        In [10]: point_data.overlap = 2
-
-        In [11]: len(point_data)
-        Out[11]: 8
+    >>> point_data.overlap = 2
+    >>> len(point_data)
+    8
 
     Notice how rows are repeated from one sample to the next when accessing
     them, because `overlap` is now 2:
 
-    .. ipython::
+    >>> point_data[0]
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.]])
 
-        In [12]: point_data[0]
-        Out[12]:
-        array([[ 0.,  1.,  2.,  3.],
-               [ 4.,  5.,  6.,  7.],
-               [ 8.,  9., 10., 11.]])
-
-        In [13]: point_data[1]
-        Out[13]:
-        array([[ 4.,  5.,  6.,  7.],
-               [ 8.,  9., 10., 11.],
-               [12., 13., 14., 15.]])
+    >>> point_data[1]
+    array([[ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.],
+           [12., 13., 14., 15.]])
 
     Now change `sample_size` to 5 and notice again how the number of samples
     changes:
 
-    .. ipython::
+    >>> len(point_data)
+    8
 
-        In [14]: len(point_data)
-        Out[14]: 8
+    >>> point_data.sample_size = 5
+    >>> len(point_data)
+    2
 
-        In [15]: point_data.sample_size = 5
+    >>> point_data[0]
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.],
+           [12., 13., 14., 15.],
+           [16., 17., 18., 19.]])
 
-        In [16]: len(point_data)
-        Out[16]: 2
-
-        In [17]: point_data[0]
-        Out[17]:
-        array([[ 0.,  1.,  2.,  3.],
-               [ 4.,  5.,  6.,  7.],
-               [ 8.,  9., 10., 11.],
-               [12., 13., 14., 15.],
-               [16., 17., 18., 19.]])
-
-        In [18]: point_data[1]
-        Out[18]:
-        array([[12., 13., 14., 15.],
-               [16., 17., 18., 19.],
-               [20., 21., 22., 23.],
-               [24., 25., 26., 27.],
-               [28., 29., 30., 31.]])
+    >>> point_data[1]
+    array([[12., 13., 14., 15.],
+           [16., 17., 18., 19.],
+           [20., 21., 22., 23.],
+           [24., 25., 26., 27.],
+           [28., 29., 30., 31.]])
 
     Notice how the samples do not cover the whole input `points_raw` array, as
     the last lines are omitted - think of the `sample_size` and `overlap`. They
     are still inside the inner `points` attribute of `point_data` though:
 
-    .. ipython::
-
-        In [19]: point_data.points
-        Out[19]:
-        array([[ 0.,  1.,  2.,  3.],
-               [ 4.,  5.,  6.,  7.],
-               [ 8.,  9., 10., 11.],
-               [12., 13., 14., 15.],
-               [16., 17., 18., 19.],
-               [20., 21., 22., 23.],
-               [24., 25., 26., 27.],
-               [28., 29., 30., 31.],
-               [32., 33., 34., 35.],
-               [36., 37., 38., 39.]])
+    >>> point_data.points
+    array([[ 0.,  1.,  2.,  3.],
+           [ 4.,  5.,  6.,  7.],
+           [ 8.,  9., 10., 11.],
+           [12., 13., 14., 15.],
+           [16., 17., 18., 19.],
+           [20., 21., 22., 23.],
+           [24., 25., 26., 27.],
+           [28., 29., 30., 31.],
+           [32., 33., 34., 35.],
+           [36., 37., 38., 39.]])
 
     See Also
     --------
     pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
+
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+
+    pept.plots.PlotlyGrapher :
+        Easy, publication-ready plotting of PEPT-oriented data.
+
+    pept.tracking.Cutpoints : Compute cutpoints from `pept.LineData`.
     '''
 
     def __init__(
@@ -295,7 +245,8 @@ class PointData(IterableSamples):
         points,
         sample_size = 0,
         overlap = 0,
-        verbose = False
+        columns = ["t", "x", "y", "z"],
+        **kwargs,
     ):
         '''`PointData` class constructor.
 
@@ -321,10 +272,11 @@ class PointData(IterableSamples):
             skipping values between samples. An error is raised if `overlap` is
             larger than or equal to `sample_size`.
 
-        verbose : bool, default False
-            An option that enables printing the time taken for the
-            initialisation of an instance of the class. Useful when reading
-            large files (10gb files for PEPT data is not unheard of).
+        columns : List[str], default ["t", "x", "y", "z"]
+            A list of strings corresponding to the column labels in `points`.
+
+        **kwargs : extra keyword arguments
+            Any extra attributes to set on the class instance.
 
         Raises
         ------
@@ -332,68 +284,89 @@ class PointData(IterableSamples):
             If `line_data` does not have (N, M) shape, where M >= 4.
         '''
 
-        if verbose:
-            start = time.time()
+        # Copy constructor
+        if isinstance(points, PointData):
+            points = points.points.copy()
+        # Iterable of PointData
+        elif len(points) and isinstance(points[0], PointData):
+            check_homogeneous_types(points)
 
-        # If `points` is not C-contiguous, create a C-contiguous copy.
-        self._points = np.asarray(points, order = 'C', dtype = float)
+            sample_size = [len(p.points) for p in points]
+            overlap = None
+            columns = points[0].columns
+
+            # Propagate extra attributes that were set by the user
+            exclude = {"columns", "points"}
+            for k, v in points[0].extra_attributes(exclude).items():
+                setattr(self, k, v)
+
+            points = np.vstack([p.points for p in points])
+
+        # NumPy array-like
+        else:
+            points = np.asarray(points, order = 'C', dtype = float)
 
         # Check that points has at least 4 columns.
-        if self._points.ndim != 2 or self._points.shape[1] < 4:
+        if points.ndim != 2 or points.shape[1] < 4:
             raise ValueError((
                 "\n[ERROR]: `points` should have dimensions (M, N), where "
-                f"N >= 4. Received {self._points.shape}.\n"
+                f"N >= 4. Received {points.shape}.\n"
             ))
 
-        self._number_of_points = len(self._points)
+        self._columns = None if columns is None else [str(c) for c in columns]
 
         # Call the IterableSamples constructor to make the class iterable in
         # samples with overlap.
-        IterableSamples.__init__(self, sample_size, overlap)
+        IterableSamples.__init__(self, points, sample_size, overlap)
 
-        if verbose:
-            end = time.time()
-            print(f"Initialised PointData class in {end - start} s.")
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
     @property
     def points(self):
-        return self._points
+        # The `data` attribute is set by the parent class, `IterableSamples`
+        return self.data
+
+
+    @points.setter
+    def points(self, points):
+        self.data = points
 
 
     @property
-    def data_samples(self):
-        # Implemented property for the `IterableSamples` parent class. See its
-        # documentation for more details.
-        return self._points
+    def columns(self):
+        return self._columns
 
 
-    @property
-    def data_length(self):
-        # Implemented property for the IterableSamples parent class. See its
-        # documentation for more details.
-        return self._number_of_points
+    @columns.setter
+    def columns(self, columns):
+        self._columns = None if columns is None else [str(c) for c in columns]
 
 
-    @property
-    def number_of_points(self):
-        return self._number_of_points
+    def extra_attributes(self, exclude={}):
+        exclude = set(exclude) | {"points"}
+        return IterableSamples.extra_attributes(self, exclude)
 
 
-    def to_csv(self, filepath):
-        '''Write `points` to a CSV file.
+    def to_csv(self, filepath, delimiter = " "):
+        '''Write the inner `points` to a CSV file.
 
-        Write all points (and any extra data) stored in the class to a CSV
-        file.
+        Write all points stored in the class to a CSV file.
 
         Parameters
         ----------
         filepath : filename or file handle
             If filepath is a path (rather than file handle), it is relative
             to where python is called.
+
+        delimiter : str, default " "
+            The delimiter used to separate the values in the CSV file.
+
         '''
 
-        np.savetxt(filepath, self._points)
+        np.savetxt(filepath, self.points, delimiter = delimiter,
+                   header = delimiter.join(self.columns))
 
 
     def save(self, filepath):
@@ -500,7 +473,7 @@ class PointData(IterableSamples):
         -----
         Plotting all points is very computationally-expensive for matplotlib.
         It is recommended to only plot a couple of samples at a time, or use
-        the faster `pept.visualisation.PlotlyGrapher`.
+        the faster `pept.plots.PlotlyGrapher`.
 
         Examples
         --------
@@ -529,10 +502,10 @@ class PointData(IterableSamples):
             sample_indices = [sample_indices]
 
         if sample_indices[0] == Ellipsis:
-            x = self._points[:, 1],
-            y = self._points[:, 2],
-            z = self._points[:, 3],
-            color = self._points[:, colorbar_col]
+            x = self.points[:, 1],
+            y = self.points[:, 2],
+            z = self.points[:, 3],
+            color = self.points[:, colorbar_col]
         else:
             x, y, z, color = [], [], [], []
             for n in sample_indices:
@@ -639,7 +612,7 @@ class PointData(IterableSamples):
         `PointData` instance:
 
         >>> point_data = pept.PointData(...)
-        >>> grapher = pept.visualisation.PlotlyGrapher()
+        >>> grapher = pept.plots.PlotlyGrapher()
         >>> trace = point_data.points_trace(1)
         >>> grapher.add_trace(trace)
         >>> grapher.show()
@@ -718,40 +691,27 @@ class PointData(IterableSamples):
             attributes as this instance, deep-copied.
         '''
 
-        return pept.PointData(
-            self._points.copy(order = "C"),
-            sample_size = self._sample_size,
-            overlap = self._overlap,
-            verbose = False
-        )
+        return pickle.loads(pickle.dumps(self))
 
 
-    def __str__(self):
-        # Shown when calling print(class)
-        docstr = (
-            f"number_of_points =  {self.number_of_points}\n\n"
-            f"sample_size =       {self._sample_size}\n"
-            f"overlap =           {self._overlap}\n"
-            f"number_of_samples = {self.number_of_samples}\n\n"
-            f"points = \n{self._points}"
-        )
+    def __getitem__(self, key):
+        # Allow indexing into columns
+        if isinstance(key, str):
+            return self.points[:, self.columns.index(key)]
 
-        return docstr
+        # Otherwise use normal samples iteration
+        return IterableSamples.__getitem__(self, key)
 
 
     def __repr__(self):
-        # Shown when writing the class on a REPL
+        # Shown when calling print(class)
+        attrs = self.extra_attributes()
 
-        docstr = (
-            "Class instance that inherits from `pept.PointData`.\n"
-            f"Type:\n{type(self)}\n\n"
-            "Attributes\n----------\n"
-            f"{self.__str__()}\n\n"
-            "Particular Cases\n----------------\n"
-            " > If sample_size == 0, all `points` are returned as a "
-            "single sample.\n"
-            " > If overlap >= sample_size, an error is raised.\n"
-            " > If overlap < 0, points are skipped between samples."
-        )
-
-        return docstr
+        return (
+            "PointData\n---------\n"
+            f"sample_size = {self.sample_size}\n"
+            f"overlap =     {self.overlap}\n"
+            f"samples =     {len(self)}\n\n"
+            f"points = \n{indent(str(self.points), '  ')}\n\n"
+            f"points.shape = {self.points.shape}\n\n"
+        ) + "\n".join((f"{k} = {v}" for k, v in attrs.items()))

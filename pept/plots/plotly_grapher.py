@@ -43,6 +43,9 @@ import  plotly.graph_objects    as          go
 from    plotly.subplots         import      make_subplots
 
 import  pept
+from    pept.tracking           import      Stack
+
+
 
 
 class PlotlyGrapher:
@@ -547,6 +550,7 @@ class PlotlyGrapher:
 
         # If a pept.PointData instance (or subclass thereof!) is received, just
         # take the inner `points`. Otherwise treat it as an array.
+        points = Stack().fit(points)
         if isinstance(points, pept.PointData):
             points = points.points
         else:
@@ -724,6 +728,7 @@ class PlotlyGrapher:
 
         # If a pept.LineData instance (or subclass thereof!) is received, just
         # take the inner `lines`. Otherwise treat it as an array.
+        lines = Stack().fit(lines)
         if isinstance(lines, pept.LineData):
             lines = lines.lines
         else:

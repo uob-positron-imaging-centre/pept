@@ -79,6 +79,7 @@ from    .cutpoints  import  Cutpoints
 from    .minpoints  import  Minpoints
 
 from    .peptml     import  HDBSCANClusterer
+from    .peptml     import  HDBSCAN
 
 
 __all__ = [
@@ -87,7 +88,8 @@ __all__ = [
     "get_cutoffs",
     "Cutpoints",
     "Minpoints",
-    "HDBSCANClusterer"
+    "HDBSCANClusterer",
+    "HDBSCAN",
 ]
 
 

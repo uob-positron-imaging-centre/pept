@@ -50,10 +50,10 @@ import numpy as np
 
 
 cpdef find_cutpoints(
-    double[:, :] sample_lines,  # LoRs in sample
-    double max_distance,        # Max allowed distance between two LoRs
-    double[:] cutoffs,          # Spatial cutoff for cutpoints
-    bint append_indices = 0     # Append LoR indices used for each cutpoint
+    const double[:, :] sample_lines,  # LoRs in sample
+    const double max_distance,        # Max allowed distance between two LoRs
+    const double[:] cutoffs,          # Spatial cutoff for cutpoints
+    bint append_indices = 0           # Append LoR indices used for each cutpoint
 ):
     '''Compute the cutpoints from a given array of lines.
 

@@ -8,23 +8,15 @@
 # Date   : 20.08.2019
 
 
-from    .modular_camera    import  ModularCamera
+from    .modular_camera    import  modular_camera
 
 
 __all__ = [
-    'ModularCamera'
+    'modular_camera',
 ]
 
 
-__author__ = "Sam Manger"
-__credits__ = [
-    "Andrei Leonard Nicusan",
-    "Kit Windows-Yule",
-    "Sam Manger"
-]
 __license__ = "GNU v3.0"
 __maintainer__ = "Sam Manger"
 __email__ = "s.manger@bham.ac.uk"
-__status__ = "Development"
-
-
+__status__ = "Beta"

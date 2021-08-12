@@ -76,8 +76,8 @@ cdef extern from "birmingham_method_ext.h":
 # Cython has a cool function to automatically get memoryviews of the input
 # parameters => double[:, :] receives a 2D numpy array.
 cpdef birmingham_method(
-    double[:, :] lines,
-    double fopt
+    const double[:, :] lines,
+    const double fopt
 ):
     '''Use the Birmingham Method to find one tracer location from the LoRs
     stored in `lines`.

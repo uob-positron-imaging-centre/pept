@@ -35,18 +35,8 @@
 # Date   : 13.04.2020
 
 
-import  time
-import  os
-import  warnings
-import  textwrap
-
-import  numpy               as      np
-
-from    tqdm                import  tqdm
-
-from    concurrent.futures  import  ThreadPoolExecutor
-
-import  pept
+import numpy as np
+import pept
 
 
 def find_cutpoints(
@@ -111,18 +101,17 @@ def find_cutpoints(
     pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
     '''
 
-    sample_lines = np.asarray(sample_lines, order = 'C', dtype = float)
+    if not isinstance(sample_lines, pept.LineData):
+        sample_lines = pept.LineData(sample_lines)
+
+    lines = sample_lines.lines
+
+    lines = np.asarray(lines, order = 'C', dtype = float)
     max_distance = float(max_distance)
 
-    # Check sample has shape (N, M >= 7)
-    if sample_lines.ndim != 2 or sample_lines.shape[1] < 7:
-        raise ValueError((
-            "\n[ERROR]: `sample_lines` should have dimensions (M, N), "
-            f" where N >= 7. Received {sample_lines.shape}.\n"
-        ))
-
+    # If cutoffs were not defined, automatically compute them
     if cutoffs is None:
-        cutoffs = get_cutoffs(sample_lines)
+        cutoffs = get_cutoffs(lines)
     else:
         cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
         if cutoffs.ndim != 1 or len(cutoffs) != 6:
@@ -133,13 +122,26 @@ def find_cutpoints(
             ))
 
     sample_cutpoints = pept.utilities.find_cutpoints(
-        sample_lines,
+        lines,
         max_distance,
         cutoffs,
         append_indices = append_indices
     )
 
-    return sample_cutpoints
+    columns = ["t", "x", "y", "z"]
+    if append_indices:
+        columns += ["line_index1", "line_index2"]
+
+    points = pept.PointData(sample_cutpoints, columns = columns)
+
+    # Add optional metadata to the points; because they have an underscore,
+    # they won't be propagated when new objects are constructed
+    points._max_distance = max_distance
+    points._cutoffs = cutoffs
+    if append_indices:
+        points._lines = sample_lines
+
+    return points
 
 
 def get_cutoffs(sample):
@@ -209,7 +211,7 @@ def get_cutoffs(sample):
 
 
 
-class Cutpoints(pept.PointData):
+class Cutpoints(pept.base.LineDataFilter):
     '''Transform LoRs (a `pept.LineData` instance) into *cutpoints* (a
     `pept.PointData` instance) for clustering, in parallel.
 
@@ -245,12 +247,7 @@ class Cutpoints(pept.PointData):
 
     Methods
     -------
-    find_cutpoints(line_data, max_distance, cutoffs = None,\
-                   append_indices = False, max_workers = None, verbose = True)
-        Compute the cutpoints from the samples in a `LineData` instance.
-    sample, to_csv, plot, etc. : inherited from pept.PointData
-        Additional attributes and methods are inherited from the base class
-        `PointData`. Check its documentation for more information.
+    fit, fit_sample
 
     Notes
     -----
@@ -284,12 +281,9 @@ class Cutpoints(pept.PointData):
 
     def __init__(
         self,
-        line_data,
         max_distance,
         cutoffs = None,
         append_indices = False,
-        max_workers = None,
-        verbose = True
     ):
         '''Cutpoints class constructor.
 
@@ -298,50 +292,35 @@ class Cutpoints(pept.PointData):
         line_data : instance of pept.LineData
             The LoRs for which the cutpoints will be computed. It must be an
             instance of `pept.LineData`.
+
         max_distance : float
             The maximum distance between any two lines for their cutpoint to be
             considered. A good starting value would be 0.1 mm for small tracers
-            and/or clean data, or 0.2 mm for larger tracers and/or noisy data.
+            and/or clean data, or 0.5 mm for larger tracers and/or noisy data.
+
         cutoffs : list-like of length 6, optional
             A list (or equivalent) of the cutoff distances for every axis,
             formatted as `[x_min, x_max, y_min, y_max, z_min, z_max]`. Only the
             cutpoints which fall within these cutoff distances are considered.
             The default is None, in which case they are automatically computed
             using `pept.tracking.peptml.get_cutoffs`.
+
         append_indices : bool, default False
             If set to `True`, the indices of the individual LoRs that were used
             to compute each cutpoint are also appended to the returned array.
-        max_workers : int, optional
-            The maximum number of threads that will be used for asynchronously
-            computing the cutpoints from the samples of LoRs in `line_data`.
-        verbose : bool, default True
-            Provide extra information when computing the cutpoints: time the
-            operation and show a progress bar.
 
         Raises
         ------
-        TypeError
-            If `line_data` is not an instance of `pept.LineData`.
         ValueError
             If `cutoffs` is not a one-dimensional array with values formatted
             as `[min_x, max_x, min_y, max_y, min_z, max_z]`.
         '''
 
-        # Find the cutpoints when instantiated. The method
-        # also initialises the instance as a `PointData` subclass.
-        self.find_cutpoints(
-            line_data,
-            max_distance,
-            cutoffs = cutoffs,
-            append_indices = append_indices,
-            max_workers = max_workers,
-            verbose = verbose
-        )
-
-
-    @property
-    def line_data(self):
-        return self._line_data
+        # Setting class attributes. The ones below call setters which do type
+        # checking
+        self.cutoffs = cutoffs
+        self.append_indices = append_indices
+        self.max_distance = max_distance
 
 
     @property
@@ -349,97 +328,19 @@ class Cutpoints(pept.PointData):
         return self._max_distance
 
 
+    @max_distance.setter
+    def max_distance(self, max_distance):
+        self._max_distance = float(max_distance)
+
+
     @property
     def cutoffs(self):
         return self._cutoffs
 
 
-    def find_cutpoints(
-        self,
-        line_data,
-        max_distance,
-        cutoffs = None,
-        append_indices = False,
-        max_workers = None,
-        verbose = True
-    ):
-        '''Compute the cutpoints from the samples in a `LineData` instance.
-
-        Parameters
-        ----------
-        line_data : instance of pept.LineData
-            The LoRs for which the cutpoints will be computed. It must be an
-            instance of `pept.LineData`.
-        max_distance : float
-            The maximum distance between any two LoRs for their cutpoint to be
-            considered.
-        cutoffs : list-like of length 6, optional
-            A list (or equivalent) of the cutoff distances for every axis,
-            formatted as `[x_min, x_max, y_min, y_max, z_min, z_max]`. Only the
-            cutpoints which fall within these cutoff distances are considered.
-            The default is None, in which case they are automatically computed
-            using `pept.tracking.peptml.get_cutoffs`.
-        append_indices : bool, default False
-            If set to `True`, the indices of the individual LoRs that were used
-            to compute each cutpoint are also appended to the returned array.
-        max_workers : int, optional
-            The maximum number of threads that will be used for asynchronously
-            computing the cutpoints from the samples of LoRs in `line_data`.
-        verbose : bool, default True
-            Provide extra information when computing the cutpoints: time the
-            operation and show a progress bar.
-
-        Returns
-        -------
-        self : the PointData instance of cutpoints
-            The computed cutpoints are stored in the `Cutpoints` class, as a
-            subclass of `pept.PointData`.
-
-        Raises
-        ------
-        TypeError
-            If `line_data` is not an instance of `pept.LineData`.
-        ValueError
-            If `cutoffs` is not a one-dimensional array with values formatted
-            as `[min_x, max_x, min_y, max_y, min_z, max_z]`.
-
-        Notes
-        -----
-        This method is automatically called when instantiating this class.
-        '''
-
-        if verbose:
-            start = time.time()
-
-        # Check line_data is an instance (or a subclass!) of pept.LineData
-        if not isinstance(line_data, pept.LineData):
-            raise TypeError((
-                "\n[ERROR]: line_data should be an instance (or subclass) of "
-                "`pept.LineData`.\n"
-            ))
-
-        # Users might forget to set the sample_size, leaving it to the default
-        # value of 0; in that case, all lines are returned as a single sample -
-        # that might not be the intended behaviour.
-        if line_data.sample_size == 0:
-            warnings.warn(
-                textwrap.fill((
-                    "\n[WARNING]: The `line_data.sample_size` was left to the "
-                    "default value of 0, in which case all lines are returned "
-                    "as a single sample. For a very large number of lines, "
-                    "this might result in a long function execution time.\n"
-                ), replace_whitespace = False),
-                RuntimeWarning
-            )
-
-        self._line_data = line_data
-        self._max_distance = float(max_distance)
-
-        # If cutoffs were not supplied, compute them
-        if cutoffs is None:
-            cutoffs = get_cutoffs(line_data.lines)
-        # Otherwise make sure they are a C-contiguous numpy array
-        else:
+    @cutoffs.setter
+    def cutoffs(self, cutoffs):
+        if cutoffs is not None:
             cutoffs = np.asarray(cutoffs, order = 'C', dtype = float)
             if cutoffs.ndim != 1 or len(cutoffs) != 6:
                 raise ValueError((
@@ -448,66 +349,25 @@ class Cutpoints(pept.PointData):
                     f"Received {cutoffs}.\n"
                 ))
 
-        self._cutoffs = cutoffs
+            self._cutoffs = cutoffs
+        else:
+            self._cutoffs = None
 
-        # Using ThreadPoolExecutor, asynchronously collect the cutpoints from
-        # every sample in a list of arrays. This is more efficient than using
-        # ProcessPoolExecutor because find_cutpoints is a Cython function that
-        # releases the GIL for most of its computation.
-        # If verbose, show progress bar using tqdm.
-        if max_workers is None:
-            max_workers = os.cpu_count()
 
-        with ThreadPoolExecutor(max_workers = max_workers) as executor:
-            futures = []
-            for sample in line_data:
-                futures.append(
-                    executor.submit(
-                        pept.utilities.find_cutpoints,
-                        sample,
-                        max_distance,
-                        cutoffs,
-                        append_indices = append_indices
-                    )
-                )
+    @property
+    def append_indices(self):
+        return self._append_indices
 
-            if verbose:
-                futures = tqdm(futures)
 
-            cutpoints = [f.result() for f in futures]
+    @append_indices.setter
+    def append_indices(self, append_indices):
+        self._append_indices = bool(append_indices)
 
-        # cutpoints shape: (n, m, 4), where n is the number of samples, and
-        # m is the number of cutpoints in the sample
-        number_of_samples = len(cutpoints)
-        cutpoints = np.vstack(cutpoints)
-        number_of_cutpoints = len(cutpoints)
 
-        # Average number of cutpoints per sample
-        cutpoints_per_sample = int(number_of_cutpoints / number_of_samples)
-
-        pept.PointData.__init__(
-            self,
-            cutpoints,
-            sample_size = cutpoints_per_sample,
-            overlap = 0,
-            verbose = False
+    def fit_sample(self, sample_lines):
+        return find_cutpoints(
+            sample_lines,
+            self.max_distance,
+            cutoffs = self.cutoffs,
+            append_indices = self.append_indices,
         )
-
-        if verbose:
-            end = time.time()
-            print(f"\nFinding the cutpoints took {end - start} seconds.\n")
-
-        return self
-
-
-    def __repr__(self):
-        # Called when writing the class on a REPL. Add another line to the
-        # standard description given in the parent class, pept.PointData.
-        docstr = pept.PointData.__repr__(self) + (
-            "\n\nNotes\n-----\n"
-            "Once instantiated with a `LineData`, the class computes the \n"
-            "cutpoints and *automatically sets the sample_size* to the \n"
-            "average number of cutpoints found per sample of LoRs."
-        )
-
-        return docstr

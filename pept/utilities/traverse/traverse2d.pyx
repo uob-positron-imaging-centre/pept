@@ -97,10 +97,10 @@ cdef double intersect(
 
 
 cpdef void traverse2d(
-    double[:, :] pixels,        # Initialised to zero!
-    double[:, :] lines,         # Has exactly 5 columns!
-    double[:] grid_x,           # Has pixels.shape[0] + 1 elements!
-    double[:] grid_y,           # Has pixels.shape[1] + 1 elements!
+    double[:, :] pixels,              # Initialised to zero!
+    const double[:, :] lines,         # Has exactly 5 columns!
+    const double[:] grid_x,           # Has pixels.shape[0] + 1 elements!
+    const double[:] grid_y,           # Has pixels.shape[1] + 1 elements!
 ) nogil:
     ''' Fast pixel traversal for 2D lines (or LoRs).
 

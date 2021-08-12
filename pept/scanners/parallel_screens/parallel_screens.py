@@ -42,41 +42,83 @@ from    pept.utilities  import  read_csv
 
 
 
-class ParallelScreens(LineData):
-    '''A subclass of `LineData` that initialises PEPT data for parallel screens
-    PET/PEPT detectors from an input data file or array.
-
-    Provides the same functionality as the `LineData` class while initialising
-    `lines` from  **PEPT scanners with two parallel screens**. That is,
-    each LoR is defined by two 2D points on two screens separated by a given
-    distance.
+def parallel_screens(
+    filepath_or_array,
+    screen_separation,
+    sample_size = 0,
+    overlap = 0,
+    verbose = True,
+    **kwargs,
+):
+    '''Initialise PEPT LoRs for parallel screens PET/PEPT detectors from an
+    input CSV file or array.
 
     **The expected data columns in the file are `[time, x1, y1, x2, y2]`**.
-    This is automatically transformed into the standard `lines` format with
+    This is automatically transformed into the standard `Lines` format with
     columns being `[time, x1, y1, z1, x2, y2, z2]`, where `z1 = 0` and
     `z2 = screen_separation`.
 
     `ParallelScreens` can be initialised with a predefined numpy array of LoRs
-    or read data from a `.csv` or `.a0n` file or equivalent. The attributes
-    and methods are the same as for `pept.LineData`.
+    or read data from a `.csv`.
 
-    Attributes
+    Parameters
     ----------
-    sample_size, overlap, number_of_lines, etc.: inherited from `pept.LineData`
-        All attributes and methods from the parent class `pept.LineData` are
-        available after instantiation. Check its documentation for more
-        information.
+    filepath_or_array : [str, pathlib.Path, IO] or numpy.ndarray (N, 5)
+        A path to a file to be read from or an array for initialisation. A
+        path is a string with the (absolute or relative) path to the data
+        file or a URL from which the PEPT data will be read. It should
+        include the full file name, along with its extension (.csv, .a01,
+        etc.).
 
-    Methods
+    screen_separation : float
+        The separation (in *mm*) between the two PEPT screens corresponding
+        to the `z` coordinate of the second point defining each line. The
+        attribute `lines`, with columns
+        `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
+        `z2 = screen_separation`.
+
+    sample_size : int, default 0
+        An `int` that defines the number of lines that should be returned
+        when iterating over `lines`. A `sample_size` of 0 yields all the
+        data as one single sample. A good starting value would be 200 times
+        the maximum number of tracers that would be tracked.
+
+    overlap : int, default 0
+        An `int` that defines the overlap between two consecutive samples
+        that are returned when iterating over `lines`. An overlap of 0
+        implies consecutive samples, while an overlap of
+        (`sample_size` - 1) means incrementing the samples by one. A
+        negative overlap means skipping values between samples. An error is
+        raised if `overlap` is larger than or equal to `sample_size`.
+
+    verbose : bool, default True
+        An option that enables printing the time taken for the
+        initialisation of an instance of the class. Useful when reading
+        large files (10gb files for PEPT data is not unheard of).
+
+    kwargs : other keyword arguments
+        Other keyword arguments to be passed to `pept.read_csv`, e.g.
+        "skiprows" or "max_rows". See the `pept.read_csv` documentation for
+        other arguments.
+
+    Returns
     -------
-    to_csv, lines_trace, etc. : inherited from `pept.LineData`
-        All attributes and methods from the parent class `pept.LineData` are
-        available after instantiation. Check its documentation for more
-        information.
+    LineData
+        The initialised LoRs.
+
+    Raises
+    ------
+    ValueError
+        If `overlap` >= `sample_size`. Overlap has to be smaller than
+        `sample_size`. Note that it can also be negative.
+
+    ValueError
+        If the data file does not have the (N, M >= 5) shape.
+
 
     Examples
     --------
-    Initialise a `ParallelScreens` array for three LoRs on a parallel screens
+    Initialise a `LineData` array for three LoRs on a parallel screens
     PEPT scanner (i.e. each line is defined by **two** points each) with a
     head separation of 500 mm:
 
@@ -87,145 +129,53 @@ class ParallelScreens(LineData):
     >>> ])
 
     >>> screen_separation = 500
-    >>> lors = pept.scanners.ParallelScreens(lors_raw, screen_separation)
-    >>> Initialising the PEPT data took 0.00038814544677734375 seconds.
+    >>> lors = pept.scanners.parallel_screens(lors_raw, screen_separation)
+    Initialised PEPT data in 0.001 s.
 
     >>> lors
-    >>> Class instance that inherits from `pept.LineData`.
-    >>> Type:
-    >>> <class 'pept.scanners.parallel_screens.parallel_screens.ParallelScreens'>
-    >>>
-    >>> Attributes
-    >>> ----------
-    >>> number_of_lines =   3
-    >>>
-    >>> sample_size =       0
-    >>> overlap =           0
-    >>> number_of_samples = 1
-    >>>
-    >>> lines =
-    >>> [[  2. 100. 150.   0. 200. 250. 500.]
-    >>>  [  4. 350. 250.   0. 100. 150. 500.]
-    >>>  [  6. 450. 350.   0. 250. 200. 500.]]
-    >>>
-    >>> Particular Cases
-    >>> ----------------
-    >>> > If sample_size == 0, all `lines` are returned as a single sample.
-    >>> > If overlap >= sample_size, an error is raised.
-    >>> > If overlap < 0, lines are skipped between samples.
+    LineData
+    --------
+    sample_size = 0
+    overlap =     0
+    samples =     1
+    lines =
+      [[  2. 100. 150.   0. 200. 250. 500.]
+       [  4. 350. 250.   0. 100. 150. 500.]
+       [  6. 450. 350.   0. 250. 200. 500.]]
+    lines.shape = (3, 7)
+    columns = ['t', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2']
+
 
     See Also
     --------
     pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
     pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
-    def __init__(
-        self,
-        filepath_or_array,
-        screen_separation,
-        sample_size = 0,
-        overlap = 0,
-        skiprows = None,
-        nrows = None,
-        verbose = True
-    ):
-        '''ParallelScreens class constructor.
+    if verbose:
+        start = time.time()
 
-        Parameters
-        ----------
-        filepath_or_array : [str, pathlib.Path, IO] or numpy.ndarray (N, 5)
-            A path to a file to be read from or an array for initialisation. A
-            path is a string with the (absolute or relative) path to the data
-            file or a URL from which the PEPT data will be read. It should
-            include the full file name, along with its extension (.csv, .a01,
-            etc.).
-        screen_separation : float
-            The separation (in *mm*) between the two PEPT screens corresponding
-            to the `z` coordinate of the second point defining each line. The
-            attribute `lines`, with columns
-            `[time, x1, y1, z1, x2, y2, z2]`, will have `z1 = 0` and
-            `z2 = screen_separation`.
-        sample_size : int, default 0
-            An `int` that defines the number of lines that should be returned
-            when iterating over `lines`. A `sample_size` of 0 yields all the
-            data as one single sample. A good starting value would be 200 times
-            the maximum number of tracers that would be tracked.
-        overlap : int, default 0
-            An `int` that defines the overlap between two consecutive samples
-            that are returned when iterating over `lines`. An overlap of 0
-            implies consecutive samples, while an overlap of
-            (`sample_size` - 1) means incrementing the samples by one. A
-            negative overlap means skipping values between samples. An error is
-            raised if `overlap` is larger than or equal to `sample_size`.
-        skiprows : int, default 0
-            The number of rows to skip from the beginning of the data file.
-            Useful when the data file includes a header of text that should be
-            skipped.
-        max_rows : int, optional
-            The maximum number of rows that will be read from the data file.
-        verbose : bool, default True
-            An option that enables printing the time taken for the
-            initialisation of an instance of the class. Useful when reading
-            large files (10gb files for PEPT data is not unheard of).
+    # Check wheter input is a valid `pandas.read_csv` filepath or a numpy
+    # array in an "Easier To Ask Forgiveness Than Permission" way.
+    try:
+        # Try to read the LoR data from `filepath_or_array`.
+        # Check if an error is raised when reading file lines using
+        lines = read_csv(filepath_or_array, **kwargs)
+    except ValueError:
+        # Seems like it is an array!
+        lines = np.asarray(filepath_or_array, order = "C", dtype = float)
 
-        Raises
-        ------
-        ValueError
-            If `overlap` >= `sample_size`. Overlap has to be smaller than
-            `sample_size`. Note that it can also be negative.
-        ValueError
-            If the data file does not have the (N, M >= 5) shape.
-        '''
+    # Add Z1 and Z2 columns => [time, X1, Y1, Z1, X2, Y2, Z2]
+    # Z1 = 0
+    lines = np.insert(lines, 3, 0.0, axis = 1)
 
-        if verbose:
-            start = time.time()
+    # Z2 = `separation`
+    lines = np.insert(lines, 6, screen_separation, axis = 1)
 
-        # Check wheter input is a valid `pandas.read_csv` filepath or a numpy
-        # array in an "Easier To Ask Forgiveness Than Permission" way.
-        try:
-            # Try to read the LoR data from `filepath_or_array`.
-            # Check if an error is raised when reading file lines using
-            lines = read_csv(
-                filepath_or_array,
-                skiprows = skiprows,
-                nrows = nrows
-            )
-        except ValueError:
-            # Seems like it is an array!
-            lines = np.asarray(
-                filepath_or_array,
-                order = "C",
-                dtype = float
-            )
+    if verbose:
+        end = time.time()
+        print(f"Initialised PEPT data in {end - start:3.3f} s.\n")
 
-        # lines cols: [time, X1, Y1, X2, Y2]
-        # Verify that lines has shape (N, M >= 5)
-        if lines.ndim != 2 or lines.shape[1] < 5:
-            raise ValueError((
-                "\n[ERROR]: lines should have dimensions (N, M) where "
-                f"M >= 5. Received {lines.shape}.\n"
-            ))
-
-        # Add Z1 and Z2 columns => [time, X1, Y1, Z1, X2, Y2, Z2]
-        # Z1 = 0
-        lines = np.insert(lines, 3, 0.0, axis = 1)
-
-        # Z2 = `separation`
-        lines = np.insert(lines, 6, screen_separation, axis = 1)
-
-        # Call the constructor of the superclass `LineData` to initialise all
-        # the inner parameters of the class (_index, etc.)
-        LineData.__init__(
-            self,
-            lines,
-            sample_size = sample_size,
-            overlap = overlap,
-            verbose = False
-        )
-
-        if verbose:
-            end = time.time()
-            print(f"Initialising the PEPT data took {end - start} seconds.\n")
+    return LineData(lines, sample_size = sample_size, overlap = overlap)

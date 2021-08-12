@@ -67,11 +67,11 @@ cdef extern from "find_minpoints_ext.h":
 
 
 cpdef find_minpoints(
-    double[:, :] sample_lines,  # LoRs in sample
-    Py_ssize_t num_lines,       # Number of LoRs in groups for computing MDP
-    double max_distance,        # Max allowed distance between two LoRs
-    double[:] cutoffs,          # Spatial cutoff for cutpoints
-    bint append_indices = 0     # Append LoR indices used for each cutpoint
+    const double[:, :] sample_lines,  # LoRs in sample
+    const Py_ssize_t num_lines,       # Number of LoRs in groups for computing MDP
+    const double max_distance,        # Max allowed distance between two LoRs
+    const double[:] cutoffs,          # Spatial cutoff for cutpoints
+    bint append_indices = 0           # Append LoR indices used for each cutpoint
 ):
     '''Compute the minimum distance points (MDPs) from all combinations of
     `num_lines` lines given in an array of lines `sample_lines`.

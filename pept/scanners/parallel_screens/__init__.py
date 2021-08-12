@@ -7,14 +7,14 @@
 # Date   : 20.08.2019
 
 
-from    .parallel_screens   import  ParallelScreens
-from    .adac_forte         import  ADACForte
+from    .parallel_screens   import  parallel_screens
+from    .adac_forte         import  adac_forte
 from    .extensions         import  convert_adac_forte
 
 
 __all__ = [
-    "ParallelScreens",
-    "ADACForte",
+    "parallel_screens",
+    "adac_forte",
     "convert_adac_forte",
 ]
 

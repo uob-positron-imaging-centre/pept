@@ -49,11 +49,13 @@ References
 '''
 
 
-from    .birmingham_method    import BirminghamMethod
+from    .birmingham_method              import  BirminghamMethod
+from    .extensions.birmingham_method   import  birmingham_method
 
 
 __all__ = [
     'BirminghamMethod',
+    'birmingham_method',
 ]
 
 

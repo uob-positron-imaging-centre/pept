@@ -7,39 +7,30 @@
 
 
 '''PEPT base classes.
-
-Subpackages Provided
---------------------
-These classes are imported into the ``pept`` package root, so they are
-available as ``pept.PointData``, ``pept.LineData``, etc., without going through
-``base`` first.
-
-::
-
-    pept.base
-    ├── PointData :     Encapsulate points for iteration and visualisation.
-    ├── LineData :      Encapsulate lines (LoRs) with a single timestamp.
-    ├── Pixels :        Encapsulate pixels for a single sample of lines.
-    ├── Voxels :        Encapsulate voxels for a single sample of lines.
-    └── VoxelData :     Encapsulate voxels for line traversal and manipulation.
-
 '''
 
 
-from    .line_data      import  LineData
-from    .point_data     import  PointData
-from    .voxel_data     import  VoxelData
-from    .voxel_data     import  Voxels
-from    .pixel_data     import  Pixels
+from    .line_data          import  LineData
+
+from    .point_data         import  PointData
+
+from    .pixel_data         import  Pixels
+
+from    .voxel_data         import  Voxels
+from    .voxel_data         import  VoxelData
+
+from    .iterable_samples   import  IterableSamples
+from    .iterable_samples   import  AsyncIterableSamples
+from    .iterable_samples   import  PEPTObject
+
+from    .pipelines          import  Transformer
+from    .pipelines          import  Filter
+from    .pipelines          import  LineDataFilter
+from    .pipelines          import  PointDataFilter
+from    .pipelines          import  Reducer
+from    .pipelines          import  Pipeline
 
 
-__all__ = [
-    'LineData',
-    'PointData',
-    'Pixels',
-    'Voxels',
-    'VoxelData',
-]
 
 
 __license__ = "GNU v3.0"

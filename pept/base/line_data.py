@@ -35,8 +35,8 @@
 # Date   : 19.08.2019
 
 
-import  time
 import  pickle
+from    textwrap                import  indent
 
 import  numpy                   as      np
 
@@ -44,7 +44,9 @@ import  plotly.graph_objects    as      go
 import  matplotlib.pyplot       as      plt
 
 from    .iterable_samples       import  IterableSamples
-import  pept
+from    .utilities              import  check_homogeneous_types
+
+
 
 
 class LineData(IterableSamples):
@@ -96,44 +98,121 @@ class LineData(IterableSamples):
         values between samples. It is required to be smaller than
         `sample_size`. The default is 0.
 
-    number_of_lines : int
-        An `int` that corresponds to len(`lines`), or the number of LoRs
-        stored by `lines`.
+    Examples
+    --------
+    Initialise a `LineData` instance containing 10 lines with a `sample_size`
+    of 3.
 
-    number_of_samples : int
-        An `int` that corresponds to the number of samples that can be accessed
-        from the class. It takes `overlap` into consideration.
+    >>> import pept
+    >>> import numpy as np
+    >>> lines_raw = np.arange(70).reshape(10, 7)
 
-    Methods
-    -------
-    sample(n)
-        Get sample number n (indexed from 0).
+    >>> print(lines_raw)
+    [[ 0  1  2  3  4  5  6]
+     [ 7  8  9 10 11 12 13]
+     [14 15 16 17 18 19 20]
+     [21 22 23 24 25 26 27]
+     [28 29 30 31 32 33 34]
+     [35 36 37 38 39 40 41]
+     [42 43 44 45 46 47 48]
+     [49 50 51 52 53 54 55]
+     [56 57 58 59 60 61 62]
+     [63 64 65 66 67 68 69]]
 
-    to_csv(filepath)
-        Write `lines` to a CSV file.
+    >>> line_data = pept.LineData(lines_raw, sample_size = 3)
+    LineData
+    --------
+    sample_size = 3
+    overlap =     0
+    samples =     3
+    lines =
+      [[ 0.  1.  2.  3.  4.  5.  6.]
+       [ 7.  8.  9. 10. 11. 12. 13.]
+       [14. 15. 16. 17. 18. 19. 20.]
+       [21. 22. 23. 24. 25. 26. 27.]
+       [28. 29. 30. 31. 32. 33. 34.]
+       [35. 36. 37. 38. 39. 40. 41.]
+       [42. 43. 44. 45. 46. 47. 48.]
+       [49. 50. 51. 52. 53. 54. 55.]
+       [56. 57. 58. 59. 60. 61. 62.]
+       [63. 64. 65. 66. 67. 68. 69.]]
+    lines.shape = (10, 7)
+    columns = ['t', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2']
 
-    save(filepath)
-        Save a `LineData` instance as a binary `pickle` object.
+    Access samples using subscript notation. Notice how the samples are
+    consecutive, as `overlap` is 0 by default.
 
-    load(filepath)
-        Load a saved / pickled `LineData` object from `filepath`.
+    >>> line_data[0]
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.]])
 
-    plot(sample_indices = ..., ax = None, alt_axes = False, colorbar_col = 0)
-        Plot lines from selected samples using matplotlib.
+    >>> line_data[1]
+    array([[21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.],
+           [35., 36., 37., 38., 39., 40., 41.]])
 
-    lines_trace(sample_indices = ..., width = 2, color = None, opacity = 0.6,\
-                colorbar = True, colorbar_col = 0, colorbar_title = None)
-        Get a Plotly trace for all the lines in selected samples.
+    Now set an overlap of 2; notice how the number of samples changes:
 
-    copy()
-        Create a deep copy of an instance of this class, including a new inner
-        numpy array `lines`.
+    >>> len(line_data)     # Number of samples
+    3
 
-    Raises
-    ------
-    ValueError
-        If `overlap` >= `sample_size` unless `sample_size` is 0. Overlap
-        must be smaller than `sample_size`. Note that it can also be negative.
+    >>> line_data.overlap = 2
+    >>> len(line_data)
+    8
+
+    Notice how rows are repeated from one sample to the next when accessing
+    them, because `overlap` is now 2:
+
+    >>> line_data[0]
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.]])
+
+    >>> line_data[1]
+    array([[ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.],
+           [21., 22., 23., 24., 25., 26., 27.]])
+
+    Now change `sample_size` to 5 and notice again how the number of samples
+    changes:
+
+    >>> len(line_data)
+    8
+
+    >>> line_data.sample_size = 5
+    >>> len(line_data)
+    2
+
+    >>> line_data[0]
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.],
+           [21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.]])
+
+    >>> line_data[1]
+    array([[21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.],
+           [35., 36., 37., 38., 39., 40., 41.],
+           [42., 43., 44., 45., 46., 47., 48.],
+           [49., 50., 51., 52., 53., 54., 55.]])
+
+    Notice how the samples do not cover the whole input `lines_raw` array, as
+    the last lines are omitted - think of the `sample_size` and `overlap`. They
+    are still inside the inner `lines` attribute of `line_data` though:
+
+    >>> line_data.lines
+    array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+           [ 7.,  8.,  9., 10., 11., 12., 13.],
+           [14., 15., 16., 17., 18., 19., 20.],
+           [21., 22., 23., 24., 25., 26., 27.],
+           [28., 29., 30., 31., 32., 33., 34.],
+           [35., 36., 37., 38., 39., 40., 41.],
+           [42., 43., 44., 45., 46., 47., 48.],
+           [49., 50., 51., 52., 53., 54., 55.],
+           [56., 57., 58., 59., 60., 61., 62.],
+           [63., 64., 65., 66., 67., 68., 69.]])
 
     Notes
     -----
@@ -141,150 +220,12 @@ class LineData(IterableSamples):
     access in C / Cython functions. The inner data can be mutated, but do not
     change the number of rows or columns after instantiating the class.
 
-    Examples
-    --------
-    Initialise a `LineData` instance containing 10 lines with a `sample_size`
-    of 3.
-
-    .. ipython::
-
-        In [3]: import pept
-
-        In [4]: import numpy as np
-
-        In [5]: lines_raw = np.arange(70).reshape(10, 7)
-
-        In [6]: print(lines_raw)
-        [[ 0  1  2  3  4  5  6]
-         [ 7  8  9 10 11 12 13]
-         [14 15 16 17 18 19 20]
-         [21 22 23 24 25 26 27]
-         [28 29 30 31 32 33 34]
-         [35 36 37 38 39 40 41]
-         [42 43 44 45 46 47 48]
-         [49 50 51 52 53 54 55]
-         [56 57 58 59 60 61 62]
-         [63 64 65 66 67 68 69]]
-
-        In [7]: line_data = pept.LineData(lines_raw, sample_size = 3)
-
-        In [8]: print(line_data)
-        number_of_lines =   10
-        sample_size =       3
-        overlap =           0
-        number_of_samples = 3
-        lines =
-        [[ 0.  1.  2.  3.  4.  5.  6.]
-         [ 7.  8.  9. 10. 11. 12. 13.]
-         [14. 15. 16. 17. 18. 19. 20.]
-         [21. 22. 23. 24. 25. 26. 27.]
-         [28. 29. 30. 31. 32. 33. 34.]
-         [35. 36. 37. 38. 39. 40. 41.]
-         [42. 43. 44. 45. 46. 47. 48.]
-         [49. 50. 51. 52. 53. 54. 55.]
-         [56. 57. 58. 59. 60. 61. 62.]
-         [63. 64. 65. 66. 67. 68. 69.]]
-
-    Access samples using subscript notation. Notice how the samples are
-    consecutive, as `overlap` is 0 by default.
-
-    .. ipython::
-
-        In [9]: line_data[0]
-        Out[9]:
-        array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
-               [ 7.,  8.,  9., 10., 11., 12., 13.],
-               [14., 15., 16., 17., 18., 19., 20.]])
-
-        In [10]: line_data[1]
-        Out[10]:
-        array([[21., 22., 23., 24., 25., 26., 27.],
-               [28., 29., 30., 31., 32., 33., 34.],
-               [35., 36., 37., 38., 39., 40., 41.]])
-
-    Now set an overlap of 2; notice how the number of samples changes:
-
-    .. ipython::
-
-        In [11]: len(line_data)     # Number of samples
-        Out[11]: 3
-
-        In [12]: line_data.overlap = 2
-
-        In [13]: len(line_data)
-        Out[13]: 8
-
-    Notice how rows are repeated from one sample to the next when accessing
-    them, because `overlap` is now 2:
-
-    .. ipython::
-
-        In [14]: line_data[0]
-        Out[14]:
-        array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
-               [ 7.,  8.,  9., 10., 11., 12., 13.],
-               [14., 15., 16., 17., 18., 19., 20.]])
-
-        In [15]: line_data[1]
-        Out[15]:
-        array([[ 7.,  8.,  9., 10., 11., 12., 13.],
-               [14., 15., 16., 17., 18., 19., 20.],
-               [21., 22., 23., 24., 25., 26., 27.]])
-
-    Now change `sample_size` to 5 and notice again how the number of samples
-    changes:
-
-    .. ipython::
-
-        In [16]: len(line_data)
-        Out[16]: 8
-
-        In [17]: line_data.sample_size = 5
-
-        In [18]: len(line_data)
-        Out[18]: 2
-
-        In [19]: line_data[0]
-        Out[19]:
-        array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
-               [ 7.,  8.,  9., 10., 11., 12., 13.],
-               [14., 15., 16., 17., 18., 19., 20.],
-               [21., 22., 23., 24., 25., 26., 27.],
-               [28., 29., 30., 31., 32., 33., 34.]])
-
-        In [20]: line_data[1]
-        Out[20]:
-        array([[21., 22., 23., 24., 25., 26., 27.],
-               [28., 29., 30., 31., 32., 33., 34.],
-               [35., 36., 37., 38., 39., 40., 41.],
-               [42., 43., 44., 45., 46., 47., 48.],
-               [49., 50., 51., 52., 53., 54., 55.]])
-
-    Notice how the samples do not cover the whole input `lines_raw` array, as
-    the last lines are omitted - think of the `sample_size` and `overlap`. They
-    are still inside the inner `lines` attribute of `line_data` though:
-
-    .. ipython::
-
-        In [21]: line_data.lines
-        Out[21]:
-        array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
-               [ 7.,  8.,  9., 10., 11., 12., 13.],
-               [14., 15., 16., 17., 18., 19., 20.],
-               [21., 22., 23., 24., 25., 26., 27.],
-               [28., 29., 30., 31., 32., 33., 34.],
-               [35., 36., 37., 38., 39., 40., 41.],
-               [42., 43., 44., 45., 46., 47., 48.],
-               [49., 50., 51., 52., 53., 54., 55.],
-               [56., 57., 58., 59., 60., 61., 62.],
-               [63., 64., 65., 66., 67., 68., 69.]])
-
     See Also
     --------
     pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-    pept.tracking.peptml.Cutpoints : Compute cutpoints from `pept.LineData`.
+    pept.tracking.Cutpoints : Compute cutpoints from `pept.LineData`.
     '''
 
     def __init__(
@@ -292,7 +233,8 @@ class LineData(IterableSamples):
         lines,
         sample_size = 0,
         overlap = 0,
-        verbose = False
+        columns = ["t", "x1", "y1", "z1", "x2", "y2", "z2"],
+        **kwargs,
     ):
         '''`LineData` class constructor.
 
@@ -317,10 +259,11 @@ class LineData(IterableSamples):
             skipping values between samples. An error is raised if `overlap` is
             larger than or equal to `sample_size`.
 
-        verbose : bool, default False
-            An option that enables printing the time taken for the
-            initialisation of an instance of the class. Useful when reading
-            large files (10gb files for PEPT data is not unheard of).
+        columns : List[str], default ["t", "x1", "y1", "z1", "x2", "y2", "z2"]
+            A list of strings corresponding to the column labels in `points`.
+
+        **kwargs : extra keyword arguments
+            Any extra attributes to set on the class instance.
 
         Raises
         ------
@@ -333,53 +276,70 @@ class LineData(IterableSamples):
             negative.
         '''
 
-        if verbose:
-            start = time.time()
+        # Copy constructor
+        if isinstance(lines, LineData):
+            lines = lines.lines.copy()
 
-        # If `lines` is not C-contiguous, create a C-contiguous copy
-        self._lines = np.asarray(lines, order = 'C', dtype = float)
+        # Create LineData from a list of LineData by stacking all inner lines
+        elif len(lines) and isinstance(lines[0], LineData):
+            check_homogeneous_types(lines)
+
+            sample_size = [len(li.lines) for li in lines]
+            overlap = None
+            columns = lines[0].columns
+
+            # Propagate extra attributes that were set by the user
+            exclude = {"columns", "lines"}
+            for k, v in lines[0].extra_attributes(exclude).items():
+                setattr(self, k, v)
+
+            lines = np.vstack([li.lines for li in lines])
+
+        # Create LineData from a NumPy array-like
+        else:
+            lines = np.asarray(lines, order = 'C', dtype = float)
 
         # Check that lines has at least 7 columns.
-        if self._lines.ndim != 2 or self._lines.shape[1] < 7:
+        if lines.ndim != 2 or lines.shape[1] < 7:
             raise ValueError((
                 "\n[ERROR]: `lines` should have dimensions (M, N), where "
-                f"N >= 7. Received {self._lines.shape}.\n"
+                f"N >= 7. Received {lines.shape}.\n"
             ))
 
-        self._number_of_lines = len(self._lines)
+        self._columns = None if columns is None else [str(c) for c in columns]
 
         # Call the IterableSamples constructor to make the class iterable in
         # terms of samples with overlap.
-        IterableSamples.__init__(self, sample_size, overlap)
+        IterableSamples.__init__(self, lines, sample_size, overlap)
 
-        if verbose:
-            end = time.time()
-            print(f"Initialised LineData class in {end - start} s.\n")
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
     @property
     def lines(self):
-        # The lines stored in the class.
-        return self._lines
+        # The `data` attribute is set by the parent class, `IterableSamples`
+        return self.data
+
+
+    @lines.setter
+    def lines(self, lines):
+        self.data = lines
 
 
     @property
-    def data_samples(self):
-        # Implemented property for the IterableSamples parent class. See its
-        # documentation for more details.
-        return self._lines
+    def columns(self):
+        return self._columns
 
 
-    @property
-    def data_length(self):
-        # Implemented property for the IterableSamples parent class. See its
-        # documentation for more details.
-        return self._number_of_lines
+    @columns.setter
+    def columns(self, columns):
+        self._columns = None if columns is None else [str(c) for c in columns]
 
 
-    @property
-    def number_of_lines(self):
-        return self._number_of_lines
+    def extra_attributes(self, exclude = {}):
+        exclude = set(exclude) | {"lines"}
+        return IterableSamples.extra_attributes(self, exclude)
 
 
     def to_csv(self, filepath, delimiter = " "):
@@ -398,7 +358,8 @@ class LineData(IterableSamples):
 
         '''
 
-        np.savetxt(filepath, self._lines, delimiter = delimiter)
+        np.savetxt(filepath, self.lines, delimiter = delimiter,
+                   header = delimiter.join(self.columns))
 
 
     def save(self, filepath):
@@ -505,7 +466,7 @@ class LineData(IterableSamples):
         -----
         Plotting all lines is very computationally-expensive for matplotlib. It
         is recommended to only plot a couple of samples at a time, or use the
-        faster `pept.visualisation.PlotlyGrapher`.
+        faster `pept.plots.PlotlyGrapher`.
 
         Examples
         --------
@@ -655,7 +616,7 @@ class LineData(IterableSamples):
         `LineData` instance:
 
         >>> lors = pept.LineData(...)
-        >>> grapher = pept.visualisation.PlotlyGrapher()
+        >>> grapher = pept.plots.PlotlyGrapher()
         >>> trace = lors.lines_trace(1)
         >>> grapher.add_trace(trace)
         >>> grapher.show()
@@ -719,50 +680,24 @@ class LineData(IterableSamples):
         return trace
 
 
-    def copy(self):
-        '''Create a deep copy of an instance of this class, including a new
-        inner numpy array `lines`.
+    def __getitem__(self, key):
+        # Allow indexing into columns
+        if isinstance(key, str):
+            return self.lines[:, self.columns.index(key)]
 
-        Returns
-        -------
-        pept.LineData
-            A new instance of the `pept.LineData` class with the same
-            attributes as this instance, deep-copied.
-        '''
-
-        return pept.LineData(
-            self._lines.copy(order = "C"),
-            sample_size = self._sample_size,
-            overlap = self._overlap,
-            verbose = False
-        )
-
-
-    def __str__(self):
-        # Shown when calling print(class)
-        docstr = (
-            f"number_of_lines =   {self.number_of_lines}\n\n"
-            f"sample_size =       {self._sample_size}\n"
-            f"overlap =           {self._overlap}\n"
-            f"number_of_samples = {self.number_of_samples}\n\n"
-            f"lines = \n{self._lines}"
-        )
-
-        return docstr
+        # Otherwise use normal samples iteration
+        return IterableSamples.__getitem__(self, key)
 
 
     def __repr__(self):
-        # Shown when writing the class on a REPR
-        docstr = (
-            "Class instance that inherits from `pept.LineData`.\n"
-            f"Type:\n{type(self)}\n\n"
-            "Attributes\n----------\n"
-            f"{self.__str__()}\n\n"
-            "Particular Cases\n----------------\n"
-            " > If sample_size == 0, all `lines` are returned as a "
-            "single sample.\n"
-            " > If overlap >= sample_size, an error is raised.\n"
-            " > If overlap < 0, lines are skipped between samples."
-        )
+        # Shown when calling print(class)
+        attrs = self.extra_attributes()
 
-        return docstr
+        return (
+            "LineData\n--------\n"
+            f"sample_size = {self.sample_size}\n"
+            f"overlap =     {self.overlap}\n"
+            f"samples =     {len(self)}\n\n"
+            f"lines = \n{indent(str(self.lines), '  ')}\n\n"
+            f"lines.shape = {self.lines.shape}\n\n"
+        ) + "\n".join((f"{k} = {v}" for k, v in attrs.items()))

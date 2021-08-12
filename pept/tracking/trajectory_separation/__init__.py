@@ -88,13 +88,13 @@ GitHub repository - https://github.com/uob-positron-imaging-centre.
 '''
 
 
-from    .trajectory_separation      import  segregate_trajectories
+from    .trajectory_separation      import  Segregate
 from    .trajectory_separation      import  connect_trajectories
 from    .trajectory_separation      import  trajectory_errors
 
 
 __all__ = [
-    "segregate_trajectories",
+    "Segregate",
     "connect_trajectories",
     "trajectory_errors"
 ]

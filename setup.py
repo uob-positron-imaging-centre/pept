@@ -26,7 +26,7 @@
 # Date   : 23.08.2019
 
 # Note: To use the 'upload' functionality of this file, you must:
-#   $ pipenv install twine --dev
+#   $ pip install twine
 
 
 import  io
@@ -63,7 +63,7 @@ DESCRIPTION = (
 URL = 'https://github.com/uob-positron-imaging-centre/pept'
 EMAIL = 'a.l.nicusan@bham.ac.uk'
 AUTHOR = 'Andrei Leonard Nicusan'
-REQUIRES_PYTHON = '>=3.6.0'
+REQUIRES_PYTHON = '>=3.9.0'
 
 
 def requirements(filename):
@@ -78,7 +78,7 @@ REQUIRED = requirements('requirements.txt')
 
 # What packages are optional?
 EXTRAS = {
-    'docs': requirements('requirements_docs.txt'),
+    'docs': requirements('requirements_extra.txt'),
 }
 
 # Cythonize keyword arguments

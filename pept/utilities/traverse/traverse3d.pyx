@@ -108,11 +108,11 @@ cdef double intersect(
 
 
 cpdef void traverse3d(
-    double[:, :, :] voxels,     # Initialised!
-    double[:, :] lines,         # Has exactly 7 columns!
-    double[:] grid_x,           # Has voxels.shape[0] + 1 elements!
-    double[:] grid_y,           # Has voxels.shape[1] + 1 elements!
-    double[:] grid_z            # Has voxels.shape[2] + 1 elements!
+    double[:, :, :] voxels,           # Initialised!
+    const double[:, :] lines,         # Has exactly 7 columns!
+    const double[:] grid_x,           # Has voxels.shape[0] + 1 elements!
+    const double[:] grid_y,           # Has voxels.shape[1] + 1 elements!
+    const double[:] grid_z            # Has voxels.shape[2] + 1 elements!
 ) nogil:
     ''' Fast voxel traversal for 3D lines (or LoRs).
 

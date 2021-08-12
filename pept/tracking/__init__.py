@@ -10,45 +10,43 @@
 
 '''Tracer location, identification and tracking algorithms.
 
-Summary
--------
 The `pept.tracking` subpackage hosts different tracking algorithms, working
-with both the base classes, as well as with generic NumPy arrays. The ones that
-use the base classes provide parallelised subroutines, being faster and easier
-to use, while the functions using NumPy arrays provide fine-grained control
-over the individual samples of lines / points being used.
+with both the base classes, as well as with generic NumPy arrays.
 
-Subpackages Provided
---------------------
-All functions from the subpackages are also imported into the `pept.tracking`
-root, so you can use both `pept.tracking.fpi.FPI` and `pept.tracking.FPI`
-depending on how verbose you want to be.
+All algorithms here are either ``pept.base.Filter`` or ``pept.base.Reducer``
+subclasses, implementing the `.fit` and `.fit_sample` methods; here is an
+example using PEPT-ML:
 
-::
+>>> from pept.tracking import *
+>>>
+>>> cutpoints = Cutpoints(0.5).fit(lines)
+>>> clustered = HDBSCAN(0.15).fit(cutpoints)
+>>> centres = (SplitLabels() + Centroids() + Stack()).fit(clustered)
 
-    pept.tracking
-    │
-    Modules imported into the subpackage root:
-    ├── birmingham_method :     The Birmingham method for single-tracers.
-    ├── peptml :                The PEPT-ML multi-tracer tracking algorithm.
-    ├── fpi :                   The FPI multi-tracer tracking algorithm.
-    ├── trajectory_separation : Separate located points into distinct tracks.
-    │
-    Subpackages:
-    ├── birmingham_method
-    │   └── BirminghamMethod
-    ├── fpi
-    │   ├── fpi_ext
-    │   └── FPI
-    ├── peptml
-    │   ├── find_cutpoints
-    │   ├── get_cutoffs
-    │   ├── Cutpoints
-    │   └── HDBSCANClusterer
-    └── trajectory_separation
-        ├── segregate_trajectories
-        ├── connect_trajectories
-        └── trajectory_errors
+Once the processing steps have been tuned (see the `Tutorials`), you can chain
+all filters into a `pept.Pipeline` for efficient, parallel execution:
+
+>>> pipeline = (
+>>>     Cutpoints(0.5) +
+>>>     HDBSCAN(0.15) +
+>>>     SplitLabels() + Centroids() + Stack()
+>>> )
+>>> centres = pipeline.fit(lines)
+
+If you would like to implement a PEPT algorithm, all you need to do is to
+subclass a ``pept.base.Filter`` and define the method ``.fit_sample(sample)`` -
+and you get parallel execution and pipeline chaining for free!
+
+>>> import pept
+>>>
+>>> class NewAlgorithm(pept.base.LineDataFilter):
+>>>     def __init__(self, setting1, setting2 = None):
+>>>         self.setting1 = setting1
+>>>         self.setting2 = setting2
+>>>
+>>>     def fit_sample(self, sample: pept.LineData):
+>>>         processed_points = ...
+>>>         return pept.PointData(processed_points)
 
 '''
 
@@ -56,15 +54,17 @@ depending on how verbose you want to be.
 from    .birmingham_method      import  *
 from    .peptml                 import  *
 from    .fpi                    import  *
+
 from    .trajectory_separation  import  *
 
+# Import other objects defined elsewhere that should be available here
+from    .transformers           import  Stack
+from    .transformers           import  SplitLabels
+from    .transformers           import  ExtractLines
+from    .transformers           import  Centroids
+from    .transformers           import  LinesCentroids
 
-__all__ = [
-    "birmingham_method",
-    "peptml",
-    "fpi",
-    "trajectory_separation"
-]
+from    .space_transformers     import  Voxelliser
 
 
 __license__ = "GNU v3.0"

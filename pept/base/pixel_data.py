@@ -45,11 +45,12 @@ import  plotly.graph_objects    as      go
 import  matplotlib.pyplot       as      plt
 
 from    pept.utilities.traverse import  traverse2d
+from    .iterable_samples       import  PEPTObject
 
 
 
 
-class Pixels(np.ndarray):
+class Pixels(np.ndarray, PEPTObject):
     '''A class that manages a 2D pixel space, including tools for pixel
     traversal of lines, manipulation and visualisation.
 

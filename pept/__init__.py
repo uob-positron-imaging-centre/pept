@@ -11,8 +11,6 @@
 PEPT
 ====
 
-Summary
--------
 A Python library that unifies Positron Emission Particle Tracking (PEPT)
 research, including tracking, simulation, data analysis and visualisation
 tools.
@@ -42,50 +40,12 @@ gamma ray represents a line of response (LoR) .
 
 Subpackages Provided
 --------------------
-The `pept` package provides five base classes at its root - `PointData`,
-`LineData`, `Pixels`, `Voxels` and `VoxelData` - acting as common data formats
-that the rest of the package will use for its tracking, analysis and
-visualisation algorithms. Thus any subroutine integrated in the `pept` package
-can be used interchangeably with new PET / PEPT scanner geometries, data
-formats or novel algorithms.
-
-The rest of the package is grouped into subpackages and modules following the
-hierarchy below:
-
-::
-
-    pept
-    │
-    Base classes imported into the package root:
-    ├── PointData :     Base class encapsulating points.
-    ├── LineData :      Base class encapsulating lines (LoRs) w/ one timestamp.
-    ├── Pixels :        Base class managing pixels from a sample of lines.
-    ├── Voxels :        Base class managing voxels from a sample of lines.
-    ├── VoxelData :     Base class asynchronously managing multiple `Voxels`.
-    │
-    Subpackages:
-    ├── base :                  Base classes (above).
-    ├── cookbook :              Pre-made PEPT analysis scripts, or recipes.
-    ├── diagnostics :           PET/PEPT scanner diagnostics.
-    ├── processing :            PEPT-oriented post-processing algorithms.
-    ├── scanners :              Transform other data formats into base classes.
-    ├── simulation :            Simulate radioactively-labeled tracers.
-    ├── tests :                 Package unit tests.
-    ├── tracking :              Tracer identification and tracking algorithms.
-    │   ├── birmingham_method : The original Birmingham Method [1].
-    │   ├── fpi :               The Feature Point Identification algorithm [3].
-    │   ├── peptml :            The PEPT-ML algorithm [2].
-    │   └── trajectory_separation : Trajectory separation of tracked tracers.
-    ├── utilities :             Utility functions such as fast CSV-readers.
-    │   ├── cutpoints :         Compute cutpoints from LoRs; Cython functions.
-    │   ├── misc :              Miscellaneous, I/O, data aggregation.
-    │   ├── parallel :          Call arbitrary functions using multithreading.
-    │   └── traverse :          Traverse voxels for LoRs; Cython functions.
-    └── visualisation :         Visualisation algorithms for LoRs, points, etc.
-
-
-Each subpackage has its own documentation containing module, class and function
-hierarchies such as the one above.
+The `pept` package provides four base classes at its root - `PointData`,
+`LineData`, `Pixels`, and `Voxels` - acting as common data formats that the
+rest of the package will use for its tracking, analysis and visualisation
+algorithms. Thus any subroutine integrated in the `pept` package can be used
+interchangeably with new PET / PEPT scanner geometries, data formats or novel
+algorithms.
 
 Performance
 -----------
@@ -202,7 +162,7 @@ use Plotly to produce some beautiful, interactive, 3D graphs:
 
 .. code-block:: python
 
-    from pept.visualisation import PlotlyGrapher
+    from pept.plots import PlotlyGrapher
     subplot_titles = ["Lines of Response (LoRs)", "HDBSCAN Clustering",
                       "2-pass Clustering", "Separated Trajectories"]
     grapher = PlotlyGrapher(rows = 2, cols = 2, zlim = [0, 712],
@@ -222,44 +182,120 @@ A more in-depth tutorial is available on
 
 
 # Import base data structures
-from    .base.line_data     import  LineData
-from    .base.point_data    import  PointData
-from    .base.pixel_data    import  Pixels
-from    .base.voxel_data    import  Voxels
-from    .base.voxel_data    import  VoxelData
+from    .base           import  LineData
+from    .base           import  PointData
+from    .base           import  Pixels
+from    .base           import  Voxels
+from    .base           import  VoxelData
+
+# Import other general-purpose subroutines
+from    .base           import  Pipeline
 
 # Import subpackages
-from    .                   import  cookbook
-from    .                   import  diagnostics
-from    .                   import  processing
-from    .                   import  scanners
-from    .                   import  simulation
-from    .                   import  tracking
-from    .                   import  utilities
-from    .                   import  visualisation
+from    .               import  processing
+from    .               import  scanners
+from    .               import  simulation
+from    .               import  tracking
+from    .               import  utilities
+from    .               import  plots
 
 # Import package version
-from    .__version__        import  __version__
+from    .__version__    import  __version__
+
+
+# Define binary / pickled data save / load functions
+import  pickle
+from    .utilities      import  read_csv
+
+
+def save(filepath, obj):
+    '''Save an object `obj` instance as a binary file at `filepath`.
+
+    Saves the full object state, including e.g. the inner `.lines` NumPy array,
+    `sample_size`, etc. in a fast, portable binary format. Load back the object
+    using the `pept.load` method.
+
+    Parameters
+    ----------
+    filepath : filename or file handle
+        If filepath is a path (rather than file handle), it is relative
+        to where python is called.
+
+    obj : object
+        Any - tipically PEPT-oriented - object to be saved in the binary
+        `pickle` format.
+
+    Examples
+    --------
+    Save a `LineData` instance, then load it back:
+
+    >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+    >>> pept.save("lines.pickle", lines)
+
+    >>> lines_reloaded = pept.load("lines.pickle")
+
+    '''
+    with open(filepath, "wb") as f:
+        pickle.dump(obj, f)
+
+
+def load(filepath):
+    '''Load a binary saved / pickled object from `filepath`.
+
+    Most often the full object state was saved using the `pept.save` method.
+
+    Parameters
+    ----------
+    filepath : filename or file handle
+        If filepath is a path (rather than file handle), it is relative
+        to where python is called.
+
+    Returns
+    -------
+    object
+        The loaded Python object instance (e.g. `pept.LineData`).
+
+    Examples
+    --------
+    Save a `LineData` instance, then load it back:
+
+    >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+    >>> pept.save("lines.pickle", lines)
+
+    >>> lines_reloaded = pept.load("lines.pickle")
+
+    '''
+    with open(filepath, "rb") as f:
+        obj = pickle.load(f)
+
+    return obj
+
+
 
 
 __all__ = [
+    'read_csv',
+    'save',
+    'load',
+
     'LineData',
     'PointData',
     'Pixels',
     'Voxels',
     'VoxelData',
-    'cookbook',
-    'diagnostics',
+
+    'Pipeline',
+
     'processing',
     'scanners',
     'simulation',
     'tracking',
     'utilities',
-    'visualisation',
+    'plots',
 ]
 
 
-__author__ = ["The pept developers"]
+__author__ = "The pept developers"
 __credits__ = [
     "Andrei Leonard Nicusan (University of Birmingham)",
     "Dr. Kit Windows-Yule (University of Birmingham)",

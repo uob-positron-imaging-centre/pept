@@ -1,5 +1,6 @@
-Installing PEPT
-===============
+***************
+Getting Started
+***************
 These instructions will help you get started with PEPT data analysis.
 
 

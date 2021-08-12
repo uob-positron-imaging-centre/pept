@@ -10,6 +10,8 @@ import pandas as pd
 import csv
 
 
+
+
 def number_of_lines(filepath_or_buffer):
     '''Return the number of lines (or rows) in a file.
 
@@ -35,12 +37,12 @@ def read_csv(
     skiprows = None,            # Important
     nrows = None,               # Important
     dtype = float,              # Medium Importance
-    sep = "\s+",                # Extra parameters
-    header = None,              #       |
-    engine = "c",               #       |
-    na_filter = False,          #       |
-    quoting = csv.QUOTE_NONE,   #       |
-    memory_map = True,          #       -
+    sep = r"\s+",               # Extra parameters
+    header = None,              # |
+    engine = "c",               # |
+    na_filter = False,          # |
+    quoting = csv.QUOTE_NONE,   # |
+    memory_map = True,          # -
     **kwargs                    # Extra keyword arguments to pandas.read_csv
 ):
     '''Read a given number of lines from a file and return a numpy array of the
@@ -117,6 +119,8 @@ def read_csv(
     )
 
     return data.to_numpy()
+
+
 
 
 def read_csv_chunks(

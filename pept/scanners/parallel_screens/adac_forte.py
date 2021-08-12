@@ -44,26 +44,54 @@ from    .extensions     import  convert_adac_forte
 
 
 
-class ADACForte(LineData):
-    '''A subclass of `LineData` that initialises PEPT lines of response (LoRs)
-    from the ADAC Forte parallel screen detector list mode *binary* format.
+def adac_forte(
+    filepath,
+    sample_size = 0,
+    overlap = 0,
+    verbose = True,
+):
+    '''Initialise PEPT lines of response (LoRs) from a binary file outputted by
+    the ADAC Forte parallel screen detector list mode (common file extension
+    ".da01").
 
-    Inherits all properties and methods from the general `LineData` class, but
-    reads in LoRs from ADAC binary files (usual extension ".da01").
-
-    Attributes
+    Parameters
     ----------
-    sample_size, overlap, number_of_lines, etc.: inherited from `pept.LineData`
-        All attributes and methods from the parent class `pept.LineData` are
-        available after instantiation. Check its documentation for more
-        information.
+    filepath : str
+        The path to a ADAC Forte-generated binary file from which the LoRs
+        will be read into the `LineData` format.
 
-    Methods
+    sample_size : int, default 0
+        An `int` that defines the number of lines that should be returned
+        when iterating over `lines`. A `sample_size` of 0 yields all the
+        data as one single sample. A good starting value would be 200 times
+        the maximum number of tracers that would be tracked.
+
+    overlap : int, default 0
+        An `int` that defines the overlap between two consecutive samples
+        that are returned when iterating over `lines`. An overlap of 0
+        implies consecutive samples, while an overlap of
+        (`sample_size` - 1) means incrementing the samples by one. A
+        negative overlap means skipping values between samples. An error is
+        raised if `overlap` is larger than or equal to `sample_size`.
+
+    verbose : bool, default True
+        An option that enables printing the time taken for the
+        initialisation of an instance of the class. Useful when reading
+        large files (10gb files for PEPT data is not unheard of).
+
+    Returns
     -------
-    to_csv, lines_trace, etc. : inherited from `pept.LineData`
-        All attributes and methods from the parent class `pept.LineData` are
-        available after instantiation. Check its documentation for more
-        information.
+    LineData
+        The initialised LoRs.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the input `filepath` does not exist.
+
+    ValueError
+        If `overlap` >= `sample_size`. Overlap has to be smaller than
+        `sample_size`. Note that it can also be negative.
 
     Examples
     --------
@@ -71,105 +99,52 @@ class ADACForte(LineData):
     PEPT scanner (i.e. each line is defined by **two** points each) with a
     head separation of 500 mm:
 
-    >>> lors = pept.scanners.ADACForte("binary_data_adac.da01")
-    >>> Initialising the PEPT data took 0.00038814544677734375 seconds.
+    >>> lors = pept.scanners.adac_forte("binary_data_adac.da01")
+    Initialised the PEPT data in 0.011 s.
 
     >>> lors
-    >>> Class instance that inherits from `pept.LineData`.
-    >>> Type:
-    >>> <class 'pept.scanners.parallel_screens.adac_forte.ADACForte'>
-    >>>
-    >>> Attributes
-    >>> ----------
-    >>> number_of_lines =   3
-    >>>
-    >>> sample_size =       0
-    >>> overlap =           0
-    >>> number_of_samples = 1
-    >>>
-    >>> lines =
-    >>> [[  2. 100. 150.   0. 200. 250. 500.]
-    >>>  [  4. 350. 250.   0. 100. 150. 500.]
-    >>>  [  6. 450. 350.   0. 250. 200. 500.]]
-    >>>
-    >>> Particular Cases
-    >>> ----------------
-    >>> > If sample_size == 0, all `lines` are returned as a single sample.
-    >>> > If overlap >= sample_size, an error is raised.
-    >>> > If overlap < 0, lines are skipped between samples.
+    LineData
+    --------
+    sample_size = 0
+    overlap =     0
+    samples =     1
+    lines =
+      [[0.00000000e+00 1.62250000e+02 3.60490000e+02 ... 4.14770000e+02
+        3.77010000e+02 3.10000000e+02]
+       [4.19512195e-01 2.05910000e+02 2.68450000e+02 ... 3.51640000e+02
+        2.95000000e+02 3.10000000e+02]
+       [8.39024390e-01 3.16830000e+02 1.26260000e+02 ... 2.74350000e+02
+        3.95300000e+02 3.10000000e+02]
+       ...
+       [1.98255892e+04 2.64320000e+02 2.43080000e+02 ... 2.25970000e+02
+        4.01200000e+02 3.10000000e+02]
+       [1.98263928e+04 3.19780000e+02 3.38660000e+02 ... 2.75530000e+02
+        5.19200000e+02 3.10000000e+02]
+       [1.98271964e+04 2.41310000e+02 4.15360000e+02 ... 2.91460000e+02
+        4.63150000e+02 3.10000000e+02]]
+    lines.shape = (32526, 7)
+    columns = ['t', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2']
 
     See Also
     --------
     pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
     pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
-    def __init__(
-        self,
-        filepath,
-        sample_size = 0,
-        overlap = 0,
-        verbose = True
-    ):
-        '''ParallelScreens class constructor.
+    if verbose:
+        start = time.time()
 
-        Parameters
-        ----------
-        filepath_or_array : str
-            The path to a ADAC Forte-generated binary file from which the LoRs
-            will be read into the `LineData` format.
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError(textwrap.fill((
+            f"The input file path {filepath} does not exist!"
+        )))
 
-        sample_size : int, default 0
-            An `int` that defines the number of lines that should be returned
-            when iterating over `lines`. A `sample_size` of 0 yields all the
-            data as one single sample. A good starting value would be 200 times
-            the maximum number of tracers that would be tracked.
+    lines = convert_adac_forte(filepath)
 
-        overlap : int, default 0
-            An `int` that defines the overlap between two consecutive samples
-            that are returned when iterating over `lines`. An overlap of 0
-            implies consecutive samples, while an overlap of
-            (`sample_size` - 1) means incrementing the samples by one. A
-            negative overlap means skipping values between samples. An error is
-            raised if `overlap` is larger than or equal to `sample_size`.
+    if verbose:
+        end = time.time()
+        print(f"\nInitialised PEPT data in {end - start:3.3f} s.\n")
 
-        verbose : bool, default True
-            An option that enables printing the time taken for the
-            initialisation of an instance of the class. Useful when reading
-            large files (10gb files for PEPT data is not unheard of).
-
-        Raises
-        ------
-        FileNotFoundError
-            If the input `filepath` does not exist.
-
-        ValueError
-            If `overlap` >= `sample_size`. Overlap has to be smaller than
-            `sample_size`. Note that it can also be negative.
-        '''
-
-        if verbose:
-            start = time.time()
-
-        if not os.path.isfile(filepath):
-            raise FileNotFoundError(textwrap.fill((
-                f"The input file path {filepath} does not exist!"
-            )))
-
-        lines = convert_adac_forte(filepath)
-
-        # Call the constructor of the superclass `LineData` to initialise all
-        # the inner parameters of the class (_index, etc.)
-        LineData.__init__(
-            self,
-            lines,
-            sample_size = sample_size,
-            overlap = overlap,
-            verbose = False
-        )
-
-        if verbose:
-            end = time.time()
-            print(f"Initialising the PEPT data took {end - start} seconds.\n")
+    return LineData(lines, sample_size = sample_size, overlap = overlap)

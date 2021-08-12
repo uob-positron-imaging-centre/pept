@@ -37,7 +37,6 @@
 
 import copy
 import os
-import sys
 import textwrap
 import time
 import warnings
@@ -48,14 +47,7 @@ from    joblib              import  Parallel, delayed
 from    tqdm                import  tqdm
 
 import  cma
-
-# Fix a deprecation warning inside the sklearn library
-try:
-    sys.modules['sklearn.externals.six'] = __import__('six')
-    sys.modules['sklearn.externals.joblib'] = __import__('joblib')
-    import hdbscan
-except ImportError:
-    import hdbscan
+import  hdbscan
 
 import  pept
 
@@ -779,20 +771,6 @@ class HDBSCANClusterer:
                 f"{type(cutpoints)}.\n"
             ))
 
-        # Users might forget to set the sample_size, leaving it to the default
-        # value of 0; in that case, all points are returned as a single sample;
-        # that might not be the intended behaviour.
-        if cutpoints.sample_size == 0:
-            warnings.warn(
-                textwrap.fill((
-                    "\n[WARNING]: The `cutpoints.sample_size` was left to the "
-                    "default value of 0, in which case all points are returned"
-                    " as a single sample. For a very large number of points, "
-                    "this might result in a long function execution time.\n"
-                ), replace_whitespace = False),
-                RuntimeWarning
-            )
-
         get_labels = bool(get_labels)
 
         # Fit all samples in `cutpoints` in parallel using joblib
@@ -1304,3 +1282,183 @@ class HDBSCANClusterer:
         )
 
         return docstr
+
+
+
+
+def _centroid(lors, weights):
+    nx = np.newaxis
+
+    m = np.identity(3)[nx, :, :] - lors[:, nx, 4:7] * lors[:, 4:7, nx]
+    m *= weights[:, nx, nx]
+
+    n = np.sum(m, axis = 0)
+    v = np.sum(np.sum(m * lors[:, nx, 1:4], axis = -1), axis = 0)
+
+    return np.matmul(np.linalg.inv(n), v)
+
+
+def _dist_matrix(x, lors):
+    y = x[np.newaxis, :3] - lors[:, 1:4]
+    return np.sum(y**2, axis = -1) - np.sum(y * lors[:, 4:7], axis = -1)**2
+
+
+def _latent_weights(d2, s):
+    w = np.exp(-d2 / 2 / s**2) / (s * 2.50662827463)
+    w /= np.sum(w)
+    return w
+
+
+def _linear_weights(d2):
+    return (d2.max() - d2) / (d2.max() - d2.min())
+
+
+def _predict_gaussian(lines, iters = 2):
+    # Rewrite LoRs in the vectorial form y(x) = position + x * direction
+    lors = lines[:, :7].copy(order = "C")
+
+    lors[:, 4:7] = lors[:, 4:7] - lors[:, 1:4]
+    lors[:, 4:7] /= np.linalg.norm(lors[:, 3:], axis = -1)[:, np.newaxis]
+
+    # Begin with equal weights for all LoRs
+    weights = np.ones(len(lors))
+
+    # Run two EM iterations so that a reasonable amount of LoRs remain with
+    # significant weights
+    for _ in range(iters):
+        x = _centroid(lors, weights)
+        d2 = _dist_matrix(x, lors)
+        # variance = np.sqrt(np.mean(d2 * weights))
+        # print(variance)
+        weights = _latent_weights(d2, 5.0)
+
+    return x, weights
+
+
+def _predict_simple(lines):
+    # Rewrite LoRs in the vectorial form y(x) = position + x * direction
+    lors = lines[:, :7].copy(order = "C")
+
+    lors[:, 4:7] = lors[:, 4:7] - lors[:, 1:4]
+    lors[:, 4:7] /= np.linalg.norm(lors[:, 3:], axis = -1)[:, np.newaxis]
+
+    # Begin with equal weights for all LoRs
+    weights = np.ones(len(lors))
+    x = _centroid(lors, weights)
+    d2 = _dist_matrix(x, lors)
+
+    for i in range(6):
+        k = int(len(d2) * (1 - 0.1 * (i + 1)))
+        part = np.argpartition(d2, k)
+        weights[part[k:]] = 0
+
+        x = _centroid(lors, weights)
+        d2 = _dist_matrix(x, lors)
+
+    weights[weights != 0] = _linear_weights(d2[weights != 0])
+    return x, weights
+
+
+
+
+class HDBSCAN(pept.base.PointDataFilter):
+    '''Use HDBSCAN to cluster some ``pept.PointData`` and append a cluster
+    label to each point.
+
+    Filter signature:
+
+    ::
+
+        PointData -> HDBSCAN.fit_sample -> PointData
+
+
+    The only free parameter to select is the ``true_fraction``, a relative
+    measure of the ratio of inliers to outliers. A noisy sample - e.g. first
+    pass of clustering of cutpoints - may need a value of `0.15`. A cleaned up
+    dataset - e.g. a second pass of clustering - can work with `0.6`.
+
+    You can also set the maximum number of tracers visible at any one time in
+    the system in ``max_tracers`` (default 1). This is simply an inverse
+    scaling factor, but the ``true_fraction`` is quite robust with varying
+    numbers of tracers.
+
+    '''
+
+    def __init__(self, true_fraction, max_tracers = 1):
+        self.true_fraction = float(true_fraction)
+        self.max_tracers = int(max_tracers)
+
+        self.clusterer = hdbscan.HDBSCAN(
+            allow_single_cluster = False,
+            core_dist_n_jobs = 1,
+        )
+
+
+    def _inject_cluster(self, points):
+        # Inject artificial cluster in a clearly outlying region
+        quantiles = np.quantile(points[:, 1:4], [0.25, 0.75], axis = 0)
+        qrange = quantiles[1, :] - quantiles[0, :]
+
+        # Artificial cluster centre = Tukey's upper fence
+        artificial = quantiles[1, :] + 1.5 * qrange
+
+        # Pre-allocate array for the artificial cluster's points
+        num_points = int(len(points) * self.true_fraction / self.max_tracers)
+        cluster = np.zeros((num_points, points.shape[1]))
+
+        # Fill artificial cluster's points' coordinates with normally
+        # distributed points of a variance comparable with that of the points
+        cluster[:, 1:4] = np.random.normal(
+            artificial,
+            0.3 * qrange,
+            size = (num_points, 3),
+        )
+
+        return np.vstack((points, cluster))
+
+
+    def fit_sample(self, sample_points):
+        # Type-checking inputs
+        if not isinstance(sample_points, pept.PointData):
+            sample_points = pept.PointData(sample_points)
+
+        points = sample_points.points
+
+        # Inject artificial cluster outside FoV to enforce characteristic
+        # length. Will remove labels given to those points after fitting
+        points_art = self._inject_cluster(points)
+
+        # Set HDBSCAN's parameters
+        phi = int(self.true_fraction * len(points_art) /
+                  (self.max_tracers + 1))
+
+        if phi < 2:
+            phi = 2
+
+        self.clusterer.min_cluster_size = phi
+        self.clusterer.min_samples = phi
+
+        # Cluster the points given and get each point's label
+        with warnings.catch_warnings():
+            # Ignore deprecation warning from HDBSCAN's use of `np.bool`
+            warnings.simplefilter("ignore", category = DeprecationWarning)
+            labels = self.clusterer.fit_predict(points_art[:, 1:4])
+
+        # Assign noise to all points included in the artificial cluster
+        labels_art = labels[len(points):]
+        for label in np.unique(labels_art):
+            labels[labels == label] = -1
+
+        # Remove labels given to the artificial cluster's points
+        labels = labels[:len(points)]
+
+        # Map labels from [0, 2, 2, 3, 0] to [0, 1, 1, 2, 0]
+        good = (labels != -1)
+        _, labels[good] = np.unique(labels[good], return_inverse = True)
+
+        # Construct new PointData instance with the same attributes
+        clustered_points = sample_points.copy()
+        clustered_points.points = np.c_[points, labels]
+        clustered_points.columns.append("labels")
+
+        return clustered_points

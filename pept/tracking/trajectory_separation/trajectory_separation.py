@@ -37,15 +37,21 @@
 
 import  os
 
+from    beartype                    import  beartype
+from    typing                      import  Union
+from    collections.abc             import  Iterable
+
 import  numpy                       as      np
 from    scipy.spatial               import  cKDTree
 from    scipy.sparse.csgraph        import  minimum_spanning_tree
 
 import  pept
+from    pept                        import  PointData
 import  hdbscan
 
 from    .tco                        import  with_continuations
 from    .distance_matrix_reachable  import  distance_matrix_reachable
+from    ..transformers              import  Stack
 
 
 
@@ -102,100 +108,57 @@ def trajectory_errors(
 
 
 
-def segregate_trajectories(
-    point_data,
-    points_window,
-    trajectory_cut_distance,
-    min_trajectory_size = 5,
-    as_list = False,
-    return_mst = False
-):
+class Segregate(pept.base.Reducer):
     '''Segregate the intertwined points from multiple trajectories into
     individual paths.
 
-    The points in `point_data` (a numpy array or `pept.PointData`) are used to
-    construct a minimum spanning tree in which every point can only be
-    connected to `points_window` points around it - this "window" refers to the
-    points in the initial data array, sorted based on the time column;
+    The points in `point_data` (a numpy array or `pept.PointData`) are used
+    to construct a minimum spanning tree in which every point can only be
+    connected to `points_window` points around it - this "window" refers to
+    the points in the initial data array, sorted based on the time column;
     therefore, only points within a certain timeframe can be connected. All
-    edges (or "connections") in the minimum spanning tree that are larger than
-    `trajectory_cut_distance` are removed (or "cut") and the remaining
+    edges (or "connections") in the minimum spanning tree that are larger
+    than `trajectory_cut_distance` are removed (or "cut") and the remaining
     connected "clusters" are deemed individual trajectories if they contain
     more than `min_trajectory_size` points.
 
-    The trajectory indices (or labels) are appended to `point_data`. That is,
-    for each data point (i.e. row) in `point_data`, a label will be appended
-    starting from 0 for the corresponding trajectory; a label of -1 represents
-    noise. If `point_data` is a numpy array, a new numpy array is returned; if
-    it is a `pept.PointData` instance, a new instance is returned.
+    The trajectory indices (or labels) are appended to `point_data`. That
+    is, for each data point (i.e. row) in `point_data`, a label will be
+    appended starting from 0 for the corresponding trajectory; a label of
+    -1 represents noise. If `point_data` is a numpy array, a new numpy
+    array is returned; if it is a `pept.PointData` instance, a new instance
+    is returned.
 
     This function uses single linkage clustering with a custom metric for
     spatio-temporal data to segregate trajectory points. The single linkage
-    clustering was optimised for this use-case: points are only connected if
-    they are within a certain `points_window` in the time-sorted input array.
-    Sparse matrices are also used for minimising the memory footprint.
+    clustering was optimised for this use-case: points are only connected
+    if they are within a certain `points_window` in the time-sorted input
+    array. Sparse matrices are also used for minimising the memory
+    footprint.
 
-    Parameters
+    Attributes
     ----------
-    point_data : (M, N>=4) numpy.ndarray or pept.PointData
-        The points from multiple trajectories. Each row in `point_data` will
-        have a timestamp and the 3 spatial coordinates, such that the data
-        columns are [time, x_coord, y_coord, z_coord]. Note that `point_data`
-        can have more data columns and they will simply be ignored.
-    points_window : int
-        Two points are "reachable" (i.e. they can be connected) if and only if
-        they are within `points_window` in the time-sorted input `point_data`.
-        As the points from different trajectories are intertwined (e.g. for two
-        tracers A and B, the `point_data` array might have two entries for A,
-        followed by three entries for B, then one entry for A, etc.), this
-        should optimally be the largest number of points in the input array
-        between two consecutive points on the same trajectory. If
-        `points_window` is too small, all points in the dataset will be
-        unreachable. Naturally, a larger `time_window` correponds to more pairs
-        needing to be checked (and the function will take a longer to
-        complete).
-    trajectory_cut_distance : float
-        Once all the closest points are connected (i.e. the minimum spanning
-        tree is constructed), separate all trajectories that are further
-        apart than `trajectory_cut_distance`.
+    window : int
+        Two points are "reachable" (i.e. they can be connected) if and only
+        if they are within `points_window` in the time-sorted input
+        `point_data`. As the points from different trajectories are
+        intertwined (e.g. for two tracers A and B, the `point_data` array
+        might have two entries for A, followed by three entries for B, then
+        one entry for A, etc.), this should optimally be the largest number
+        of points in the input array between two consecutive points on the
+        same trajectory. If `points_window` is too small, all points in the
+        dataset will be unreachable. Naturally, a larger `time_window`
+        correponds to more pairs needing to be checked (and the function
+        will take a longer to complete).
+
+    cut_distance : float
+        Once all the closest points are connected (i.e. the minimum
+        spanning tree is constructed), separate all trajectories that are
+        further apart than `trajectory_cut_distance`.
+
     min_trajectory_size : float, default 5
         After the trajectories have been cut, declare all trajectories with
         fewer points than `min_trajectory_size` as noise.
-    as_list : bool, default False
-        If True, return a list of arrays, where each array contains the points
-        in a single trajectory. In other words, return separate, single
-        trajectories in a list. If False, return a single array of all points
-        (if `point_data` was a `numpy.ndarray`) or a `pept.PointData`
-        (if `point_data` was a `pept.PointData` instance).
-    return_mst : bool, default False
-        If `True`, the function will also return the minimum spanning tree
-        constructed using the input `point_data`. This is a numpy array with
-        columns [vertex1, vertex2, edge_length], where vertex1 and vertex2 are
-        the indices in `point_data` of the connected points, and edge_length is
-        the euclidian distance between them.
-
-    Returns
-    -------
-    points_labelled: numpy.ndarray or pept.PointData or list of numpy.ndarray
-        If `as_list` is `False`, this is the `point_data` array or
-        `pept.PointData` instance with an extra column for the trajectory index
-        (i.e. label) - the return type is similar to the input type. If
-        `as_list` is `True`, this is a list of arrays, in which each array
-        contains the points in a single_trajectory; these still include the
-        trajectory label. A label value of `-1` indicates noise; the found
-        trajectories are then labelled starting from 0.
-    mst: numpy.ndarray, optional
-        If `return_mst` is `True`, another numpy array is returned as a second
-        variable containing the columns [vertex1, vertex2, edge_length], where
-        vertex1 and vertex2 are the indices in `point_data` of the connected
-        points, and edge_length is the euclidian distance between them.
-
-    Raises
-    ------
-    ValueError
-        If `point_data` is a numpy array with fewer than 4 columns.
-    ValueError
-        If `points_window` is smaller than 1.
 
     Examples
     --------
@@ -241,88 +204,63 @@ def segregate_trajectories(
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
-    # Check `point_data` is a numpy array or pept.PointData
-    if isinstance(point_data, pept.PointData):
-        pts = point_data.points
-    else:
-        pts = np.asarray(point_data)
-        if pts.ndim != 2 or pts.shape[1] < 4:
-            raise ValueError((
-                "\n[ERROR]: `point_data` should have dimensions (M, N), where "
-                f"N >= 4. Received {pts.shape}.\n"
-            ))
+    def __init__(
+        self,
+        window,
+        cut_distance,
+        min_trajectory_size = 5,
+    ):
+        self.window = int(window)
+        self.cut_distance = float(cut_distance)
+        self.min_trajectory_size = int(min_trajectory_size)
 
-    # Sort pts based on the time column (col 0) and create a C-ordered copy to
-    # send to Cython.
-    pts = np.asarray(pts[pts[:, 0].argsort()], dtype = float, order = "C")
 
-    # Type-check the input parameters
-    points_window = int(points_window)
-    if points_window < 1:
-        raise ValueError((
-            "\n[ERROR]: `points_window` should be larger than 1! Received "
-            f"{points_window}.\n"
-        ))
+    @beartype
+    def fit(self, points: Iterable[PointData]):
+        # Stack the input points into a single PointData
+        points = Stack().fit(points)
+        if len(points) == 0:
+            raise ValueError("No points to segregate.")
 
-    trajectory_cut_distance = float(trajectory_cut_distance)
-    min_trajectory_size = int(min_trajectory_size)
-    return_mst = bool(return_mst)
+        pts = points.points
 
-    # Calculate the sparse distance matrix between reachable points. This is an
-    # optimised Cython function returning a sparse CSR matrix.
-    distance_matrix = distance_matrix_reachable(pts, points_window)
+        # Sort pts based on the time column (col 0) and create a C-ordered copy
+        # to send to Cython.
+        pts = np.asarray(pts[pts[:, 0].argsort()], dtype = float, order = "C")
 
-    # Construct the minimum spanning tree from the sparse distance matrix. Note
-    # that `mst` is also a sparse CSR matrix.
-    mst = minimum_spanning_tree(distance_matrix)
+        # Calculate the sparse distance matrix between reachable points. This
+        # is an optimised Cython function returning a sparse CSR matrix.
+        distance_matrix = distance_matrix_reachable(pts, self.window)
 
-    # Get the minimum spanning tree edges into the [vertex 1, vertex 2,
-    # edge distance] format, then sort it based on the edge distance.
-    mst = mst.tocoo()
-    mst_edges = np.vstack((mst.row, mst.col, mst.data)).T
-    mst_edges = mst_edges[mst_edges[:, 2].argsort()]
+        # Construct the minimum spanning tree from the sparse distance matrix.
+        # Note that `mst` is also a sparse CSR matrix.
+        mst = minimum_spanning_tree(distance_matrix)
 
-    # Create the single linkage tree from the minimum spanning tree edges using
-    # internal hdbscan methods (because they're damn fast). This should be a
-    # fairly quick step.
-    single_linkage_tree = hdbscan._hdbscan_linkage.label(mst_edges)
-    single_linkage_tree = hdbscan.plots.SingleLinkageTree(single_linkage_tree)
+        # Get the minimum spanning tree edges into the [vertex 1, vertex 2,
+        # edge distance] format, then sort it based on the edge distance.
+        mst = mst.tocoo()
+        mst_edges = np.vstack((mst.row, mst.col, mst.data)).T
+        mst_edges = mst_edges[mst_edges[:, 2].argsort()]
 
-    # Cut the single linkage tree at `trajectory_cut_distance` and get the
-    # cluster labels, setting clusters smaller than `min_trajectory_size` to
-    # -1 (i.e. noise).
-    labels = single_linkage_tree.get_clusters(
-        trajectory_cut_distance,
-        min_trajectory_size
-    )
+        # Create the single linkage tree from the minimum spanning tree edges
+        # using internal hdbscan methods (because they're damn fast). This
+        # should be a fairly quick step.
+        linkage_tree = hdbscan._hdbscan_linkage.label(mst_edges)
+        linkage_tree = hdbscan.plots.SingleLinkageTree(linkage_tree)
 
-    # Append the labels to `pts`.
-    pts = np.append(pts, labels[:, np.newaxis], axis = 1)
-
-    # Returns based on as_list, return_mst and input data type
-    if as_list:
-        # Get a list of arrays for each trajectory
-        separate_pts = pept.utilities.group_by_column(pts, -1)
-        if return_mst:
-            return separate_pts, mst_edges
-        return separate_pts
-
-    # If `point_data` was a `pept.PointData` instance, return a new
-    # `pept.PointData` with the new label column.
-    if isinstance(point_data, pept.PointData):
-        point_data_labelled = pept.PointData(
-            pts,
-            sample_size = point_data.sample_size,
-            overlap = point_data.overlap,
-            verbose = False
+        # Cut the single linkage tree at `trajectory_cut_distance` and get the
+        # cluster labels, setting clusters smaller than `min_trajectory_size`
+        # to -1 (i.e. noise).
+        labels = linkage_tree.get_clusters(
+            self.cut_distance,
+            self.min_trajectory_size,
         )
-        if return_mst:
-            return point_data_labelled, mst_edges
-        else:
-            return point_data_labelled
-    elif return_mst:
-        return pts, mst_edges
-    return pts
+
+        # Append the labels to `pts`.
+        pts = np.append(pts, labels[:, np.newaxis], axis = 1)
+        attributes = points.extra_attributes()
+        attributes["columns"] = attributes["columns"] + ["labels"]
+        return pept.PointData(pts, **attributes)
 
 
 

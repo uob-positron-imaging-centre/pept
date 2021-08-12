@@ -55,8 +55,8 @@ cimport numpy as np
 
 
 cpdef distance_matrix_reachable(
-    double[:, :] pts,           # Array of points, cols = [t, x, y, z, ...]
-    int points_window
+    const double[:, :] pts,           # Array of points, cols = [t, x, y, z, ...]
+    const int points_window
 ):
     '''Compute the distance matrix from a time-sorted array of points `pts`
     based on a sliding `points_window`.

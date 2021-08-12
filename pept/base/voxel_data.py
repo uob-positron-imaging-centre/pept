@@ -38,7 +38,6 @@
 import  pickle
 import  time
 import  textwrap
-from    concurrent.futures      import  ThreadPoolExecutor
 
 import  numpy                   as      np
 
@@ -46,15 +45,15 @@ import  plotly.graph_objects    as      go
 import  matplotlib
 import  matplotlib.pyplot       as      plt
 
-from    tqdm                    import  tqdm
-
-import  pept
 from    pept.utilities.traverse import  traverse3d
 
+from    .iterable_samples       import  AsyncIterableSamples, PEPTObject
+from    .line_data              import  LineData
 
 
 
-class Voxels(np.ndarray):
+
+class Voxels(np.ndarray, PEPTObject):
     '''A class that manages a single 3D voxel space, including tools for voxel
     traversal of lines, manipulation and visualisation.
 
@@ -468,19 +467,10 @@ class Voxels(np.ndarray):
             start = time.time()
 
         # Type-checking inputs
-        if isinstance(lines, pept.LineData):
-            lines = lines.lines
+        if not isinstance(lines, LineData):
+            lines = LineData(lines)
 
-        lines = np.asarray(lines, order = "C", dtype = float)
-
-        if lines.ndim != 2 or lines.shape[1] < 7:
-            raise ValueError(textwrap.fill((
-                "The input `lines` must be a 2D numpy array containing lines "
-                "defined by two points, with every row is formatted as "
-                "[time, x1, y1, z1, x2, y2, z2, ...]. The `lines` must then "
-                "have shape (M, N >= 7). Received array with shape "
-                f"{lines.shape}."
-            )))
+        lines = lines.lines
 
         number_of_voxels = np.asarray(
             number_of_voxels,
@@ -808,7 +798,7 @@ class Voxels(np.ndarray):
         -----
         Plotting all points is very computationally-expensive for matplotlib.
         It is recommended to only plot a couple of samples at a time, or use
-        the faster `pept.visualisation.PlotlyGrapher`.
+        the faster `pept.plots.PlotlyGrapher`.
 
         Examples
         --------
@@ -1241,6 +1231,7 @@ class Voxels(np.ndarray):
     def __str__(self):
         # Shown when calling print(class)
         docstr = (
+            "Voxels\n------\n"
             f"{self.__array__()}\n\n"
             f"number_of_voxels =    {self._number_of_voxels}\n"
             f"voxel_size =          {self._voxel_size}\n\n"
@@ -1258,19 +1249,12 @@ class Voxels(np.ndarray):
 
     def __repr__(self):
         # Shown when writing the class on a REPR
-        docstr = (
-            "Class instance that inherits from `pept.Voxels`.\n"
-            f"Type:\n{type(self)}\n\n"
-            "Attributes\n----------\n"
-            f"{self.__str__()}"
-        )
-
-        return docstr
+        return self.__str__()
 
 
 
 
-class VoxelData:
+class VoxelData(AsyncIterableSamples):
     '''A class that can voxellise multiple samples of lines (from a `LineData`)
     lazily / on demand.
 
@@ -1422,9 +1406,7 @@ class VoxelData:
         xlim = None,
         ylim = None,
         zlim = None,
-        max_workers = None,
         save_cache = False,
-        traverse = False,
         verbose = True,
     ):
         '''`VoxelData` class constructor.
@@ -1453,20 +1435,10 @@ class VoxelData:
             z-dimension, formatted as [z_min, z_max]. If undefined, it is
             inferred from the boundaries of the lines in `line_data`.
 
-        max_workers : int, optional
-            The number of threads that will be used to voxellise the lines in
-            parallel. If undefined, the value returned by `os.cpu_count()` is
-            used.
-
         save_cache : bool, default False
             Whether to cache the voxellised spaces *when their computation is
             requested* (e.g. when calling `traverse()`). The `voxels` attribute
             is only populated if this is `True`.
-
-        traverse : bool, default False
-            Whether to immediately voxellise all the samples of lines in
-            `line_data`. If `True`, `save_cache` is also set to `True` and the
-            `traverse()` method is called.
 
         verbose : bool, default True
             Show extra information as the voxellisation runs.
@@ -1484,7 +1456,7 @@ class VoxelData:
         '''
 
         # Type-checking inputs
-        if not isinstance(line_data, pept.LineData):
+        if not isinstance(line_data, LineData):
             raise TypeError(textwrap.fill((
                 "The input `line_data` must be an instance (or subclass "
                 f"thereof!) of `pept.LineData`. Received {type(line_data)}."
@@ -1554,35 +1526,34 @@ class VoxelData:
                     f"Received parameter with shape {ylim.shape}."
                 )))
 
-        save_cache = bool(save_cache)
-        traverse = bool(traverse)
-
         # Setting class attributes
-        self._line_data = line_data.copy()
         self._number_of_voxels = tuple(number_of_voxels)
         self._xlim = xlim
         self._ylim = ylim
         self._zlim = zlim
 
-        self._max_workers = max_workers
-        self._save_cache = save_cache
-
-        self._voxels_index = 0
-        self._voxels = [None for _ in range(len(self._line_data))]
-
-        if traverse:
-            self._save_cache = True
-            self.traverse(verbose = verbose)
+        AsyncIterableSamples.__init__(
+            self,
+            line_data,
+            Voxels.from_lines,
+            args = (self.number_of_voxels,),
+            kwargs = dict(xlim = self.xlim, ylim = self.ylim,
+                          zlim = self.zlim, verbose = False),
+            save_cache = save_cache,
+            verbose = verbose,
+        )
 
 
     @property
     def line_data(self):
-        return self._line_data
+        # The `samples` attribute is set by the parent class,
+        # `AsyncIterableSamples`
+        return self.samples
 
 
     @property
     def voxels(self):
-        return self._voxels
+        return self.processed
 
 
     @property
@@ -1603,21 +1574,6 @@ class VoxelData:
     @property
     def zlim(self):
         return self._zlim
-
-
-    @property
-    def max_workers(self):
-        return self._max_workers
-
-
-    @property
-    def save_cache(self):
-        return self._save_cache
-
-
-    @save_cache.setter
-    def save_cache(self, new_save_cache):
-        self._save_cache = bool(new_save_cache)
 
 
     def save(self, filepath):
@@ -1682,293 +1638,27 @@ class VoxelData:
         return obj
 
 
-    def traverse(
-        self,
-        sample_indices = ...,
-        verbose = True,
-    ):
-        '''Voxellise the samples in `line_data` at indices `samples_indices`.
-
-        If `save_cache` is `True`, the voxellised spaces are also cached in the
-        `voxels` attribute. Otherwise, they are only returned as a list.
-
-        Parameters
-        ----------
-        sample_indices : int or iterable or Ellipsis, default Ellipsis
-            The index or indices of the samples of lines. An `int` signifies
-            the sample index, an iterable (list-like) signifies multiple sample
-            indices, while an Ellipsis (`...`) signifies all samples. The
-            default is `...` (all samples).
-
-        verbose : bool, default True
-            Show extra information as the voxellisation runs.
-
-        Returns
-        -------
-        list[Voxels]
-            A list of the voxellised samples of lines (each as a `Voxels`
-            class) selected by `sample_indices`.
-
-        Examples
-        --------
-        This method is automatically called if the instantiation of the class
-        sets `traverse = True`:
-
-        >>> import pept
-        >>> import numpy as np
-
-        >>> lines_raw = np.arange(70).reshape(10, 7)
-        >>> lines = pept.LineData(lines_raw, sample_size = 2)
-
-        >>> number_of_voxels = [3, 4, 5]
-        >>> voxel_data = pept.VoxelData(
-        >>>     lines, number_of_voxels, traverse = True
-        >>> )
-        >>> voxel_data.voxels
-        >>> [..Voxels.. , ..Voxels.., ...]
-
-        You can also call the method after the instantiation. If the results
-        were cached (i.e. `save_cache = True`), they are returned without
-        re-computing them:
-
-        >>> voxel_list = voxel_data.traverse()
-
-        Alternatively, you can only voxellise a few samples at once (still in
-        parallel):
-
-        >>> voxel_list = voxel_data.traverse([1, 5, 2])
-
-        Of course, the list of `Voxels` will have the same ordering as the
-        list of indices given to the function.
-
-        '''
-
-        # Check if sample_indices is an iterable collection (list-like)
-        # otherwise just "iterate" over the single number or Ellipsis.
-        if sample_indices is Ellipsis:
-            sample_indices = np.arange(len(self._line_data))
-        elif not hasattr(sample_indices, "__iter__"):
-            sample_indices = [sample_indices]
-
-        with ThreadPoolExecutor(max_workers = self._max_workers) as executor:
-            # Use pre-computed voxels and voxellise the other samples
-            selected_voxels = [None for _ in range(len(sample_indices))]
-            selected_futures = [None for _ in range(len(sample_indices))]
-
-            # Voxellise each selected sample
-            for i, n in enumerate(sample_indices):
-                # Optimisation: if this sample was already voxellised, reuse it
-                if self._voxels[n] is not None:
-                    selected_voxels[i] = self._voxels[n].copy()
-                    continue
-
-                # Otherwise, voxellise the sample asynchronously
-                selected_futures[i] = executor.submit(
-                    pept.Voxels.from_lines,
-                    self._line_data[n],
-                    self._number_of_voxels,
-                    xlim = self._xlim,
-                    ylim = self._ylim,
-                    zlim = self._zlim,
-                    verbose = False,
-                )
-
-            if verbose:
-                sample_indices = tqdm(sample_indices)
-
-            # Iterate through all the futures; if not None (i.e. we voxellised
-            # the sample now), get the result. Otherwise it was pre-computed
-            for i, n in enumerate(sample_indices):
-                if selected_futures[i] is not None:
-                    selected_voxels[i] = selected_futures[i].result()
-
-                    # If we voxellised this sample and we use "save_cache",
-                    # cache the result in self.voxels
-                    if self._save_cache:
-                        self._voxels[n] = selected_voxels[i]
-
-        return selected_voxels
-
-
-    def accumulate(self, sample_indices = ..., verbose = True):
-        '''Superimpose the voxellised samples in `line_data` at indices
-        `samples_indices` into the same voxel space.
-
-        This method can be used to voxellise multiple samples of lines into the
-        same `Voxels` class. The computation is done in parallel and uses the
-        least amount of memory possible.
-
-        Parameters
-        ----------
-        sample_indices : int or iterable or Ellipsis, default Ellipsis
-            The index or indices of the samples of lines. An `int` signifies
-            the sample index, an iterable (list-like) signifies multiple sample
-            indices, while an Ellipsis (`...`) signifies all samples. The
-            default is `...` (all samples).
-
-        verbose : bool, default True
-            Show extra information as the voxellisation runs.
-
-        Returns
-        -------
-        Voxels
-            The single voxellised space that contains the superimposed
-            voxellised representations of the samples of lines selected by
-            `sample_indices`.
-
-        Examples
-        --------
-        This method is helpful for splitting the voxellisation that would be
-        done by a single `Voxels` class across multiple threads:
-
-        >>> import pept
-        >>> import numpy as np
-
-        >>> lines_raw = np.arange(70).reshape(10, 7)
-        >>> lines = pept.LineData(lines_raw, sample_size = 2)
-
-        >>> number_of_voxels = [3, 4, 5]
-        >>> voxel_data = pept.VoxelData(lines, number_of_voxels)
-        >>> vox = voxel_data.accumulate()
-
-        '''
-
-        # Check if sample_indices is an iterable collection (list-like)
-        # otherwise just "iterate" over the single number or Ellipsis.
-        if sample_indices is Ellipsis:
-            sample_indices = np.arange(len(self._line_data))
-        elif not hasattr(sample_indices, "__iter__"):
-            sample_indices = [sample_indices]
-
-        vox = Voxels.empty(
-            self._number_of_voxels,
-            self._xlim,
-            self._ylim,
-            self._zlim,
-        )
-
-        # Voxellise each selected sample
-        with ThreadPoolExecutor(max_workers = self._max_workers) as executor:
-            # Use pre-computed voxels and voxellise the other samples
-            selected_futures = [None for _ in range(len(sample_indices))]
-
-            for i, n in enumerate(sample_indices):
-                # Optimisation: if this sample was already voxellised, reuse it
-                if self._voxels[n] is not None:
-                    continue
-
-                # Otherwise, voxellise the sample asynchronously
-                selected_futures[i] = executor.submit(
-                    pept.Voxels.from_lines,
-                    self._line_data[n],
-                    self._number_of_voxels,
-                    xlim = self._xlim,
-                    ylim = self._ylim,
-                    zlim = self._zlim,
-                    verbose = False,
-                )
-
-            if verbose:
-                sample_indices = tqdm(sample_indices)
-
-            # Iterate through all the futures; if not None (i.e. we voxellised
-            # the sample now), get the result. Otherwise it was pre-computed
-            for i, n in enumerate(sample_indices):
-                if selected_futures[i] is not None:
-                    vox += selected_futures[i].result()
-                else:
-                    vox += self._voxels[n]
-
-        return vox
-
-
-    def __getitem__(self, key):
-        # For accessing voxels using subscript notation
-        key = int(key)
-
-        # Allow negative indices
-        while key < 0:
-            key += len(self._voxels)
-
-        if key >= len(self._voxels):
-            raise IndexError(textwrap.fill((
-                f"The index `{key}` was out of range. There are "
-                f"{len(self._voxels)} samples of lines to be voxellised, "
-                "indexed from 0."
-            )))
-
-        if self._voxels[key] is not None:
-            return self._voxels[key]
-
-        vox = pept.Voxels.from_lines(
-            self._line_data[key],
-            self._number_of_voxels,
-            xlim = self._xlim,
-            ylim = self._ylim,
-            zlim = self._zlim,
-            verbose = False,
-        )
-
-        if self._save_cache:
-            self._voxels[key] = vox
-
-        return vox
-
-
-    def __iter__(self):
-        return self
-
-
-    def __next__(self):
-        # Finish iteration
-        if self._voxels_index >= len(self._line_data):
-            self._voxels_index = 0
-
-            raise StopIteration
-
-        # If we already traversed and saved this sample, return it directly
-        if self._voxels[self._voxels_index] is not None:
-            self._voxels_index += 1
-            return self._voxels[self._voxels_index - 1]
-
-        vox = pept.Voxels.from_lines(
-            self._line_data[self._voxels_index],
-            self._number_of_voxels,
-            xlim = self._xlim,
-            ylim = self._ylim,
-            zlim = self._zlim,
-            verbose = False,
-        )
-
-        if self._save_cache:
-            self._voxels[self._voxels_index] = vox
-
-        self._voxels_index += 1
-
-        return vox
-
-
-    def __len__(self):
-        return len(self._voxels)
+    def copy(self):
+        '''Create a deep copy of an instance of this class.'''
+        return pickle.loads(pickle.dumps(self))
 
 
     def __str__(self):
         # Shown when calling print(class)
-        traversed = sum((v is not None for v in self._voxels))
-        total = len(self._voxels)
+        traversed = sum((v is not None for v in self.voxels))
+        total = len(self.voxels)
 
         # Indent LineData docstring with an extra tab
-        line_data_str = "    ".join(self._line_data.__str__().splitlines(True))
+        line_data_str = "    ".join(self.line_data.__str__().splitlines(True))
 
         docstr = (
             f"voxels:               {traversed} / {total} traversed & cached\n"
-            f"number_of_voxels =    {self._number_of_voxels}\n"
-            f"xlim =                {self._xlim}\n"
-            f"ylim =                {self._ylim}\n"
-            f"zlim =                {self._zlim}\n\n"
+            f"number_of_voxels =    {self.number_of_voxels}\n"
+            f"xlim =                {self.xlim}\n"
+            f"ylim =                {self.ylim}\n"
+            f"zlim =                {self.zlim}\n\n"
             f"line_data:\n    {line_data_str}\n\n"
-            f"save_cache =          {self._save_cache}\n"
-            f"max_workers =         {self._max_workers}\n"
+            f"save_cache =          {self.save_cache}\n"
         )
 
         return docstr
