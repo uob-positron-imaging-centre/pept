@@ -40,11 +40,11 @@ typedef struct {
 
 
 
-FILE*           open_file(const char *filepath)
+FILE* open_file(const char* filepath)
 {
-    FILE        *file;
+    FILE* file;
 
-    file = fopen(filepath, "r");
+    file = fopen(filepath, "rb");
     if (file == NULL)
         fprintf(stderr, "File `%s` not found!\n", filepath);
 
@@ -52,7 +52,7 @@ FILE*           open_file(const char *filepath)
 }
 
 
-uint_fast8_t    init_detector(FILE *file, Detector *detector)
+uint_fast8_t    init_detector(FILE* file, Detector* detector)
 {
     // `fread` returns the number of elements read; check it is not zero
     if (fread(&detector->separation, sizeof(detector->separation), 1, file) != 1)
@@ -77,7 +77,7 @@ uint_fast8_t    init_detector(FILE *file, Detector *detector)
 }
 
 
-void            init_event_cache(EventCache *ec)
+void            init_event_cache(EventCache* ec)
 {
     ec->trg_x = 0;
     ec->trg_y = 0;
@@ -85,13 +85,13 @@ void            init_event_cache(EventCache *ec)
     ec->trg_h = 0;
     ec->trg_p = 0;
 
-    ec->pair =          0;
-    ec->got_xa =        0;
-    ec->got_ya =        0;
-    ec->got_xb =        0;
-    ec->got_yb =        0;
-    ec->got_first =     0;
-    ec->got_second =    0;
+    ec->pair = 0;
+    ec->got_xa = 0;
+    ec->got_ya = 0;
+    ec->got_xb = 0;
+    ec->got_yb = 0;
+    ec->got_first = 0;
+    ec->got_second = 0;
 }
 
 
@@ -99,7 +99,7 @@ void            init_event_cache(EventCache *ec)
  *  Bit twiddling magic, taken from the old ADAC list mode binary format decoder used at
  *  the University of Birmingham, developed by Dr. Tom Leadbeater.
  */
-void            update_event_cache(EventCache *ec, const uint32_t word)
+void            update_event_cache(EventCache* ec, const uint32_t word)
 {
     uint32_t    word_cut;
     uint32_t    word_p1;
@@ -182,7 +182,7 @@ void            update_event_cache(EventCache *ec, const uint32_t word)
 }
 
 
-uint_fast8_t    full_event_cache(const EventCache *ec)
+uint_fast8_t    full_event_cache(const EventCache* ec)
 {
     return (
         ec->got_xa &&
@@ -191,11 +191,11 @@ uint_fast8_t    full_event_cache(const EventCache *ec)
         ec->got_yb &&
         ec->got_first &&
         ec->got_second
-    );
+        );
 }
 
 
-void            reset_event_cache(EventCache *ec)
+void            reset_event_cache(EventCache* ec)
 {
     ec->trg_x = 0;
     ec->trg_y = 0;
@@ -203,18 +203,18 @@ void            reset_event_cache(EventCache *ec)
     ec->trg_h = 0;
     ec->trg_p = 0;
 
-    ec->pair =          0;
-    ec->got_xa =        0;
-    ec->got_ya =        0;
-    ec->got_xb =        0;
-    ec->got_yb =        0;
-    ec->got_first =     0;
-    ec->got_second =    0;
+    ec->pair = 0;
+    ec->got_xa = 0;
+    ec->got_ya = 0;
+    ec->got_xb = 0;
+    ec->got_yb = 0;
+    ec->got_first = 0;
+    ec->got_second = 0;
 }
 
 
-double          set_lors_times(double *lors, const size_t lors_idx_prev, const size_t lors_idx,
-                               const uint32_t time_prev, const uint32_t time)
+double          set_lors_times(double* lors, const size_t lors_idx_prev, const size_t lors_idx,
+    const uint32_t time_prev, const uint32_t time)
 {
     size_t      idx;                    // LoR iterator
     double      time_increment;         // Linear time increment between two LoRs in this buffer
@@ -228,14 +228,17 @@ double          set_lors_times(double *lors, const size_t lors_idx_prev, const s
 }
 
 
-void            reallocate_lors(double **lors, size_t *lors_rows)
+void            reallocate_lors(double** lors, size_t lors_rows)
 {
-    *lors = (double*)realloc(
-        *lors,
-        sizeof(double) * (*lors_rows + *lors_rows / 2) * 7
-    );
+    double* new_lors = (double*)realloc(*lors, sizeof(double) * lors_rows  * 7);
 
-    *lors_rows += *lors_rows / 2;
+    if (new_lors == NULL)
+    {
+        perror("memory allocation failed");
+        free(*lors);
+    }
+    else
+        *lors = new_lors;
 }
 
 
@@ -281,14 +284,14 @@ void            reallocate_lors(double **lors, size_t *lors_rows)
  *  If OS memory allocation fails, or the file at `filepath` is corrupted or inexistent, NULL is
  *  returned and `*lors_elements` is set to zero.
  */
-double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
+double* read_adac_binary(const char* filepath, ssize_t* lors_elements)
 {
-    FILE        *file;                  // Opened file descriptor
+    FILE*       file;                   // Opened file descriptor
     Detector    detector;               // Detector data from beginning of file
     EventCache  event_cache;            // Coincidence event cache
 
-    double      *lors;                  // Flattened (N, 7) array of LoR coordinates
-    double      *current_lor;           // Pointer to current LoR line in `lors`
+    double*     lors;                   // Flattened (N, 7) array of LoR coordinates
+    double*     current_lor;            // Pointer to current LoR line in `lors`
     size_t      lors_rows;              // Number of rows N in the flattened array
     size_t      lors_idx;               // Current `lors` **row** index
     size_t      lors_idx_prev;          // Previous buffer's `lors` row index
@@ -346,7 +349,8 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
             // If `lors` is full, reallocate it to a larger size
             if (lors_idx >= lors_rows)
             {
-                reallocate_lors(&lors, &lors_rows);
+                lors_rows += lors_rows / 2;
+                reallocate_lors(&lors, lors_rows);
                 CHECK_ALLOC(lors);
             }
 
@@ -413,15 +417,16 @@ double*         read_adac_binary(const char *filepath, ssize_t *lors_elements)
     }
 
     // Resize `lors` array to truncate unwritten elements
-    lors = (double*)realloc(lors, sizeof(double) * lors_idx * 7);
+    reallocate_lors(&lors, lors_idx);
+    CHECK_ALLOC(lors);
     *lors_elements = (ssize_t)(lors_idx * 7);
 
     return lors;
 }
 
 
-/** Uncomment for a standalone executable binary reader
- *
+/* Uncomment for a standalone executable binary reader
+//
 // Main defined to create standalone executable, called with the filepath as input, e.g.:
 // $> clang converter.c
 // $> ./a.out <filepath>
