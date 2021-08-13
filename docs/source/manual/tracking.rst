@@ -15,7 +15,6 @@ General-Purpose Transformers
    pept.tracking.Stack
    pept.tracking.SplitLabels
    pept.tracking.Centroids
-   pept.tracking.ExtractLines
    pept.tracking.LinesCentroids
 
 

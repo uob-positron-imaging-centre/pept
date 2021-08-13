@@ -60,7 +60,6 @@ from    .trajectory_separation  import  *
 # Import other objects defined elsewhere that should be available here
 from    .transformers           import  Stack
 from    .transformers           import  SplitLabels
-from    .transformers           import  ExtractLines
 from    .transformers           import  Centroids
 from    .transformers           import  LinesCentroids
 

@@ -1286,6 +1286,8 @@ class HDBSCANClusterer:
 
 
 
+# The code below is adapted from the PEPT-EM algorithm developed by Antoine
+# Renaud and Sam Manger
 def _centroid(lors, weights):
     nx = np.newaxis
 

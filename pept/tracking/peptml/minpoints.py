@@ -124,6 +124,8 @@ def find_minpoints(
 
     lines = sample_lines.lines
 
+    lines = np.asarray(lines, order = 'C', dtype = float)
+
     num_lines = int(num_lines)
     max_distance = float(max_distance)
 
@@ -148,16 +150,18 @@ def find_minpoints(
 
     columns = ["t", "x", "y", "z"]
     if append_indices:
-        columns += [f"line_index{i}" for i in range(num_lines)]
+        columns += ["line_index1", "line_index2"]
 
-    points = pept.PointData(sample_minpoints, columns)
+    points = pept.PointData(sample_minpoints, columns = columns)
 
     # Add optional metadata to the points; because they have an underscore,
     # they won't be propagated when new objects are constructed
-    points._num_lines = num_lines
     points._max_distance = max_distance
     points._cutoffs = cutoffs
-    points._lines = sample_lines
+    points._num_lines = num_lines
+
+    if append_indices:
+        points._lines = sample_lines
 
     return points
 

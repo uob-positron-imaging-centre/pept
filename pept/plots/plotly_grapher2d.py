@@ -70,101 +70,6 @@ def format_fig(fig, size=20, font="Computer Modern", template="plotly_white"):
 
 
 
-def timeseries(
-    points,
-    rows_cols = [(1, 1), (2, 1), (3, 1)],
-    grapher = None,
-    size = 6.0,
-    color = None,
-    opacity = 0.8,
-    colorbar = True,
-    colorbar_col = -1,
-    colorscale = "Magma",
-    colorbar_title = None
-):
-    # If a pept.PointData instance (or subclass thereof!) is received, just
-    # take the inner `points`. Otherwise treat it as an array.
-    points = Stack().fit(points)
-    if not isinstance(points, pept.PointData):
-        points = pept.PointData(points)
-
-    points = points.points
-
-    # No need to type-check the other parameters as Plotly will do that
-    # anyway...
-    if grapher is None:
-        grapher = PlotlyGrapher2D(rows = max((rc[0] for rc in rows_cols)),
-                                  cols = max((rc[1] for rc in rows_cols)))
-        xyz = ["x (mm)", "y (mm)", "z (mm)"]
-        for i, rc in enumerate(rows_cols):
-            if rc[0] == rc[1] == 1:
-                xaxis = "xaxis"
-                yaxis = "yaxis"
-            else:
-                xaxis = f"xaxis{(rc[0] - 1) * rc[1] + rc[1]}"
-                yaxis = f"yaxis{(rc[0] - 1) * rc[1] + rc[1]}"
-
-            grapher.fig.layout[xaxis].update(title = "t (ms)")
-            grapher.fig.layout[yaxis].update(title = xyz[i])
-
-    # Create the dictionary of marker properties
-    marker = dict(
-        size = size,
-        color = color,
-        opacity = opacity
-    )
-
-    # Update `marker` if a colorbar is requested AND color is None.
-    if colorbar and color is None:
-        marker.update(colorscale = colorscale)
-        if colorbar_title is not None:
-            marker["colorbar"] = dict(title = colorbar_title)
-
-        # Special case: if there are less than 10 values in the colorbar
-        # column, add them as separate traces for better distinction
-        # between colours.
-        labels = np.unique(points[:, colorbar_col])
-
-        if len(labels) <= 10:
-            for label in labels:
-                selected = points[points[:, colorbar_col] == label]
-
-                for i, rc in enumerate(rows_cols):
-                    grapher.add_trace(
-                        go.Scatter(
-                            x = selected[:, 0],
-                            y = selected[:, i + 1],
-                            mode = "markers",
-                            marker = marker
-                        ),
-                        row = rc[0],
-                        col = rc[1],
-                    )
-            return grapher
-
-        # Otherwise just use a typical continuous colorbar for all the
-        # values in colorbar_col.
-        else:
-            marker['color'] = points[:, colorbar_col]
-
-    for i, rc in enumerate(rows_cols):
-        grapher.add_trace(
-            go.Scatter(
-                x = selected[:, 0],
-                y = selected[:, i + 1],
-                mode = "markers",
-                marker = marker
-            ),
-            row = rc[0],
-            col = rc[1],
-        )
-
-    return grapher
-
-
-
-
-
 class PlotlyGrapher2D:
     '''A class for PEPT data visualisation using Plotly-based 2D graphs.
 
@@ -457,9 +362,120 @@ class PlotlyGrapher2D:
                 )
 
 
+    def xlabel(self, label, row = 1, col = 1):
+        if row == col == 1:
+            xaxis = "xaxis"
+        else:
+            xaxis = f"xaxis{(row - 1) * col + col}"
+
+        self.fig.layout[xaxis].update(title = label)
+
+
+    def ylabel(self, label, row = 1, col = 1):
+        if row == col == 1:
+            yaxis = "yaxis"
+        else:
+            yaxis = f"yaxis{(row - 1) * col + col}"
+
+        self.fig.layout[yaxis].update(title = label)
+
+
     @property
     def fig(self):
         return self._fig
+
+
+    def add_timeseries(
+        self,
+        points,
+        rows_cols = [(1, 1), (2, 1), (3, 1)],
+        size = 6.0,
+        color = None,
+        opacity = 0.8,
+        colorbar = True,
+        colorbar_col = -1,
+        colorscale = "Magma",
+        colorbar_title = None
+    ):
+        # If a pept.PointData instance (or subclass thereof!) is received, just
+        # take the inner `points`. Otherwise treat it as an array.
+        points = Stack().fit(points)
+        if not isinstance(points, pept.PointData):
+            points = pept.PointData(points)
+
+        points = points.points
+
+        # No need to type-check the other parameters as Plotly will do that
+        # anyway...
+
+        # If the current figure does not have enough cols / rows, regenerate it
+        rows = max((rc[0] for rc in rows_cols))
+        cols = max((rc[1] for rc in rows_cols))
+
+        if rows > self._rows or cols > self._cols:
+            self._rows = rows
+            self._cols = cols
+            self._fig = self.create_figure()
+
+        # Set axis labels
+        xyz = ["x (mm)", "y (mm)", "z (mm)"]
+        for i, rc in enumerate(rows_cols):
+            self.xlabel("t (ms)", rc[0], rc[1])
+            self.ylabel(xyz[i], rc[0], rc[1])
+
+        # Create the dictionary of marker properties
+        marker = dict(
+            size = size,
+            color = color,
+            opacity = opacity
+        )
+
+        # Update `marker` if a colorbar is requested AND color is None.
+        if colorbar and color is None:
+            marker.update(colorscale = colorscale)
+            if colorbar_title is not None:
+                marker["colorbar"] = dict(title = colorbar_title)
+
+            # Special case: if there are less than 10 values in the colorbar
+            # column, add them as separate traces for better distinction
+            # between colours.
+            labels = np.unique(points[:, colorbar_col])
+
+            if len(labels) <= 10:
+                for label in labels:
+                    selected = points[points[:, colorbar_col] == label]
+
+                    for i, rc in enumerate(rows_cols):
+                        self.add_trace(
+                            go.Scatter(
+                                x = selected[:, 0],
+                                y = selected[:, i + 1],
+                                mode = "markers",
+                                marker = marker
+                            ),
+                            row = rc[0],
+                            col = rc[1],
+                        )
+                return self
+
+            # Otherwise just use a typical continuous colorbar for all the
+            # values in colorbar_col.
+            else:
+                marker['color'] = points[:, colorbar_col]
+
+        for i, rc in enumerate(rows_cols):
+            self.add_trace(
+                go.Scatter(
+                    x = points[:, 0],
+                    y = points[:, i + 1],
+                    mode = "markers",
+                    marker = marker
+                ),
+                row = rc[0],
+                col = rc[1],
+            )
+
+        return self
 
 
     def add_points(

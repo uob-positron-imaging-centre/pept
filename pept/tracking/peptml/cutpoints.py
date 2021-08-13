@@ -228,32 +228,17 @@ class Cutpoints(pept.base.LineDataFilter):
 
     Attributes
     ----------
-    line_data : instance of pept.LineData
-        The LoRs for which the cutpoints will be computed. It must be an
-        instance of `pept.LineData`.
     max_distance : float
         The maximum distance between any two lines for their cutpoint to be
         considered. A good starting value would be 0.1 mm for small tracers
         and/or clean data, or 0.2 mm for larger tracers and/or noisy data.
+
     cutoffs : list-like of length 6
         A list (or equivalent) of the cutoff distances for every axis,
         formatted as `[x_min, x_max, y_min, y_max, z_min, z_max]`. Only the
         cutpoints which fall within these cutoff distances are considered. The
         default is None, in which case they are automatically computed using
         `pept.tracking.peptml.get_cutoffs`.
-    sample_size, overlap, number_of_lines, etc. : inherited from pept.PointData
-        Additional attributes and methods are inherited from the base class
-        `PointData`. Check its documentation for more information.
-
-    Methods
-    -------
-    fit, fit_sample
-
-    Notes
-    -----
-    Once instantiated with a `LineData`, the class computes the cutpoints and
-    *automatically sets the sample_size* to the average number of cutpoints
-    found per sample of LoRs.
 
     Examples
     --------
@@ -261,22 +246,19 @@ class Cutpoints(pept.base.LineDataFilter):
     than 0.1 apart:
 
     >>> line_data = pept.LineData(example_data)
-    >>> cutpts = peptml.Cutpoints(line_data, 0.1)
+    >>> cutpts = peptml.Cutpoints(0.1).fit(line_data)
 
     Compute the cutpoints for a single sample:
 
     >>> sample = line_data[0]
-    >>> cutpts_sample = peptml.find_cutpoints(sample, 0.1)
+    >>> cutpts_sample = peptml.Cutpoints(0.1).fit_sample(sample)
 
     See Also
     --------
     pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.tracking.peptml.HDBSCANClusterer : Efficient, parallel HDBSCAN-based
-                                            clustering of cutpoints.
-    pept.scanners.ParallelScreens : Read in and initialise a `pept.LineData`
-                                    instance from parallel screens PET/PEPT
-                                    detectors.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.tracking.HDBSCAN : Efficient, parallel HDBSCAN-based clustering of
+                            (cut)points.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
     '''
 
     def __init__(

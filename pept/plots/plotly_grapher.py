@@ -44,6 +44,7 @@ from    plotly.subplots         import      make_subplots
 
 import  pept
 from    pept.tracking           import      Stack
+from    .plotly_grapher2d       import      format_fig
 
 
 
@@ -333,6 +334,7 @@ class PlotlyGrapher:
                     ),
                 )
 
+        format_fig(self._fig, size = 15)
         return self._fig
 
 
@@ -432,6 +434,33 @@ class PlotlyGrapher:
     @property
     def fig(self):
         return self._fig
+
+
+    def xlabel(self, label, row = 1, col = 1):
+        if row == col == 1:
+            scene = "scene"
+        else:
+            scene = f"scene{(row - 1) * col + col}"
+
+        self.fig.layout[scene].update(xaxis = dict(title = label))
+
+
+    def ylabel(self, label, row = 1, col = 1):
+        if row == col == 1:
+            scene = "scene"
+        else:
+            scene = f"scene{(row - 1) * col + col}"
+
+        self.fig.layout[scene].update(yaxis = dict(title = label))
+
+
+    def zlabel(self, label, row = 1, col = 1):
+        if row == col == 1:
+            scene = "scene"
+        else:
+            scene = f"scene{(row - 1) * col + col}"
+
+        self.fig.layout[scene].update(zaxis = dict(title = label))
 
 
     def add_points(

@@ -81,8 +81,12 @@ class SplitLabels(Filter):
 
     ::
 
+        # `extract_lines` = False (default)
         LineData -> SplitLabels.fit_sample -> list[LineData]
         PointData -> SplitLabels.fit_sample -> list[PointData]
+
+        # `extract_lines` = True and PointData.lines exists
+        PointData -> SplitLabels.fit_sample -> list[LineData]
 
 
     The sample of data must have a column named exactly "labels". The filter
@@ -90,8 +94,9 @@ class SplitLabels(Filter):
     ``remove_labels = True``).
     '''
 
-    def __init__(self, remove_labels = True):
+    def __init__(self, remove_labels = True, extract_lines = False):
         self.remove_labels = bool(remove_labels)
+        self.extract_lines = bool(extract_lines)
 
 
     @beartype
@@ -109,28 +114,43 @@ class SplitLabels(Filter):
         clusters = []
 
         for label in labels_unique:
-            cluster = sample.copy()
-            cluster.data = data[labels == label]
+            cluster_data = data[labels == label]
 
-            # Remove the "labels" column if needed
-            if self.remove_labels:
-                del cluster.columns[col_idx]
-                cluster.data = np.delete(cluster.data, col_idx, axis = 1)
+            if self.extract_lines:
+                cluster = sample._lines.copy()
+
+                indices_cols = [
+                    i for i, c in enumerate(sample.columns)
+                    if c.startswith("line_index")
+                ]
+
+                if len(indices_cols) == 0:
+                    raise ValueError(textwrap.fill((
+                        "If `extract_lines`, the input samples must have "
+                        "columns whose names start with `line_index`."
+                    )))
+
+                line_indices = np.unique(cluster_data[:, indices_cols])
+                cluster.lines = cluster.lines[line_indices.astype(int)]
+
+            else:
+                cluster = sample.copy()
+                cluster.data = cluster_data
 
             clusters.append(cluster)
 
         # If no valid cluster was found, return at least a single empty cluster
         if not len(clusters):
             cluster = sample.copy()
-            ncols = cluster.data.shape[1]
-            cluster.data = np.empty((0, ncols))
-
-            # Remove the "labels" column if needed
-            if self.remove_labels:
-                del cluster.columns[col_idx]
-                cluster.data = np.delete(cluster.data, col_idx, axis = 1)
+            cluster.data = np.empty((0, cluster.data.shape[1]))
 
             clusters.append(cluster)
+
+        # Remove the "labels" column if needed
+        if self.remove_labels and not self.extract_lines:
+            for cluster in clusters:
+                del cluster.columns[col_idx]
+                cluster.data = np.delete(cluster.data, col_idx, axis = 1)
 
         return clusters
 
@@ -182,60 +202,12 @@ class Centroids(Filter):
 
 
 
-class ExtractLines(Filter):
-    '''Extract the `._lines` attribute from a sample of ``PointData``, if
-    defined.
-    '''
-
-    def _extract_cluster(self, points):
-        if hasattr(points, "lines"):
-            lines = points.lines
-        elif hasattr(points, "_lines"):
-            lines = points._lines
-        else:
-            raise ValueError(textwrap.fill((
-                "The input `points` must have an attribute `.lines` or "
-                "`._lines` to extract lines from. For example, `Cutpoints` "
-                "sets this attribute if `append_indices = True`."
-            )))
-
-        indices_cols = [
-            i for i, c in enumerate(points.columns)
-            if c.startswith("line_index")
-        ]
-
-        if len(indices_cols) == 0:
-            raise AttributeError(textwrap.fill((
-                "The input `points` must have columns whose names start with "
-                "`line_index` to know which lines to extract. This can be set "
-                "in previous filters (e.g. `Cutpoints` if "
-                "`append_indices = True`)."
-            )))
-
-        line_indices = np.unique(points.points[:, indices_cols]).astype(int)
-        attributes = lines.extra_attributes()
-        attributes.update(lines.hidden_attributes())
-        return LineData(lines.lines[line_indices], **attributes)
-
-
-    def fit_sample(self, points):
-        # Type-checking inputs
-        if isinstance(points, PointData):
-            list_points = [points]
-        elif isinstance(points, np.ndarray):
-            list_points = [PointData(points)]
-        else:
-            list_points = list(points)
-
-        list_lines = [self._extract_cluster(p) for p in list_points]
-        return list_lines
-
-
-
-
 class LinesCentroids(Filter):
     '''Compute the minimum distance point of some ``pept.LineData`` while
     iteratively removing a fraction of the furthest lines.
+
+    The code below is adapted from the PEPT-EM algorithm developed by Antoine
+    Renaud and Sam Manger
     '''
 
     def __init__(self, remove = 0.1, iterations = 6):
