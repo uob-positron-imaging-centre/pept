@@ -62,6 +62,7 @@ from    .transformers           import  Stack
 from    .transformers           import  SplitLabels
 from    .transformers           import  Centroids
 from    .transformers           import  LinesCentroids
+from    .transformers           import  Condition
 
 from    .space_transformers     import  Voxelliser
 

@@ -296,3 +296,78 @@ class LinesCentroids(Filter):
         del attributes["columns"]
 
         return PointData(np.vstack(centroids), **attributes)
+
+
+
+
+class Condition(Filter):
+    '''Select only data satisfying multiple conditions, given as a string; e.g.
+    ``Condition("error < 15")`` selects all points whose "error" column value
+    is smaller than 15.
+
+    Filter signature:
+
+    ::
+
+        PointData -> Condition.fit_sample -> PointData
+        LineData -> Condition.fit_sample -> LineData
+
+
+    Multiple conditions may be concatenated using a comma, e.g.
+    ``Condition("error < 15, y > 100")`` also selects only points whose "y"
+    coordinate is larger than 100.
+
+    '''
+
+
+    def __init__(self, cond: str):
+        # Calls the conditions setter which does parsing
+        self.conditions = cond
+
+
+    @property
+    def conditions(self):
+        return self._conditions
+
+
+    @conditions.setter
+    def conditions(self, cond):
+        conditions = cond.replace(" ", "").split(",")
+
+        for i in range(len(conditions)):
+            op = None
+            if "<" in conditions[i]:
+                op = "<"
+            elif ">" in conditions[i]:
+                op = ">"
+
+            if op is not None:
+                cs = conditions[i].split(op)
+                cs[0] = Condition._replace_term(cs[0])
+                conditions[i] = op.join(cs)
+            else:
+                raise ValueError(textwrap.fill((
+                    f"The input `{conditions[i]=}` did not contain an "
+                    "operator."
+                )))
+
+        self._conditions = conditions
+
+
+    @staticmethod
+    def _replace_term(term: str):
+        try:
+            index = int(term)
+            return f"data[:, {index}]"
+        except ValueError:
+            return f"data[:, sample.columns.index('{term}')]"
+
+
+    @beartype
+    def fit_sample(self, sample: IterableSamples):
+        data = sample.data
+
+        for cond in self.conditions:
+            data = data[eval(cond, locals())]
+
+        return sample.copy(data = data)

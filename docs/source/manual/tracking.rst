@@ -16,6 +16,7 @@ General-Purpose Transformers
    pept.tracking.SplitLabels
    pept.tracking.Centroids
    pept.tracking.LinesCentroids
+   pept.tracking.Condition
 
 
 
