@@ -218,8 +218,8 @@ class Segregate(pept.base.Reducer):
     @beartype
     def fit(self, points: Iterable[PointData]):
         # Stack the input points into a single PointData
-        points = Stack().fit(points)
-        if len(points) == 0:
+        points = PointData(points)
+        if len(points.points) == 0:
             raise ValueError("No points to segregate.")
 
         pts = points.points

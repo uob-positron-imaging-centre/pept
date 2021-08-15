@@ -129,26 +129,20 @@ def samples_indices_number(data, sample_size, overlap):
     can be extracted as `data[samples_indices[n, 0]:samples_indices[n, 1]]`.
     '''
 
-    if sample_size < 0:
+    if sample_size == 0:
+        return np.zeros((0, 2))
+
+    elif sample_size < 0:
         raise ValueError((
             f"\n[ERROR]: `sample_size = {sample_size}` must be positive "
             "(>= 0).\n"
         ))
 
-    if sample_size != 0 and overlap >= sample_size:
+    elif overlap >= sample_size:
         raise ValueError((
             f"\n[ERROR]: `overlap = {overlap}` must be smaller than "
             f"`sample_size = {sample_size}`.\n"
         ))
-
-    # If `sample_size` is zero, simply return all data in a single sample
-    if sample_size == 0:
-        if len(data) == 0:
-            return np.empty((0, 2), dtype = int)
-        else:
-            si = np.zeros((1, 2), dtype = int)
-            si[0, 1] = len(data)
-            return si
 
     # The first column is each sample's starting index; the second column is
     # the corresponding sample's ending index
@@ -217,7 +211,7 @@ class IterableSamples(PEPTObject, Collection):
 
     '''
 
-    def __init__(self, data, sample_size, overlap = None):
+    def __init__(self, data, sample_size = None, overlap = None, **kwargs):
         '''`IterableSamples` class constructor.
 
         Parameters
@@ -242,18 +236,21 @@ class IterableSamples(PEPTObject, Collection):
         self._data = np.asarray(data, dtype = float, order = "C")
 
         # If the overlap is defined, ensure it has the same type as sample_size
-        if overlap is not None:
-            if not isinstance(overlap, type(sample_size)):
-                raise TypeError(textwrap.fill((
-                    "The input `overlap` (if defined) must have the same type "
-                    f"as `sample_size`. Received `{type(overlap)}`."
-                )))
-            self._overlap = overlap
+        if overlap is not None and not isinstance(overlap, type(sample_size)):
+            raise TypeError(textwrap.fill((
+                "The input `overlap` (if defined) must have the same type "
+                f"as `sample_size`. Received `{type(overlap)}`."
+            )))
 
         # Set sample_size. This calls the setter which does type-checking
+        self._overlap = overlap
         self.sample_size = sample_size
 
         self._index = 0
+
+        # Set extra attributes passed as keyword arguments
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
     @property
@@ -295,7 +292,11 @@ class IterableSamples(PEPTObject, Collection):
 
     @sample_size.setter
     def sample_size(self, sample_size):
-        if isinstance(sample_size, Number):
+        if sample_size is None:
+            self._sample_size = None
+            self._overlap = None
+            self._samples_indices = np.array([[0, len(self.data)]])
+        elif isinstance(sample_size, Number):
             # If the overlap is of a different type, reset it
             if not isinstance(self.overlap, Number):
                 self._overlap = 0
@@ -333,25 +334,47 @@ class IterableSamples(PEPTObject, Collection):
 
     @overlap.setter
     def overlap(self, overlap):
-        if not isinstance(overlap, type(self.sample_size)):
+        if overlap is not None and not \
+                isinstance(overlap, type(self.sample_size)):
             raise TypeError(textwrap.fill((
                 "The input `overlap` must have the same type "
                 f"as `sample_size`. Received `{type(overlap)}`."
             )))
 
-        if isinstance(overlap, Number):
-            self._overlap = int(overlap)
-            self._samples_indices = samples_indices_number(
-                self.data, self._sample_size, self._overlap
-            )
-        else:
-            raise TypeError("The input `overlap` has an unknown type.")
+        # Call the `sample_size` setter which does type checking
+        self._overlap = overlap
+        self.sample_size = self._sample_size
 
 
     def extra_attributes(self, exclude={}):
         exclude = set(exclude) | {"sample_size", "overlap",
                                   "samples_indices", "data"}
         return PEPTObject.extra_attributes(self, exclude)
+
+
+    def hidden_attributes(self, exclude={}):
+        exclude = set(exclude) | {"_sample_size", "_overlap", "_index",
+                                  "_samples_indices", "_data"}
+        return PEPTObject.hidden_attributes(self, exclude)
+
+
+    def copy(self, data = None, sample_size = None, overlap = None):
+        '''Construct a similar object, optionally with different `data`,
+        `sample_size` and `overlap`.
+        '''
+
+        if data is None:
+            return PEPTObject.copy(self)
+
+        new_instance = self.__class__(data, sample_size, overlap)
+
+        # Propagate all hidden / extra attributes
+        for k, v in self.extra_attributes().items():
+            setattr(new_instance, k, v)
+        for k, v in self.hidden_attributes().items():
+            setattr(new_instance, k, v)
+
+        return new_instance
 
 
     def __len__(self):
@@ -399,17 +422,11 @@ class IterableSamples(PEPTObject, Collection):
             data = self.data[indices[n, 0]:indices[n, 1]]
             sample_sizes = len(data)
 
-        # Swap current class' data with the new one, make a deep copy, set
-        # appropriate sample_sizes, then put the old data back
-        old_data = self._data
-        self._data = data
-        new_instance = self.copy()
-        new_instance.sample_size = sample_sizes
+        new_instance = self.copy(data, sample_sizes)
 
         # Set `samples_indices` directly if needed (e.g. for slices)
         if samples_indices is not None:
             new_instance._samples_indices = samples_indices
-        self._data = old_data
 
         return new_instance
 

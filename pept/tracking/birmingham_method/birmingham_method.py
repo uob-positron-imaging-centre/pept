@@ -178,7 +178,7 @@ class BirminghamMethod(pept.base.LineDataFilter):
         if self.get_used:
             lines = sample.copy()
             lines.lines = np.c_[lines.lines, used]
-            lines.columns += "used"
+            lines.columns += ["used"]
             locations._lines = lines
 
         return locations

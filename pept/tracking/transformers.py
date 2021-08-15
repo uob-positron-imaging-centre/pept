@@ -117,8 +117,6 @@ class SplitLabels(Filter):
             cluster_data = data[labels == label]
 
             if self.extract_lines:
-                cluster = sample._lines.copy()
-
                 indices_cols = [
                     i for i, c in enumerate(sample.columns)
                     if c.startswith("line_index")
@@ -131,25 +129,25 @@ class SplitLabels(Filter):
                     )))
 
                 line_indices = np.unique(cluster_data[:, indices_cols])
-                cluster.lines = cluster.lines[line_indices.astype(int)]
+                cluster = sample._lines.copy(
+                    data = sample._lines.lines[line_indices.astype(int)]
+                )
 
             else:
-                cluster = sample.copy()
-                cluster.data = cluster_data
+                cluster = sample.copy(data = cluster_data)
 
             clusters.append(cluster)
 
         # If no valid cluster was found, return at least a single empty cluster
         if not len(clusters):
-            cluster = sample.copy()
-            cluster.data = np.empty((0, cluster.data.shape[1]))
-
+            cluster = sample.copy(data = np.empty((0, sample.data.shape[1])))
             clusters.append(cluster)
 
         # Remove the "labels" column if needed
         if self.remove_labels and not self.extract_lines:
             for cluster in clusters:
-                del cluster.columns[col_idx]
+                cluster.columns = cluster.columns.copy()
+                cluster.columns.pop(col_idx)
                 cluster.data = np.delete(cluster.data, col_idx, axis = 1)
 
         return clusters
@@ -175,15 +173,35 @@ class Centroids(Filter):
     '''
 
 
-    def __init__(self):
-        self.columns_needed = None
+    def __init__(self, max_error = None):
+        self.max_error = None if max_error is None else float(max_error)
+
+
+    def _empty_centroid(self, points):
+        # Return an empty centroid with the correct number of columns
+        ncols = points.points.shape[1]
+        if self.max_error is not None:
+            ncols += 1
+        return np.empty((0, ncols))
 
 
     def centroid(self, points):
         if len(points.points) == 0:
-            return np.empty((0, len(points.columns)))
+            return self._empty_centroid(points)
 
-        return points.points.mean(axis = 0)
+        c = points.points.mean(axis = 0)
+
+        # If max_error is defined, compute std-dev of distances from centroid
+        # to all points; if it is larger than max_error, return empty centroid
+        if self.max_error is not None:
+            err = np.linalg.norm(points.points - c, axis = 1).std()
+
+            if err > self.max_error:
+                return self._empty_centroid(points)
+
+            return np.r_[c, err]
+
+        return c
 
 
     def fit_sample(self, points):
@@ -195,9 +213,16 @@ class Centroids(Filter):
         else:
             list_points = list(points)
 
+        # Compute centroid for each PointData and stack centroid arrays
         centroids = np.vstack([self.centroid(p) for p in list_points])
+        attributes = list_points[0].extra_attributes()
 
-        return PointData(centroids, **list_points[0].extra_attributes())
+        # If max_error is defined, add "error" column
+        if self.max_error is not None:
+            attributes["columns"] = attributes["columns"] + ["error"]
+
+        points = PointData(centroids, **attributes)
+        return points
 
 
 

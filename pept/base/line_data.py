@@ -231,8 +231,8 @@ class LineData(IterableSamples):
     def __init__(
         self,
         lines,
-        sample_size = 0,
-        overlap = 0,
+        sample_size = None,
+        overlap = None,
         columns = ["t", "x1", "y1", "z1", "x2", "y2", "z2"],
         **kwargs,
     ):
@@ -278,7 +278,20 @@ class LineData(IterableSamples):
 
         # Copy constructor
         if isinstance(lines, LineData):
-            lines = lines.lines.copy()
+            if sample_size is None:
+                sample_size = lines.sample_size
+            if overlap is None:
+                overlap = lines.overlap
+
+            # If both sample_size and overlap were None, samples_indices is
+            # set differently; propagate it
+            if sample_size is None and overlap is None:
+                kwargs.update(samples_indices = lines.samples_indices)
+
+            kwargs.update(lines.extra_attributes())
+            kwargs.update(lines.hidden_attributes())
+
+            lines = lines.lines
 
         # Create LineData from a list of LineData by stacking all inner lines
         elif len(lines) and isinstance(lines[0], LineData):
@@ -306,14 +319,11 @@ class LineData(IterableSamples):
                 f"N >= 7. Received {lines.shape}.\n"
             ))
 
-        self._columns = None if columns is None else [str(c) for c in columns]
+        self.columns = None if columns is None else [str(c) for c in columns]
 
         # Call the IterableSamples constructor to make the class iterable in
         # terms of samples with overlap.
-        IterableSamples.__init__(self, lines, sample_size, overlap)
-
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        IterableSamples.__init__(self, lines, sample_size, overlap, **kwargs)
 
 
     @property
@@ -325,16 +335,6 @@ class LineData(IterableSamples):
     @lines.setter
     def lines(self, lines):
         self.data = lines
-
-
-    @property
-    def columns(self):
-        return self._columns
-
-
-    @columns.setter
-    def columns(self, columns):
-        self._columns = None if columns is None else [str(c) for c in columns]
 
 
     def extra_attributes(self, exclude = {}):
@@ -693,11 +693,16 @@ class LineData(IterableSamples):
         # Shown when calling print(class)
         attrs = self.extra_attributes()
 
+        with np.printoptions(threshold = 5, edgeitems = 2):
+            samples_indices_str = str(self.samples_indices)
+            lines_str = str(self.lines)
+
         return (
             "LineData\n--------\n"
             f"sample_size = {self.sample_size}\n"
             f"overlap =     {self.overlap}\n"
             f"samples =     {len(self)}\n\n"
-            f"lines = \n{indent(str(self.lines), '  ')}\n\n"
+            f"samples_indices = \n{indent(samples_indices_str, '  ')}\n\n"
+            f"lines = \n{indent(lines_str, '  ')}\n\n"
             f"lines.shape = {self.lines.shape}\n\n"
         ) + "\n".join((f"{k} = {v}" for k, v in attrs.items()))

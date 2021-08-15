@@ -173,7 +173,8 @@ class PlotlyGrapher2D:
         cols = 1,
         xlim = None,
         ylim = None,
-        subplot_titles = ["  "]
+        subplot_titles = ["  "],
+        **kwargs,
     ):
         '''`PlotlyGrapher` class constructor.
 
@@ -246,10 +247,10 @@ class PlotlyGrapher2D:
         self._subplot_titles.extend(['  '] * (rows * cols -
                                               len(subplot_titles)))
 
-        self._fig = self.create_figure()
+        self._fig = self.create_figure(**kwargs)
 
 
-    def create_figure(self):
+    def create_figure(self, **kwargs):
         '''Create a Plotly figure, pre-configured for PEPT data.
 
         This function creates a Plotly figure with an arbitrary number of
@@ -271,6 +272,7 @@ class PlotlyGrapher2D:
             subplot_titles = self._subplot_titles,
             horizontal_spacing = 0.05,
             vertical_spacing = 0.08,
+            **kwargs,
         )
 
         self._fig['layout'].update(
@@ -296,8 +298,6 @@ class PlotlyGrapher2D:
                 self._fig["layout"][yaxis].update(
                     range = self._ylim,
                     title = dict(text = "<i>y</i> (mm)"),
-                    scaleanchor = f"x{index}" if index != 1 else "x",
-                    scaleratio = 1,
                 )
 
         format_fig(self._fig)
@@ -415,7 +415,7 @@ class PlotlyGrapher2D:
         if rows > self._rows or cols > self._cols:
             self._rows = rows
             self._cols = cols
-            self._fig = self.create_figure()
+            self._fig = self.create_figure(shared_xaxes = True)
 
         # Set axis labels
         xyz = ["x (mm)", "y (mm)", "z (mm)"]
@@ -456,6 +456,7 @@ class PlotlyGrapher2D:
                             row = rc[0],
                             col = rc[1],
                         )
+                self.equalise_separate()
                 return self
 
             # Otherwise just use a typical continuous colorbar for all the
@@ -475,6 +476,7 @@ class PlotlyGrapher2D:
                 col = rc[1],
             )
 
+        self.equalise_separate()
         return self
 
 
@@ -871,6 +873,46 @@ class PlotlyGrapher2D:
         self.ylim = [mean[1] - max_range / 2, mean[1] + max_range / 2]
 
 
+    def equalise_separate(self):
+        '''Equalise the axes of all subplots *individually* by setting the
+        system limits in each dimension to equal values, such that all data
+        plotted is within the plotted bounds.
+        '''
+        # Compute min, max for the `x`, `y` dimensions for every
+        # dataset added to `_fig`
+        def get_min_max(fig_data):
+            # Convert x, y attributes of `fig_data` to numpy arrays with
+            # `dtype = float`, such that `None` entries are casted to
+            # np.nan. Then find min, max for each dimension.
+            x = np.asarray(fig_data.x, dtype = float)
+            y = np.asarray(fig_data.y, dtype = float)
+
+            # Find min, max, ignoring np.nans
+            xmin = np.nanmin(x)
+            xmax = np.nanmax(x)
+
+            ymin = np.nanmin(y)
+            ymax = np.nanmax(y)
+
+            return [xmin, xmax, ymin, ymax]
+
+        # `lims` columns: [xmin, xmax, ymin, ymax].
+        lims = [get_min_max(fig_data) for fig_data in self._fig.data]
+        lims = np.array(lims, order = "F")
+
+        # Find global min and max for each dimension.
+        xmin = lims[:, 0].min()
+        xmax = lims[:, 1].max()
+
+        ymin = lims[:, 2].min()
+        ymax = lims[:, 3].max()
+
+        # Finally, set xlim, ylim to be centred around their mean,
+        # with a span of max_range.
+        self.xlim = [xmin, xmax]
+        self.ylim = [ymin, ymax]
+
+
     def show(self, equal_axes = True):
         '''Show the Plotly figure, optionally setting equal axes limits.
 
@@ -894,8 +936,11 @@ class PlotlyGrapher2D:
             automatically use min, max for each dimension).
         '''
 
-        if equal_axes is True and self.xlim is None and self.ylim is None:
-            self.equalise_axes()
+        if self.xlim is None and self.ylim is None:
+            if equal_axes:
+                self.equalise_axes()
+            else:
+                self.equalise_separate()
 
         self._fig.show()
 

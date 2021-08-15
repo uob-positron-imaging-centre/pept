@@ -1459,8 +1459,7 @@ class HDBSCAN(pept.base.PointDataFilter):
         _, labels[good] = np.unique(labels[good], return_inverse = True)
 
         # Construct new PointData instance with the same attributes
-        clustered_points = sample_points.copy()
-        clustered_points.points = np.c_[points, labels]
-        clustered_points.columns.append("labels")
+        clustered_points = sample_points.copy(data = np.c_[points, labels])
+        clustered_points.columns = clustered_points.columns + ["labels"]
 
         return clustered_points

@@ -243,8 +243,8 @@ class PointData(IterableSamples):
     def __init__(
         self,
         points,
-        sample_size = 0,
-        overlap = 0,
+        sample_size = None,
+        overlap = None,
         columns = ["t", "x", "y", "z"],
         **kwargs,
     ):
@@ -286,7 +286,21 @@ class PointData(IterableSamples):
 
         # Copy constructor
         if isinstance(points, PointData):
-            points = points.points.copy()
+            if sample_size is None:
+                sample_size = points.sample_size
+            if overlap is None:
+                overlap = points.overlap
+
+            # If both sample_size and overlap were None, samples_indices is
+            # set differently; propagate it
+            if sample_size is None and overlap is None:
+                kwargs.update(samples_indices = points.samples_indices)
+
+            kwargs.update(points.extra_attributes())
+            kwargs.update(points.hidden_attributes())
+
+            points = points.points
+
         # Iterable of PointData
         elif len(points) and isinstance(points[0], PointData):
             check_homogeneous_types(points)
@@ -313,14 +327,11 @@ class PointData(IterableSamples):
                 f"N >= 4. Received {points.shape}.\n"
             ))
 
-        self._columns = None if columns is None else [str(c) for c in columns]
+        self.columns = None if columns is None else [str(c) for c in columns]
 
         # Call the IterableSamples constructor to make the class iterable in
         # samples with overlap.
-        IterableSamples.__init__(self, points, sample_size, overlap)
-
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        IterableSamples.__init__(self, points, sample_size, overlap, **kwargs)
 
 
     @property
@@ -332,16 +343,6 @@ class PointData(IterableSamples):
     @points.setter
     def points(self, points):
         self.data = points
-
-
-    @property
-    def columns(self):
-        return self._columns
-
-
-    @columns.setter
-    def columns(self, columns):
-        self._columns = None if columns is None else [str(c) for c in columns]
 
 
     def extra_attributes(self, exclude={}):
@@ -680,20 +681,6 @@ class PointData(IterableSamples):
         return trace
 
 
-    def copy(self):
-        '''Create a deep copy of an instance of this class, including a new
-        inner numpy array `points`.
-
-        Returns
-        -------
-        pept.PointData
-            A new instance of the `pept.PointData` class with the same
-            attributes as this instance, deep-copied.
-        '''
-
-        return pickle.loads(pickle.dumps(self))
-
-
     def __getitem__(self, key):
         # Allow indexing into columns
         if isinstance(key, str):
@@ -707,11 +694,16 @@ class PointData(IterableSamples):
         # Shown when calling print(class)
         attrs = self.extra_attributes()
 
+        with np.printoptions(threshold = 5, edgeitems = 2):
+            samples_indices_str = str(self.samples_indices)
+            points_str = str(self.points)
+
         return (
             "PointData\n---------\n"
             f"sample_size = {self.sample_size}\n"
             f"overlap =     {self.overlap}\n"
             f"samples =     {len(self)}\n\n"
-            f"points = \n{indent(str(self.points), '  ')}\n\n"
+            f"samples_indices = \n{indent(samples_indices_str, '  ')}\n\n"
+            f"points = \n{indent(points_str, '  ')}\n\n"
             f"points.shape = {self.points.shape}\n\n"
         ) + "\n".join((f"{k} = {v}" for k, v in attrs.items()))
