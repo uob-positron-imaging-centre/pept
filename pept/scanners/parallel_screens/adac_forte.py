@@ -144,7 +144,8 @@ def adac_forte(
     # If we have a wildcard (*) in the filepath, find all files
     if "*" in filepath:
         filepaths = natsorted(glob(filepath))
-        print(filepaths)
+        if verbose:
+            print(f"Concatenating files:\n  {filepaths}")
 
     # Otherwise make sure the single file exists
     else:
