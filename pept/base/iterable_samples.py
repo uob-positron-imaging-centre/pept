@@ -358,7 +358,7 @@ class IterableSamples(PEPTObject, Collection):
         return PEPTObject.hidden_attributes(self, exclude)
 
 
-    def copy(self, data = None, sample_size = None, overlap = None):
+    def copy(self, data = None, sample_size = None, overlap = None, **kwargs):
         '''Construct a similar object, optionally with different `data`,
         `sample_size` and `overlap`.
         '''
@@ -372,6 +372,9 @@ class IterableSamples(PEPTObject, Collection):
         for k, v in self.extra_attributes().items():
             setattr(new_instance, k, v)
         for k, v in self.hidden_attributes().items():
+            setattr(new_instance, k, v)
+
+        for k, v in kwargs.items():
             setattr(new_instance, k, v)
 
         return new_instance

@@ -36,7 +36,10 @@
 import  os
 import  time
 import  textwrap
+from    glob            import  glob
 
+import  numpy           as      np
+from    natsort         import  natsorted
 from    pept            import  LineData
 
 from    .extensions     import  convert_adac_forte
@@ -46,8 +49,8 @@ from    .extensions     import  convert_adac_forte
 
 def adac_forte(
     filepath,
-    sample_size = 0,
-    overlap = 0,
+    sample_size = None,
+    overlap = None,
     verbose = True,
 ):
     '''Initialise PEPT lines of response (LoRs) from a binary file outputted by
@@ -58,7 +61,9 @@ def adac_forte(
     ----------
     filepath : str
         The path to a ADAC Forte-generated binary file from which the LoRs
-        will be read into the `LineData` format.
+        will be read into the `LineData` format. If you have multiple files,
+        use a wildcard (*) after their common substring to concatenate them,
+        e.g. "DS1.da*" will add ["DS1.da01", "DS1.da02", "DS1.da02_02"].
 
     sample_size : int, default 0
         An `int` that defines the number of lines that should be returned
@@ -136,12 +141,31 @@ def adac_forte(
     if verbose:
         start = time.time()
 
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError(textwrap.fill((
-            f"The input file path {filepath} does not exist!"
-        )))
+    # If we have a wildcard (*) in the filepath, find all files
+    if "*" in filepath:
+        filepaths = natsorted(glob(filepath))
+        print(filepaths)
 
-    lines = convert_adac_forte(filepath)
+    # Otherwise make sure the single file exists
+    else:
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError(textwrap.fill((
+                f"The input file path {filepath} does not exist!"
+            )))
+
+        filepaths = [filepath]
+
+    lines = convert_adac_forte(filepaths[0])
+
+    # If there are multiple files, concatenate them (and add up the timestamps)
+    for i in range(1, len(filepaths)):
+        new_lines = convert_adac_forte(filepaths[i])
+        new_lines[:, 0] += lines[-1, 0]
+
+        lines = np.vstack((lines, new_lines))
+
+    # Flip Y axis
+    lines[:, [2, 5]] = 600 - lines[:, [2, 5]]
 
     if verbose:
         end = time.time()
