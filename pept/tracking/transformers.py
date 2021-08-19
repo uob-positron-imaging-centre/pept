@@ -6,8 +6,17 @@
 # Date   : 08.08.2021
 
 
+import  re
+import  sys
+import  warnings
 from    typing          import  Union
-from    collections.abc import  Iterable
+
+if sys.version_info.minor >= 9:
+    # Python 3.9
+    from collections.abc import  Iterable
+else:
+    from typing         import  Iterable
+
 import  textwrap
 
 import  numpy           as      np
@@ -94,54 +103,95 @@ class SplitLabels(Filter):
     ``remove_labels = True``).
     '''
 
-    def __init__(self, remove_labels = True, extract_lines = False):
+    def __init__(
+        self,
+        remove_labels = True,
+        extract_lines = False,
+        noise = False,
+    ):
         self.remove_labels = bool(remove_labels)
         self.extract_lines = bool(extract_lines)
+        self.noise = bool(noise)
+
+
+    def _get_cluster(self, sample, labels_mask, lines_cols = None):
+        # Extract the labels column
+        cluster_data = sample.data[labels_mask]
+
+        if lines_cols is not None:
+            line_indices = np.unique(cluster_data[:, lines_cols])
+            cluster_lines = sample._lines.lines[line_indices.astype(int)]
+
+        if self.extract_lines:
+            return sample._lines.copy(data = cluster_lines)
+
+        cluster = sample.copy(data = cluster_data)
+        if lines_cols is not None:
+            cluster._lines = sample._lines.copy(data = cluster_lines)
+
+        return cluster
+
+
+    def _empty_cluster(self, sample, lines_cols = None):
+        if self.extract_lines:
+            # Return empty LineData
+            return sample._lines.copy(
+                data = np.empty((0, sample._lines.data.shape[1]))
+            )
+
+        cluster = sample.copy(data = np.empty((0, sample.data.shape[1])))
+        if lines_cols is not None:
+            cluster._lines = sample._lines.copy(
+                data = np.empty((0, sample._lines.data.shape[1]))
+            )
+
+        return cluster
 
 
     @beartype
-    def fit_sample(self, sample: IterableSamples) -> list[IterableSamples]:
-        # Get data attribute name depending on whether it is Points or Lines
-        data = sample.data
-
+    def fit_sample(self, sample: IterableSamples):
         # Extract the labels column
         col_idx = sample.columns.index("labels")
-        labels = data[:, col_idx]
+        labels = sample.data[:, col_idx]
 
-        # For each unique non-noise label, create a new Points / Lines that
+        # Check if there is a `._lines` attribute with `line_index` columns
+        lines_cols = None
+        if hasattr(sample, "_lines"):
+            lines_cols = [
+                i for i, c in enumerate(sample.columns)
+                if c.startswith("line_index")
+            ]
+
+            if len(lines_cols) == 0:
+                warnings.warn((
+                    "A `sample._lines` attribute was found, but no lines can "
+                    "be extracted without columns `line_index<N>`."
+                ), RuntimeWarning)
+                lines_cols = None
+
+        elif self.extract_lines:
+            raise ValueError(textwrap.fill((
+                "If `extract_lines` is True, then the input `sample` must "
+                "contain a `._lines` attribute."
+            )))
+
+        # If noise is requested, also include the noise cluster
+        if self.noise:
+            labels_unique = np.unique(labels)
+        else:
+            labels_unique = np.unique(labels[labels != -1])
+
+        # For each unique label, create a new PointData / LineData cluster that
         # maintains / propagates all attributes (which needs a copy)
         labels_unique = np.unique(labels[labels != -1])
-        clusters = []
-
-        for label in labels_unique:
-            cluster_data = data[labels == label]
-
-            if self.extract_lines:
-                indices_cols = [
-                    i for i, c in enumerate(sample.columns)
-                    if c.startswith("line_index")
-                ]
-
-                if len(indices_cols) == 0:
-                    raise ValueError(textwrap.fill((
-                        "If `extract_lines`, the input samples must have "
-                        "columns whose names start with `line_index`."
-                    )))
-
-                line_indices = np.unique(cluster_data[:, indices_cols])
-                cluster = sample._lines.copy(
-                    data = sample._lines.lines[line_indices.astype(int)]
-                )
-
-            else:
-                cluster = sample.copy(data = cluster_data)
-
-            clusters.append(cluster)
+        clusters = [
+            self._get_cluster(sample, labels == label, lines_cols)
+            for label in labels_unique
+        ]
 
         # If no valid cluster was found, return at least a single empty cluster
         if not len(clusters):
-            cluster = sample.copy(data = np.empty((0, sample.data.shape[1])))
-            clusters.append(cluster)
+            clusters.append(self._empty_cluster(sample, lines_cols))
 
         # Remove the "labels" column if needed
         if self.remove_labels and not self.extract_lines:
@@ -173,14 +223,17 @@ class Centroids(Filter):
     '''
 
 
-    def __init__(self, max_error = None):
-        self.max_error = None if max_error is None else float(max_error)
+    def __init__(self, error = False, cluster_size = False):
+        self.error = bool(error)
+        self.cluster_size = bool(cluster_size)
 
 
     def _empty_centroid(self, points):
         # Return an empty centroid with the correct number of columns
         ncols = points.points.shape[1]
-        if self.max_error is not None:
+        if self.error:
+            ncols += 1
+        if self.cluster_size:
             ncols += 1
         return np.empty((0, ncols))
 
@@ -191,15 +244,14 @@ class Centroids(Filter):
 
         c = points.points.mean(axis = 0)
 
-        # If max_error is defined, compute std-dev of distances from centroid
-        # to all points; if it is larger than max_error, return empty centroid
-        if self.max_error is not None:
+        # If error is requested, compute std-dev of distances from centroid
+        if self.error:
             err = np.linalg.norm(points.points - c, axis = 1).std()
+            c = np.r_[c, err]
 
-            if err > self.max_error:
-                return self._empty_centroid(points)
-
-            return np.r_[c, err]
+        # If cluster_size is requested, also append the number of points
+        if self.cluster_size:
+            c = np.r_[c, len(points.points)]
 
         return c
 
@@ -217,9 +269,12 @@ class Centroids(Filter):
         centroids = np.vstack([self.centroid(p) for p in list_points])
         attributes = list_points[0].extra_attributes()
 
-        # If max_error is defined, add "error" column
-        if self.max_error is not None:
+        # If error or cluster_size are requested, append those columns
+        if self.error:
             attributes["columns"] = attributes["columns"] + ["error"]
+
+        if self.cluster_size:
+            attributes["columns"] = attributes["columns"] + ["cluster_size"]
 
         points = PointData(centroids, **attributes)
         return points
@@ -317,8 +372,11 @@ class Condition(Filter):
     ``Condition("error < 15, y > 100")`` also selects only points whose "y"
     coordinate is larger than 100.
 
-    '''
+    Alternatively, the column index may be specified as a number, e.g.
+    ``Condition("0 < 150")`` selects all points whose first column is smaller
+    than 150.
 
+    '''
 
     def __init__(self, cond: str):
         # Calls the conditions setter which does parsing
@@ -347,8 +405,8 @@ class Condition(Filter):
                 conditions[i] = op.join(cs)
             else:
                 raise ValueError(textwrap.fill((
-                    f"The input `{conditions[i]=}` did not contain an "
-                    "operator."
+                    f"The input `conditions[i] = {conditions[i]}` did not "
+                    "contain an operator."
                 )))
 
         self._conditions = conditions
@@ -371,3 +429,112 @@ class Condition(Filter):
             data = data[eval(cond, locals())]
 
         return sample.copy(data = data)
+
+
+
+
+class Expression:
+
+    def __init__(self, cond: str):
+        # Calls the conditions setter which does parsing
+        self.conditions = cond
+
+
+    @property
+    def conditions(self):
+        return self._conditions
+
+
+    @conditions.setter
+    def conditions(self, cond):
+        # Remove whitespace and split into individual expressions
+        conditions = cond.replace(" ", "").split(",")
+
+        # Compile regex object to find quoted strings
+        finder = re.compile(r"'\w+'")
+
+        for i in range(len(conditions)):
+            conditions[i] = finder.sub(Condition._replace_term, conditions[i])
+
+        if not len(conditions):
+            raise ValueError(textwrap.fill((
+                f"The input `conditions[i] = {conditions[i]}` did not contain "
+                "quoted terms."
+            )))
+
+        self._conditions = conditions
+
+
+    @staticmethod
+    def _replace_term(term):
+        # Remove single quotes
+        if isinstance(term, re.Match):
+            term = term.group()
+        term = term.split("'")[1]
+
+        try:
+            index = int(term)
+            return f"data[:, {index}]"
+        except ValueError:
+            return f"data[:, sample.columns.index('{term}')]"
+
+
+    @beartype
+    def fit_sample(self, sample: IterableSamples):
+        data = sample.data
+
+        for cond in self.conditions:
+            if "=" in cond and "<=" not in cond and ">=" not in cond:
+                # Assignment
+                exec(cond, locals())
+            else:
+                # Filter
+                data = data[eval(cond, locals())]
+
+        return sample.copy(data = data)
+
+
+
+
+class Swap(Filter):
+
+    def __init__(self, expressions: str):
+        self._expressions = expressions
+
+
+    @property
+    def expressions(self):
+        return self._expressions
+
+
+    @expressions.setter
+    def expressions(self, expressions: str):
+        # Remove whitespace and split into individual expressions
+        expressions = expressions.replace(" ", "").split(",")
+
+        for i in range(len(expressions)):
+            terms = expressions[i].split("=")
+            term1 = terms[0]
+            term2 = terms[1]
+
+            if "'" in term1:
+                pass
+
+            aux1 = f"aux1={Swap._replace_term(term1)}.copy();"
+            aux2 = f"aux2={Swap._replace_term(term2)}.copy();"
+
+            expressions[i] = aux1 + aux2
+
+
+    @staticmethod
+    def _replace_term(term):
+        # Remove single quotes
+        if isinstance(term, re.Match):
+            term = term.group()
+        term = term.split("'")[1]
+
+        try:
+            index = int(term)
+            return f"data[:, {index}]"
+        except ValueError:
+            return f"data[:, sample.columns.index('{term}')]"

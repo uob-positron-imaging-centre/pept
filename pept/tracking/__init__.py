@@ -51,11 +51,12 @@ and you get parallel execution and pipeline chaining for free!
 '''
 
 
-from    .birmingham_method      import  *
-from    .peptml                 import  *
-from    .fpi                    import  *
+from    .birmingham_method      import  BirminghamMethod
+from    .peptml                 import  Cutpoints, Minpoints
+from    .peptml                 import  HDBSCAN, HDBSCANClusterer
+from    .fpi                    import  FPI
 
-from    .trajectory_separation  import  *
+from    .trajectory_separation  import  Segregate
 
 # Import other objects defined elsewhere that should be available here
 from    .transformers           import  Stack
@@ -65,6 +66,7 @@ from    .transformers           import  LinesCentroids
 from    .transformers           import  Condition
 
 from    .space_transformers     import  Voxelliser
+from    .space_transformers     import  Velocity
 
 
 __license__ = "GNU v3.0"

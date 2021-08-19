@@ -182,6 +182,7 @@ A more in-depth tutorial is available on
 
 
 # Import base data structures
+from    .base           import  TimeWindow
 from    .base           import  LineData
 from    .base           import  PointData
 from    .base           import  Pixels
@@ -278,6 +279,7 @@ __all__ = [
     'save',
     'load',
 
+    'TimeWindow',
     'LineData',
     'PointData',
     'Pixels',

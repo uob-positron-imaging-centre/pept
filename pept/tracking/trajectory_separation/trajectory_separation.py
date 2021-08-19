@@ -36,10 +36,16 @@
 
 
 import  os
+import  sys
 
 from    beartype                    import  beartype
 from    typing                      import  Union
-from    collections.abc             import  Iterable
+
+if sys.version_info.minor >= 9:
+    # Python 3.9
+    from collections.abc import  Iterable
+else:
+    from typing         import  Iterable
 
 import  numpy                       as      np
 from    scipy.spatial               import  cKDTree

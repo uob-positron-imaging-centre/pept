@@ -38,6 +38,7 @@ import  pickle
 import  operator
 import  textwrap
 from    textwrap            import  indent
+from    dataclasses         import  dataclass
 from    numbers             import  Number
 from    collections.abc     import  Collection
 from    concurrent.futures  import  ThreadPoolExecutor
@@ -162,6 +163,69 @@ def samples_indices_iterable(data, sample_size):
     start = end - sample_size
 
     return np.c_[start, end]
+
+
+
+
+@dataclass
+class TimeWindow:
+    '''Define a `sample_size` as a fixed time window / slice. You can use this
+    as a direct replacement of the `sample_size` and `overlap`:
+
+    ::
+
+        points = pept.PointData(sample_size = pept.TimeWindow(5.5))
+
+    '''
+    __slots__ = ["window"]      # Only have the `window` attribute
+    window: float
+
+
+
+
+def samples_indices_time_window(
+    data,
+    sample_size: TimeWindow,
+    overlap: TimeWindow,
+):
+    '''Compute the sample indices given a time window across the timestamps in
+    `data` (i.e. column 0).
+    '''
+
+    if sample_size.window == 0:
+        return np.zeros((0, 2))
+
+    elif sample_size.window < 0:
+        raise ValueError((
+            f"\n[ERROR]: `sample_size.window = {sample_size}` must be "
+            "positive (>= 0).\n"
+        ))
+
+    elif overlap.window >= sample_size.window:
+        raise ValueError((
+            f"\n[ERROR]: `overlap = {overlap}` must be smaller than "
+            f"`sample_size = {sample_size}`.\n"
+        ))
+
+    eps = np.finfo(float).resolution
+
+    start_times = np.arange(
+        0.9999 * data[0, 0] - eps,
+        1.0001 * (data[-1, 0] - sample_size.window) + eps,
+        sample_size.window - overlap.window,
+        dtype = float,
+    )
+    end_times = start_times + sample_size.window
+
+    start_indices = np.searchsorted(data[:, 0], start_times, "right")
+    end_indices = np.searchsorted(data[:, 0], end_times, "right")
+
+    # Remove empty samples
+    cond = start_indices != end_indices
+    start_indices = start_indices[cond]
+    end_indices = end_indices[cond]
+
+    return np.c_[start_indices, end_indices]
 
 
 
@@ -305,6 +369,15 @@ class IterableSamples(PEPTObject, Collection):
             self._samples_indices = samples_indices_number(
                 self.data, self._sample_size, self._overlap
             )
+        elif isinstance(sample_size, TimeWindow):
+            # If the overlap is of a different type, reset it
+            if not isinstance(self.overlap, TimeWindow):
+                self._overlap = TimeWindow(0.)
+
+            self._sample_size = sample_size
+            self._samples_indices = samples_indices_time_window(
+                self.data, self._sample_size, self._overlap
+            )
         elif hasattr(sample_size, "__iter__"):
             sample_size = np.asarray(sample_size, dtype = int)
 
@@ -358,7 +431,15 @@ class IterableSamples(PEPTObject, Collection):
         return PEPTObject.hidden_attributes(self, exclude)
 
 
-    def copy(self, data = None, sample_size = None, overlap = None, **kwargs):
+    def copy(
+        self,
+        data = None,
+        sample_size = None,
+        overlap = None,
+        extra = True,
+        hidden = True,
+        **kwargs
+    ):
         '''Construct a similar object, optionally with different `data`,
         `sample_size` and `overlap`.
         '''
@@ -369,10 +450,13 @@ class IterableSamples(PEPTObject, Collection):
         new_instance = self.__class__(data, sample_size, overlap)
 
         # Propagate all hidden / extra attributes
-        for k, v in self.extra_attributes().items():
-            setattr(new_instance, k, v)
-        for k, v in self.hidden_attributes().items():
-            setattr(new_instance, k, v)
+        if extra:
+            for k, v in self.extra_attributes().items():
+                setattr(new_instance, k, v)
+
+        if hidden:
+            for k, v in self.hidden_attributes().items():
+                setattr(new_instance, k, v)
 
         for k, v in kwargs.items():
             setattr(new_instance, k, v)

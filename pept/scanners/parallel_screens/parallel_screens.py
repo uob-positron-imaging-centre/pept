@@ -45,8 +45,8 @@ from    pept.utilities  import  read_csv
 def parallel_screens(
     filepath_or_array,
     screen_separation,
-    sample_size = 0,
-    overlap = 0,
+    sample_size = None,
+    overlap = None,
     verbose = True,
     **kwargs,
 ):

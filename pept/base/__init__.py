@@ -20,6 +20,7 @@ from    .voxel_data         import  Voxels
 from    .voxel_data         import  VoxelData
 
 from    .iterable_samples   import  IterableSamples
+from    .iterable_samples   import  TimeWindow
 from    .iterable_samples   import  AsyncIterableSamples
 from    .iterable_samples   import  PEPTObject
 

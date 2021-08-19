@@ -28,9 +28,7 @@
 # Date   : 20.08.2019
 
 
-import  os
 import  time
-import  textwrap
 
 import  numpy                       as      np
 
@@ -40,8 +38,8 @@ from    .extensions.get_pept_event  import  get_pept_LOR
 
 def modular_camera(
     data_file,
-    sample_size = 200,
-    overlap = 0,
+    sample_size = None,
+    overlap = None,
     verbose = True
 ):
     '''Initialise PEPT LoRs from the modular camera DAQ.
