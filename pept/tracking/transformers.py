@@ -376,6 +376,8 @@ class Condition(Filter):
     ``Condition("0 < 150")`` selects all points whose first column is smaller
     than 150.
 
+    For a full expression, you can use single quotes; e.g. filtering out NaNs
+    and Infs using NumPy: ``Condition("np.isfinite('x')")``.
     '''
 
     def __init__(self, cond: str):
@@ -392,17 +394,31 @@ class Condition(Filter):
     def conditions(self, cond):
         conditions = cond.replace(" ", "").split(",")
 
+        # Compile regex object to find quoted strings
+        finder = re.compile(r"'\w+'")
+
         for i in range(len(conditions)):
             op = None
             if "<" in conditions[i]:
                 op = "<"
             elif ">" in conditions[i]:
                 op = ">"
+            elif "!" in conditions[i]:
+                op = "!"
+            elif "==" in conditions[i]:
+                op = "=="
 
             if op is not None:
                 cs = conditions[i].split(op)
                 cs[0] = Condition._replace_term(cs[0])
                 conditions[i] = op.join(cs)
+
+            elif "'" in conditions[i]:
+                conditions[i] = finder.sub(
+                    Condition._replace_quoted,
+                    conditions[i],
+                )
+
             else:
                 raise ValueError(textwrap.fill((
                     f"The input `conditions[i] = {conditions[i]}` did not "
@@ -421,12 +437,26 @@ class Condition(Filter):
             return f"data[:, sample.columns.index('{term}')]"
 
 
+    @staticmethod
+    def _replace_quoted(term):
+        # Remove single quotes
+        if isinstance(term, re.Match):
+            term = term.group()
+        term = term.split("'")[1]
+
+        try:
+            index = int(term)
+            return f"data[:, {index}]"
+        except ValueError:
+            return f"data[:, sample.columns.index('{term}')]"
+
+
     @beartype
     def fit_sample(self, sample: IterableSamples):
         data = sample.data
 
         for cond in self.conditions:
-            data = data[eval(cond, locals())]
+            data = data[eval(cond, globals(), locals())]
 
         return sample.copy(data = data)
 

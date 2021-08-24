@@ -150,7 +150,7 @@ def find_minpoints(
 
     columns = ["t", "x", "y", "z"]
     if append_indices:
-        columns += ["line_index1", "line_index2"]
+        columns += [f"line_index{i + 1}" for i in range(num_lines)]
 
     points = pept.PointData(sample_minpoints, columns = columns)
 
@@ -381,10 +381,35 @@ class Minpoints(pept.base.LineDataFilter):
 
 
     def fit_sample(self, sample_lines):
-        return find_minpoints(
-            sample_lines,
+        if not isinstance(sample_lines, pept.LineData):
+            sample_lines = pept.LineData(sample_lines)
+
+        # If cutoffs were not defined, automatically compute them
+        if self.cutoffs is not None:
+            cutoffs = self.cutoffs
+        else:
+            cutoffs = get_cutoffs(sample_lines.lines)
+
+        sample_cutpoints = pept.utilities.find_minpoints(
+            sample_lines.lines,
             self.num_lines,
             self.max_distance,
-            cutoffs = self.cutoffs,
+            cutoffs,
             append_indices = self.append_indices,
         )
+
+        columns = ["t", "x", "y", "z"]
+        if self.append_indices:
+            columns += [f"line_index{i + 1}" for i in range(self.num_lines)]
+
+        points = pept.PointData(sample_cutpoints, columns = columns)
+
+        # Add optional metadata to the points; because they have an underscore,
+        # they won't be propagated when new objects are constructed
+        points._num_lines = self.num_lines
+        points._max_distance = self.max_distance
+        points._cutoffs = self.cutoffs
+        if self.append_indices:
+            points._lines = sample_lines
+
+        return points
