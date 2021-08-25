@@ -1427,7 +1427,7 @@ class HDBSCAN(pept.base.PointDataFilter):
         points = sample_points.points
 
         # If there are no points, return empty PointData with the same attrs
-        if not len(points):
+        if len(points) <= 1:
             clustered_points = np.empty((0, points.shape[1] + 1))
             clustered_points = sample_points.copy(data = clustered_points)
             clustered_points.columns = clustered_points.columns + ["labels"]
@@ -1442,6 +1442,8 @@ class HDBSCAN(pept.base.PointDataFilter):
         phi = int(self.true_fraction * len(points_art) /
                   (self.max_tracers + 1))
 
+        if phi >= len(points):
+            phi = len(points)
         if phi < 2:
             phi = 2
 
