@@ -253,6 +253,40 @@ class ADACGeometricEfficiency(PEPTObject):
     >>> fig.add_trace(go.Contour(x = x, y = y, z = eg))
     >>> fig.show()
 
+    For an interactive 3D volumetric / voxel plot, you can use PyVista:
+
+    >>> # Import necessary libraries; you may need to install PyVista
+    >>> import numpy as np
+    >>> import pept
+    >>> import pyvista as pv
+
+    >>> # Instantiate the ADACGeometricEfficiency class
+    >>> geom = pept.scanners.ADACGeometricEfficiency(500)
+
+    >>> # Lower and upper corners of the grid over which to compute the GE
+    >>> lower = np.array([115, 50, 5])
+    >>> upper = np.array([490, 550, 495])
+
+    >>> # Create 3D meshgrid of values and evaluate the GE at each point
+    >>> n = 40
+    >>> x = np.linspace(lower[0], upper[0], n)
+    >>> y = np.linspace(lower[1], upper[1], n)
+    >>> z = np.linspace(lower[2], upper[2], n)
+    >>> xx, yy, zz = np.meshgrid(x, y, z)
+    >>> eg = geom(xx, yy, zz)
+
+    >>> # Create PyVista grid of values
+    >>> grid = pv.UniformGrid()
+    >>> grid.dimensions = np.array(eg.shape) + 1
+    >>> grid.origin = lower
+    >>> grid.spacing = (upper - lower) / n
+    >>> grid.cell_arrays["values"] = eg.flatten(order="F")
+
+    >>> # Create PyVista volumetric / voxel plot with an interactive clipper
+    >>> p = pv.Plotter()
+    >>> p.add_mesh_clip_plane(grid)
+    >>> p.show()
+
     References
     ----------
     .. [1] Guida A. Positron emission particle tracking applied to solid-liquid
