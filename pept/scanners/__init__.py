@@ -30,6 +30,7 @@ format, for free.
 
 
 from    .parallel_screens   import  parallel_screens, adac_forte
+from    .parallel_screens   import  ADACGeometricEfficiency
 from    .modular_camera     import  modular_camera
 
 

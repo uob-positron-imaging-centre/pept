@@ -8,15 +8,9 @@
 
 
 from    .parallel_screens   import  parallel_screens
+from    .parallel_screens   import  ADACGeometricEfficiency
 from    .adac_forte         import  adac_forte
 from    .extensions         import  convert_adac_forte
-
-
-__all__ = [
-    "parallel_screens",
-    "adac_forte",
-    "convert_adac_forte",
-]
 
 
 __license__ = "GNU v3.0"

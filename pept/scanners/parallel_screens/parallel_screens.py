@@ -35,8 +35,10 @@
 
 import  time
 import  numpy           as      np
+from    scipy.integrate import  quad
 
 from    pept            import  LineData
+from    pept.base       import  PEPTObject
 from    pept.utilities  import  read_csv
 
 
@@ -179,3 +181,165 @@ def parallel_screens(
         print(f"Initialised PEPT data in {end - start:3.3f} s.\n")
 
     return LineData(lines, sample_size = sample_size, overlap = overlap)
+
+
+
+
+class ADACGeometricEfficiency(PEPTObject):
+    '''Compute the geometric efficiency of a parallel screens PEPT detector at
+    different 3D coordinates using Antonio Guida's formula [1]_.
+
+    The default `xlim` and `ylim` values represent the active detector area of
+    the ADAC Forte scanner used at the University of Birmingham, but can be
+    changed to any parallel screens detector active area range.
+
+    This class assumes PEPT coordinates, with the Y and Z axes being swapped,
+    such that Y points upwards and Z is perpendicular to the two detectors.
+
+    Attributes
+    ----------
+    xlim : (2,) np.ndarray, default [111.78, 491.78]
+        The limits of the active detector area in the *x*-dimension.
+
+    ylim : (2,) np.ndarray, default [46.78, 556.78]
+        The limits of the active detector area in the *y*-dimension.
+
+    zlim : (2,) np.ndarray
+        The limits of the active detector area in the *z*-dimension.
+
+    Examples
+    --------
+    Simply instantiate the class with the head separation, then 'call' it with
+    the (x, y, z) coordinates of the point at which to evaluate the geometric
+    efficiency:
+
+    >>> import pept
+    >>> separation = 500
+    >>> geom = pept.scanners.ADACGeometricEfficiency(separation)
+    >>> eg = geom(250, 250, 250)
+
+    Alternatively, the separation may be specified using the both the starting
+    and ending limits:
+
+    >>> separation = [-10, 510]
+    >>> geom = pept.scanners.ADACGeometricEfficiency(separation)
+    >>> eg = geom(250, 250, 250)
+
+    You can evaluate multiple points by using a list / array of values:
+
+    >>> geom([250, 260], 250, 250)
+    array([0.18669302, 0.19730517])
+
+    Compute the variation in geometric efficiency in the XY plane:
+
+    >>> separation = 500
+    >>> geom = pept.scanners.ADACGeometricEfficiency(separation)
+
+    >>> # Range of x, y values to evaluate the geometric efficiency at
+    >>> import numpy as np
+    >>> x = np.linspace(120, 480, 100)
+    >>> y = np.linspace(50, 550, 100)
+    >>> z = 250
+
+    >>> # Evaluate EG on a 2D grid of values at all combinations of x, y
+    >>> xx, yy = np.meshgrid(x, y)
+    >>> eg = geom(xx, yy, z)
+
+    The geometric efficiencies can be visualised using a Plotly heatmap or
+    contour plot:
+
+    >>> import plotly.graph_objs as go
+    >>> fig = go.Figure()
+    >>> fig.add_trace(go.Contour(x = x, y = y, z = eg))
+    >>> fig.show()
+
+    References
+    ----------
+    .. [1] Guida A. Positron emission particle tracking applied to solid-liquid
+       mixing in mechanically agitated vessels (Doctoral dissertation,
+       University of Birmingham).
+
+    '''
+
+    def __init__(
+        self,
+        separation,
+        xlim = [111.78, 491.78],
+        ylim = [46.78, 556.78],
+    ):
+        # Separation may be either a number (e.g. 500) or a 2-list ([-10, 510])
+        separation = np.array(separation)
+        if separation.shape == ():
+            self.zlim = np.array([0, separation])
+        else:
+            self.zlim = separation
+
+        self.xlim = np.array(xlim)
+        self.ylim = np.array(ylim)
+
+        self.veg = np.vectorize(self.eg, cache = True)
+
+
+    def eg(self, x, y, z):
+        '''Return the geometric efficiency evaluated at a single point
+        (x, y, z) *in PEPT coordinates*, i.e. Y points upwards.
+        '''
+
+        # Translate x, y, z relative to the scanner active area's centre
+        x = (x - self.xlim[0]) - (self.xlim[1] - self.xlim[0]) / 2
+        y = (y - self.ylim[0]) - (self.ylim[1] - self.ylim[0]) / 2
+        z = (z - self.zlim[0]) - (self.zlim[1] - self.zlim[0]) / 2
+
+        # Active detector area dimensions
+        ld = self.xlim[1] - self.xlim[0]
+        hd = self.ylim[1] - self.ylim[0]
+        sd = self.zlim[1] - self.zlim[0]
+
+        # Solid horizontal (XZ in PEPT coordinates) angle
+        theta_min = np.arctan(max(
+            (sd - 2 * z) / (ld - 2 * x),
+            (sd + 2 * z) / (ld + 2 * x),
+        ))
+
+        theta_max = np.pi - np.arctan(max(
+            (sd - 2 * z) / (ld + 2 * x),
+            (sd + 2 * z) / (ld - 2 * x),
+        ))
+
+        # Terms for the two integrals that will be summed
+        m1 = max(
+            (sd - 2 * z) / (hd - 2 * y),
+            (sd + 2 * z) / (hd + 2 * y),
+        )
+
+        m2 = max(
+            (sd - 2 * z) / (hd + 2 * y),
+            (sd + 2 * z) / (hd - 2 * y),
+        )
+
+        # Evaluate integrals
+        f1_integral, _ = quad(
+            lambda theta: (m1**2 / np.sin(theta)**2 + 1)**(-0.5),
+            theta_min, theta_max
+        )
+
+        f2_integral, _ = quad(
+            lambda theta: (m2**2 / np.sin(theta)**2 + 1)**(-0.5),
+            theta_min, theta_max
+        )
+
+        return (f1_integral + f2_integral) / (2 * np.pi)
+
+
+    def __call__(self, x, y, z):
+        # Allow 'calling' the class using a vectorized call to `ge`
+        return self.veg(x, y, z)
+
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}("
+            f"xlim={self.xlim}, "
+            f"ylim={self.ylim}, "
+            f"zlim={self.zlim})"
+        )
