@@ -107,7 +107,7 @@ cy_extensions = [
     Extension(
         'pept.scanners.parallel_screens.extensions.binary_converter',
         ['pept/scanners/parallel_screens/extensions/binary_converter.pyx'],
-        **cy_extension_kw
+        **cy_extension_kw_strict
     ),
     Extension(
         'pept.utilities.cutpoints.find_cutpoints',
