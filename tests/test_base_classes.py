@@ -26,6 +26,7 @@ def test_point_data():
     assert (points[0].points == points_raw[:4]).all(), "Incorrect 1st sample"
     assert (points[1].points == points_raw[4:8]).all(), "Incorrect 2nd sample"
     assert len(points) == 2, "Incorrect number of samples"
+    assert np.all(points["t"] == points_raw[:, 0]), "Incorrect string indexing"
 
     # Test changing sample size and overlap (int)
     points.sample_size = 3
@@ -44,8 +45,39 @@ def test_point_data():
     assert (points[3].points == points_raw[9:9]).all(), "List sample size"
 
     # Test copying
-    assert points.copy() is not points, "Copy is not deep"
+    assert points.copy().points is not points.points, "Copy is not deep"
+    assert points.copy(deep=False).points is points.points, "Not shallow copy"
     assert (points.copy().points == points.points).all(), "Incorrect copying"
+
+    assert np.all(points.copy().samples_indices == points.samples_indices)
+    points.samples_indices = [[0, 5], [5, 5], [5, 10]]
+    assert np.all(points.copy().samples_indices == points.samples_indices)
+
+    # Test different constructors: copy, iterable, numpy-like
+    points_raw = np.arange(50).reshape(10, 5)
+    columns = ["t", "x", "y", "z", "error"]
+    points = pept.PointData(points_raw, columns = columns)
+
+    pept.PointData(points)
+    pept.PointData([points, points])
+    pept.PointData([[1, 2, 3, 4], [1, 2, 3, 4]])
+
+    # Test unnamed columns
+    pept.PointData([range(5), range(5)])
+    pept.PointData([range(5)], columns = ["a", "b", "c", "d", "e"])
+
+    # Test columns propagation
+    assert "error" in pept.PointData(points).columns
+    assert "error" in pept.PointData([points, points]).columns
+
+    # Test attrs propagation
+    points.attrs["_lines"] = 123
+    points.attrs["_attr2"] = [1, 2, 3]
+
+    assert "_lines" in pept.PointData(points).attrs
+    assert "_attr2" in pept.PointData([points, points]).attrs
+    assert "_lines" in points[0].attrs
+    assert "_attr2" in points.copy().attrs
 
     # Test illegal changes to sample size and overlap
     with pytest.raises(ValueError):
@@ -80,6 +112,7 @@ def test_line_data():
     assert (lines[0].lines == lines_raw[:4]).all(), "Incorrect first sample"
     assert (lines[1].lines == lines_raw[4:8]).all(), "Incorrect second sample"
     assert len(lines) == 2, "Incorrent number of samples"
+    assert np.all(lines["t"] == lines_raw[:, 0]), "Incorrect string indexing"
 
     # Test copying
     assert lines.copy() is not lines, "Copy is not deep"
@@ -100,6 +133,42 @@ def test_line_data():
     assert (lines[1].lines == lines_raw[3:7]).all(), "List sample size"
     assert (lines[2].lines == lines_raw[7:9]).all(), "List sample size"
     assert (lines[3].lines == lines_raw[9:9]).all(), "List sample size"
+
+    # Test copying
+    assert lines.copy().lines is not lines.lines, "Copy is not deep"
+    assert lines.copy(deep=False).lines is lines.lines, "Not shallow copy"
+    assert (lines.copy().lines == lines.lines).all(), "Incorrect copying"
+
+    assert np.all(lines.copy().samples_indices == lines.samples_indices)
+    lines.samples_indices = [[0, 5], [5, 5], [5, 10]]
+    assert np.all(lines.copy().samples_indices == lines.samples_indices)
+
+    # Test different constructors: copy, iterable, numpy-like
+    lines_raw = np.arange(80).reshape(10, 8)
+    columns = ["t", "x1", "y1", "z1", "x2", "y2", "z2", "error"]
+    lines = pept.LineData(lines_raw, columns = columns)
+
+    pept.LineData(lines)
+    pept.LineData([lines, lines])
+    pept.LineData([range(7), range(7)])
+
+    # Test unnamed columns
+    pept.LineData([range(8), range(8)])
+    pept.LineData([range(7)], columns = ["a", "b", "c", "d", "e", "f", "g",
+                                         "h", "i"])
+
+    # Test columns propagation
+    assert "error" in pept.LineData(lines).columns
+    assert "error" in pept.LineData([lines, lines]).columns
+
+    # Test attrs propagation
+    lines.attrs["_lines"] = 123
+    lines.attrs["_attr2"] = [1, 2, 3]
+
+    assert "_lines" in pept.LineData(lines).attrs
+    assert "_attr2" in pept.LineData([lines, lines]).attrs
+    assert "_lines" in lines[0].attrs
+    assert "_attr2" in lines.copy().attrs
 
     # Test illegal changes to sample size and overlap
     with pytest.raises(ValueError):
@@ -136,6 +205,9 @@ def test_voxels():
 
     assert float(voxels.sum()) == float(voxels_raw.sum())
 
+    # Testing different functions
+    voxels.copy()
+
 
 def test_voxel_data():
     lines_raw = np.arange(70).reshape(10, 7)
@@ -168,76 +240,8 @@ def test_voxel_data():
         "Traversed list of voxels not found correctly"
 
 
-class SomeSamples(pept.base.IterableSamples):
-    def __init__(self, arr, sample_size, overlap):
-        self._data_samples = arr
-        pept.base.IterableSamples.__init__(self, arr, sample_size, overlap)
-
-
-def test_iterable_samples_subclass():
-
-    # Test simple sample size, no overlap
-    array_raw = np.arange(20).reshape(10, 2)
-    samples = SomeSamples(array_raw, sample_size=4, overlap=0)
-    assert (samples[0].data == array_raw[:4]).all(), "Incorrect first sample"
-    assert (samples[1].data == array_raw[4:8]).all(), "Incorrect second sample"
-    assert len(samples) == 2, "Incorrent number of samples"
-
-    # Test changing sample size and overlap (int)
-    samples.sample_size = 3
-    samples.overlap = 2
-    assert (samples[0].data == array_raw[:3]).all(), "Incorrect sample size"
-    assert (samples[1].data == array_raw[1:4]).all(), "Incorrect overlapping"
-    assert len(samples) == 8, "Incorrect number of samples after overlap"
-
-    # Test changing sample size to List[Int]
-    samples.sample_size = [3, 4, 2, 0]
-    assert samples.overlap is None, "Overlap was not set to None"
-    assert len(samples) == 4, "Incorrect number of samples"
-    assert (samples[0].data == array_raw[:3]).all(), "Incorrect sample size"
-    assert (samples[1].data == array_raw[3:7]).all()
-    assert (samples[2].data == array_raw[7:9]).all()
-    assert (samples[3].data == array_raw[9:9]).all()
-
-    # Test illegal changes to sample size and overlap
-    with pytest.raises(ValueError):
-        samples.sample_size = 3
-        samples.overlap = 3
-
-    with pytest.raises(ValueError):
-        samples.sample_size = 0
-        samples.overlap = 3
-        samples.sample_size = 3
-
-    with pytest.raises(ValueError):
-        samples.sample_size = -1
-
-
-class SomeAsyncSamples(pept.base.AsyncIterableSamples):
-    def __init__(self, samples, function):
-        pept.base.AsyncIterableSamples.__init__(self, samples, function)
-
-
 def f(x):
     return 2 * x.data
-
-
-def test_async_iterable_samples_subclass():
-
-    # Test simple sample size, no overlap
-    array_raw = np.arange(20).reshape(10, 2)
-    samples_raw = SomeSamples(array_raw, sample_size=4, overlap=0)
-    samples = SomeAsyncSamples(samples_raw, f)
-    assert (samples[0] == f(samples_raw[0])).all(), "Incorrect 1st sample"
-    assert (samples[1] == f(samples_raw[1])).all(), "Incorrect 2nd sample"
-    assert len(samples) == 2, "Incorrent number of samples"
-
-    # Test changing sample size and overlap of the unprocessed samples
-    samples_raw.sample_size = 3
-    samples_raw.overlap = 2
-    assert (samples[0] == f(samples_raw[0])).all(), "Sample sizing"
-    assert (samples[1] == f(samples_raw[1])).all(), "Overlapping"
-    assert len(samples) == 8, "Incorrect number of samples after overlap"
 
 
 def test_pipeline():
@@ -245,14 +249,14 @@ def test_pipeline():
     class F1(pept.base.LineDataFilter):
         def fit_sample(self, sample_lines):
             sample_lines.lines[:] += 1
-            sample_lines.attr1 = "New attribute added by F1"
+            sample_lines.attrs["attr1"] = "New attribute added by F1"
             return sample_lines
 
 
     class F2(pept.base.LineDataFilter):
         def fit_sample(self, sample_lines):
             sample_lines.lines[:] += 2
-            sample_lines.attr2 = "New attribute added by F2"
+            sample_lines.attrs["attr2"] = "New attribute added by F2"
             return sample_lines
 
 
@@ -296,8 +300,8 @@ def test_pipeline():
     assert (lp1[0].lines == lp2[0].lines).all(), "Apply steps manually"
 
     # Test the attribute is added by the first filter
-    assert hasattr(F1().fit_sample(lines[0]), "attr1")
-    assert hasattr(pept.base.Pipeline([F1()]).fit_sample(lines[0]), "attr1")
+    assert "attr1" in F1().fit_sample(lines[0]).attrs
+    assert "attr1" in pept.base.Pipeline([F1()]).fit_sample(lines[0]).attrs
 
     # Test fit
     # Simple filter-only pipeline
@@ -344,5 +348,5 @@ def test_pipeline():
     assert all([(l1.lines == l2.lines).all() for l1, l2 in zip(lp1, lp2)])
 
     # Test the attribute is added by the first filter
-    assert hasattr(F1().fit(lines)[0], "attr1")
-    assert hasattr(pept.base.Pipeline([F1()]).fit(lines)[0], "attr1")
+    assert "attr1" in F1().fit(lines)[0].attrs
+    assert "attr1" in pept.base.Pipeline([F1()]).fit(lines)[0].attrs
