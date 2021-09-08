@@ -35,19 +35,17 @@
 # Date   : 16.04.2021
 
 
-import  time
-import  textwrap
-from    concurrent.futures  import  ThreadPoolExecutor
+import  warnings
 
 import  numpy               as      np
 
-from    tqdm                import  tqdm
+from    beartype            import  beartype
 
 import  pept
 from    .fpi_ext            import  fpi_ext
 
 
-class FPI:
+class FPI(pept.base.VoxelsFilter):
     '''FPI is a modern voxel-based tracer-location algorithm that can reliably
     work with unknown numbers of tracers in fast and noisy environments.
 
@@ -61,8 +59,8 @@ class FPI:
         Spectrometers, Detectors and Associated Equipment. 2017 Jan 21;
         843:22-8.
 
-    Permission was granted explicitly by Dr. Cody Wiggins in March 2021 to
-    publish his code in the `pept` library under the GNU v3.0 license.
+    Permission was granted by Dr. Cody Wiggins in March 2021 to publish his
+    code in the `pept` library under the GNU v3.0 license.
 
     Two main methods are provided: `fit_sample` for tracking a single voxel
     space (i.e. a single `pept.Voxels`) and `fit` which tracks all the samples
@@ -85,16 +83,6 @@ class FPI:
         low values. The parameter lld_counts is not used much in practice -
         for most cases, it can be set to zero.
 
-    Methods
-    -------
-    fit_sample(voxels, as_array = False, verbose = False)
-        Use the FPI algorithm to locate a tracer from a single voxellised
-        space (i.e. from one sample of LoRs).
-
-    fit(voxel_data, max_workers = None, verbose = True)
-        Fit multiple voxellised samples of LoRs (in an instance of
-        `pept.VoxelData`) and return the tracked tracer locations.
-
     Examples
     --------
     A typical workflow would involve reading LoRs from a file, creating a lazy
@@ -102,17 +90,31 @@ class FPI:
     tracking the tracer locations from the LoRs, and plotting them.
 
     >>> import pept
-    >>> from pept.tracking.fpi import FPI
-
+    >>>
     >>> lors = pept.LineData(...)   # set sample_size and overlap appropriately
-    >>> voxels = pept.VoxelData(lors)
-
-    >>> fpi = FPI(w = 3, r = 0.4)
+    >>> voxels = pept.tracking.Voxelize((50, 50, 50)).fit(lors)
+    >>>
+    >>> fpi = pept.tracking.FPI(w = 3, r = 0.4)
     >>> positions = fpi.fit(voxels) # this is a `pept.PointData` instance
 
+    A much more efficient approach would be to create a `pept.Pipeline`
+    containing a voxelization step and then FPI:
+
+    >>> from pept.tracking import *
+    >>>
+    >>> pipeline = Voxelize((50, 50, 50)) + FPI() + Stack()
+    >>> positions = pipeline.fit(lors)
+
+    Finally, plotting results:
+
+    >>> from pept.plots import PlotlyGrapher
+    >>>
     >>> grapher = PlotlyGrapher()
     >>> grapher.add_points(positions)
     >>> grapher.show()
+
+    >>> from pept.plots import PlotlyGrapher2D
+    >>> PlotlyGrapher2D().add_timeseries(positions).show()
 
     See Also
     --------
@@ -158,13 +160,8 @@ class FPI:
         self.lld_counts = float(lld_counts)
 
 
-    def fit_sample(
-        self,
-        voxels,
-        timestamp = 0.,
-        as_array = False,
-        verbose = False,
-    ):
+    @beartype
+    def fit_sample(self, voxels: pept.Voxels):
         '''Use the FPI algorithm to locate a tracer from a single voxellised
         space (i.e. from one sample of LoRs).
 
@@ -202,11 +199,6 @@ class FPI:
             If `voxels` is not an instance of `pept.Voxels` (or subclass
             thereof).
         '''
-        if not isinstance(voxels, pept.Voxels):
-            raise TypeError(textwrap.fill((
-                "The input `voxels` must be an instance of `pept.Voxels`. "
-                f"Received `{type(voxels)}`."
-            )))
 
         points = fpi_ext(
             voxels.voxels,
@@ -217,128 +209,19 @@ class FPI:
 
         # Insert the time column and translate the coordinates from the voxel
         # space to the physical space
-        points = np.insert(points, 0, timestamp, axis = 1)
         points[:, 1:4] *= voxels.voxel_size
         points[:, 1:4] += [voxels.xlim[0], voxels.ylim[0], voxels.zlim[0]]
 
-        if as_array:
-            return points
+        points = np.insert(points, 0, np.nan, axis = 1)
+        if "_lines" in voxels.attrs:
+            points[:, 0] = voxels.attrs["_lines"].lines[:, 0].mean()
+        else:
+            warnings.warn((
+                "The input `Voxels` did not have a '_lines' attribute, so no "
+                "timestamp can be inferred. The time was set to NaN."
+            ), RuntimeWarning)
 
-        return pept.PointData(points)
-
-
-    def _fit_voxel_data(self, voxel_data, index):
-        # The voxellisation step is only computed when indexing `voxel_data`
-        voxels = voxel_data[index]
-        points = fpi_ext(voxels, self.w, self.r, self.lld_counts)
-
-        # Insert the time column and translate the coordinates from the voxel
-        # space to the physical space
-        timestamp = voxel_data.line_data[index][:, 0].mean()
-        points = np.insert(points, 0, timestamp, axis = 1)
-
-        points[:, 1:4] *= voxels.voxel_size
-        points[:, 1:4] += [voxels.xlim[0], voxels.ylim[0], voxels.zlim[0]]
-
-        return points
-
-
-    def fit(
-        self,
-        voxel_data,
-        max_workers = None,
-        verbose = True,
-    ):
-        '''Fit multiple voxellised samples of LoRs (in an instance of
-        `pept.VoxelData`) and return the tracked tracer locations.
-
-        The input `pept.VoxelData` class can voxellise samples of LoRs (from a
-        `pept.LineData`) in parallel, *on demand* - that is, the voxels will
-        not be stored in memory all at once, only when needed.
-
-        This is a convenience function that asynchronously iterates through the
-        samples in a `VoxelData`, finding the tracer locations. For more
-        fine-grained control over the tracking, the `fit_sample` method can be
-        used for individual samples.
-
-        Parameters
-        ----------
-        voxel_data: pept.VoxelData
-            The voxellised samples of LoRs; the `pept.VoxelData` class can
-            compute the voxellisation steps in parallel, *on-demand*,
-            minimising the amount of memory needed at once.
-
-        max_workers: int, optional
-            The maximum number of threads that will be used for asynchronously
-            finding the tracers' positions. If unset (`None`), the maximum
-            number of threads available on the machine will be used.
-
-        verbose : bool, default True
-            Provide extra information when tracking: time the operation and
-            show a progress bar.
-
-        Returns
-        -------
-        locations : pept.PointData
-            The tracer locations found.
-
-        Raises
-        ------
-        TypeError
-            If the input `voxel_data` is not an instance of `pept.VoxelData`
-            (or subclass thereof).
-
-        '''
-        if not isinstance(voxel_data, pept.VoxelData):
-            raise TypeError(textwrap.fill((
-                "The input `voxel_data` must be an instance of "
-                f"`pept.VoxelData`. Received `{type(voxel_data)}`."
-            )))
-
-        with ThreadPoolExecutor(max_workers = max_workers) as executor:
-            futures = []
-
-            for index in range(len(voxel_data)):
-                futures.append(executor.submit(
-                    self._fit_voxel_data,
-                    voxel_data,
-                    index,
-                ))
-
-            if verbose:
-                futures = tqdm(futures)
-                time_start = time.time()
-
-            points = [f.result() for f in futures]
-
-            if verbose:
-                time_end = time.time()
-                print(f"Fitted data in {time_end - time_start} s")
-
-        points = np.vstack(points)
-
-        return pept.PointData(points)
-
-
-    def __str__(self):
-        # Shown when calling print(class)
-        docstr = (
-            f"w =           {self.w}\n"
-            f"r =           {self.r}\n"
-            f"lld_counts =  {self.lld_counts}"
+        return pept.PointData(
+            points,
+            columns = ["t", "x", "y", "z", "error_x", "error_y", "error_z"],
         )
-
-        return docstr
-
-
-    def __repr__(self):
-        # Shown when writing the class on a REPL
-        docstr = (
-            "Class instance that inherits from `FPI`.\n"
-            f"Type:\n{type(self)}\n\n"
-            "Attributes\n"
-            "----------\n"
-            f"{self.__str__()}\n"
-        )
-
-        return docstr

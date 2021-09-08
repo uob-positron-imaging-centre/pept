@@ -28,6 +28,7 @@ from    joblib              import  Parallel, delayed
 from    .iterable_samples   import  PEPTObject
 from    .point_data         import  PointData
 from    .line_data          import  LineData
+from    .voxel_data         import  Voxels
 
 
 
@@ -180,6 +181,32 @@ class PointDataFilter(Filter):
     ):
         return Filter.fit(
             self, point_data, executor, max_workers, verbose = verbose
+        )
+
+
+
+
+class VoxelsFilter(Filter):
+    '''An abstract class that defines a filter for samples of `pept.Voxels`.
+
+    An implementor must define the method `def fit_sample(self, sample)`.
+
+    A default `fit` method is provided for convenience, calling `fit_sample`
+    on each sample from an iterable according to a given execution policy
+    (e.g. "sequential", "joblib", or `concurrent.futures.Executor` subclasses,
+    such as `ProcessPoolExecutor` or `MPIPoolExecutor`).
+    '''
+
+    @beartype
+    def fit(
+        self,
+        line_data: Iterable[Voxels],
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
+        return Filter.fit(
+            self, line_data, executor, max_workers, verbose = verbose
         )
 
 

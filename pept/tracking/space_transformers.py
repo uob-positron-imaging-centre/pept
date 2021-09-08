@@ -8,18 +8,62 @@
 
 import textwrap
 
-import  numpy           as      np
-import  numba           as      nb
+import  numpy               as      np
+from    scipy.interpolate   import  interp1d
 
-from    pept            import  PointData, LineData, Voxels
-from    pept.base       import  LineDataFilter, PointDataFilter
-
-from    .transformers   import  Stack
+from    pept                import  LineData, PointData, Voxels
+from    pept.base           import  LineDataFilter, PointDataFilter
 
 
 
 
-class Voxelliser(LineDataFilter):
+class Voxelize(LineDataFilter):
+    '''Asynchronously voxelize samples of lines from a `pept.LineData`.
+
+    Filter signature:
+
+    ::
+
+        LineData -> Voxelize.fit_sample -> PointData
+
+    This filter is much more memory-efficient than voxelizing all samples of
+    LoRs at once - which often overflows the available memory. Most often this
+    is used alongside voxel-based tracking algorithms, e.g.
+    ``pept.tracking.FPI``:
+
+    >>> from pept.tracking import *
+    >>> pipeline = pept.Pipeline([
+    >>>     Voxelize((50, 50, 50)),
+    >>>     FPI(3, 0.4),
+    >>>     Stack(),
+    >>> ])
+
+    Parameters
+    ----------
+    number_of_voxels : 3-tuple
+        A tuple-like containing exactly three integers specifying the number of
+        voxels to be used in each dimension.
+
+    xlim : (2,) list[float], optional
+        The lower and upper boundaries of the voxellised volume in the
+        x-dimension, formatted as [x_min, x_max]. If undefined, it is
+        inferred from the bounding box of each sample of lines.
+
+    ylim : (2,) list[float], optional
+        The lower and upper boundaries of the voxellised volume in the
+        y-dimension, formatted as [y_min, y_max]. If undefined, it is
+        inferred from the bounding box of each sample of lines.
+
+    zlim : (2,) list[float], optional
+        The lower and upper boundaries of the voxellised volume in the
+        z-dimension, formatted as [z_min, z_max]. If undefined, it is
+        inferred from the bounding box of each sample of lines.
+
+    set_lines : (N, 7) numpy.ndarray or pept.LineData, optional
+        If defined, set the system limits upon creating the class to the
+        bounding box of the lines in `set_lines`.
+
+    '''
 
     def __init__(
         self,
@@ -150,11 +194,11 @@ class Voxelliser(LineDataFilter):
 
 
     def fit_sample(self, sample_lines):
-        if isinstance(sample_lines, LineData):
-            sample_lines = sample_lines.lines
+        if not isinstance(sample_lines, LineData):
+            sample_lines = LineData(sample_lines)
 
-        return Voxels.from_lines(
-            sample_lines,
+        vox = Voxels.from_lines(
+            sample_lines.lines,
             self.number_of_voxels,
             self.xlim,
             self.ylim,
@@ -162,109 +206,56 @@ class Voxelliser(LineDataFilter):
             verbose = False,
         )
 
+        # Save the constituent LoRs as a hidden attribute
+        vox.attrs["_lines"] = sample_lines
+        return vox
 
 
 
-@nb.jit
-def polyfit(x, y, deg):
-    '''Fit polynomial of order `deg` against x, y data points.'''
-    mat = np.zeros(shape = (x.shape[0], deg + 1))
-    mat[:, 0] = np.ones_like(x)
-    for n in range(1, deg + 1):
-        mat[:, n] = x**n
 
-    p = np.linalg.lstsq(mat, y)[0]
-    return p
+class Interpolate(PointDataFilter):
+    '''Interpolate between data points at a fixed sampling rate; useful for
+    Eulerian fields computation.
 
+    Filter signature:
 
-@nb.jit
-def polyder(p):
-    '''Differentiate polynomial p.'''
-    d = np.zeros(shape = (p.shape[0] - 1))
-    for n in range(d.shape[0]):
-        d[n] = (n + 1) * p[n + 1]
-    return d
+    ::
 
+        PointData -> Interpolate.fit_sample -> PointData
 
-@nb.jit
-def polyval(p, x):
-    '''Evaluate polynomial p(x) using Horner's Method.
+    By default, the linear interpolator `scipy.interpolate.interp1d` is used.
+    You can specify a different interpolator and keyword arguments to send it.
+    E.g. nearest-neighbour interpolation: ``Interpolate(1., kind = "nearest")``
+    or cubic interpolation: ``Interpolate(1., kind = "cubic")``.
 
-    New numpy.polynomial.Polynomial format:
-        p[0] + p[1] * x + p[2] * x^2 + ...
+    All data columns except timestamps are interpolated.
     '''
-    result = np.zeros_like(x)
-    for coeff in p[::-1]:
-        result = x * result + coeff
-    return result
+
+    def __init__(self, timestep, interpolator = interp1d, **kwargs):
+        self.timestep = float(timestep)
+        self.interpolator = interpolator
+        self.kwargs = kwargs
 
 
-@nb.jit
-def compute_velocities(points, window, deg):
-    # Pre-allocate velocities matrix, columns [vx, vy, vz]
-    v = np.zeros((points.shape[0], 3))
+    def fit_sample(self, sample):
+        if not isinstance(sample, PointData):
+            sample = PointData(sample)
 
-    # Half-window size
-    hw = (window - 1) // 2
+        if not len(sample):
+            return sample[0:0]
 
-    # Infer velocities of first hw points
-    w = points[:window]
-    vx = polyder(polyfit(w[:, 0], w[:, 1], deg))
-    vy = polyder(polyfit(w[:, 0], w[:, 2], deg))
-    vz = polyder(polyfit(w[:, 0], w[:, 3], deg))
+        # Create interpolators for each dimension (column) wrt time
+        interps = [
+            self.interpolator(
+                sample.points[:, 0],
+                sample.points[:, i],
+                **self.kwargs,
+            ) for i in range(1, sample.points.shape[1])
+        ]
 
-    for i in range(hw + 1):
-        v[i, 0] = polyval(vx, w[i, 0:1])[0]
-        v[i, 1] = polyval(vy, w[i, 0:1])[0]
-        v[i, 2] = polyval(vz, w[i, 0:1])[0]
+        # Sampling points, between the first and last timestamps
+        sampling = np.arange(sample.points[0, 0], sample.points[-1, 0],
+                             self.timestep)
 
-    # Compute velocities in a sliding window
-    for i in range(hw + 1, points.shape[0] - hw):
-        w = points[i - hw:i + hw + 1]
-
-        vx = polyder(polyfit(w[:, 0], w[:, 1], deg))
-        vy = polyder(polyfit(w[:, 0], w[:, 2], deg))
-        vz = polyder(polyfit(w[:, 0], w[:, 3], deg))
-
-        v[i, 0] = polyval(vx, points[i, 0:1])[0]
-        v[i, 1] = polyval(vy, points[i, 0:1])[0]
-        v[i, 2] = polyval(vz, points[i, 0:1])[0]
-
-    # Infer velocities of last hw points
-    for i in range(points.shape[0] - hw, points.shape[0]):
-        v[i, 0] = polyval(vx, points[i, 0:1])[0]
-        v[i, 1] = polyval(vy, points[i, 0:1])[0]
-        v[i, 2] = polyval(vz, points[i, 0:1])[0]
-
-    return v
-
-
-
-
-class Velocity(PointDataFilter):
-
-    def __init__(self, window, degree = 2, absolute = False):
-        self.window = int(window)
-        assert self.window % 2 == 1, "The `window` must be an odd number!"
-        self.degree = int(degree)
-        self.absolute = bool(absolute)
-
-
-    def fit_sample(self, samples):
-        if not isinstance(samples, PointData):
-            samples = PointData(samples)
-
-        vels = compute_velocities(samples.points, self.window, self.degree)
-
-        # Create new object like sample with the extra velocity columns
-        if self.absolute:
-            absvels = np.linalg.norm(vels, axis = 1)
-            points = np.c_[samples.points, absvels]
-            columns = samples.columns + ["v"]
-        else:
-            points = np.c_[samples.points, vels]
-            columns = samples.columns + ["vx", "vy", "vz"]
-
-        new_sample = samples.copy(data = points, columns = columns)
-
-        return new_sample
+        data = np.vstack([sampling] + [interp(sampling) for interp in interps])
+        return sample.copy(data = data.T)
