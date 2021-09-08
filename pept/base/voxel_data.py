@@ -53,7 +53,7 @@ from    .line_data              import  LineData
 
 
 
-class Voxels(np.ndarray, PEPTObject):
+class Voxels(PEPTObject, np.ndarray):
     '''A class that manages a single 3D voxel space, including tools for voxel
     traversal of lines, manipulation and visualisation.
 
@@ -75,8 +75,8 @@ class Voxels(np.ndarray, PEPTObject):
     It is possible to add multiple samples of lines to the same voxel space
     using the `add_lines` method.
 
-    If you want to voxellise multiple samples of lines, see the `VoxelData`
-    class.
+    If you want to voxellise multiple samples of lines, see the
+    ``pept.tracking.Voxelize`` class.
 
     Attributes
     ----------
@@ -110,51 +110,6 @@ class Voxels(np.ndarray, PEPTObject):
         Each dimension's gridlines are stored as a numpy of the voxel
         delimitations, such that it has length (M + 1), where M is the number
         of voxels in given dimension.
-
-    Methods
-    -------
-    save(filepath)
-        Save a `Voxels` instance as a binary `pickle` object.
-
-    load(filepath)
-        Load a saved / pickled `Voxels` object from `filepath`.
-
-    from_lines(lines, number_of_voxels, xlim = None, ylim = None, zlim = None,\
-               verbose = True)
-        Create a voxel space and traverse / voxellise a given sample of
-        `lines`.
-
-    empty(number_of_voxels, xlim, ylim, zlim, verbose = False)
-        Create an empty voxel space for the 3D cube bounded by `xlim`,
-        `ylim` and `zlim`.
-
-    get_cutoff(p1, p2)
-        Return a numpy array containing the minimum and maximum value found
-        across the two input arrays.
-
-    add_lines(lines, verbose = False)
-        Voxellise a sample of lines, adding 1 to each voxel traversed, for
-        each line in the sample.
-
-    cube_trace(index, color = None, opacity = 0.4, colorbar = True,\
-               colorscale = "magma")
-        Get the Plotly `Mesh3d` trace for a single voxel at `index`.
-
-    cubes_traces(condition = lambda voxels: voxels > 0, color = None,\
-                 opacity = 0.4, colorbar = True, colorscale = "magma")
-        Get a list of Plotly `Mesh3d` traces for all voxels selected by the
-        `condition` filtering function.
-
-    voxels_trace(condition = lambda voxel_data: voxel_data > 0, size = 4,\
-                 color = None, opacity = 0.4, colorbar = True,\
-                 colorscale = "Magma", colorbar_title = None)
-        Create and return a trace for all the voxels in this class, with
-        possible filtering.
-
-    heatmap_trace(ix = None, iy = None, iz = None, width = 0,\
-                  colorscale = "Magma", transpose = True)
-        Create and return a Plotly `Heatmap` trace of a 2D slice through the
-        voxels.
 
     Notes
     -----
@@ -316,6 +271,8 @@ class Voxels(np.ndarray, PEPTObject):
             for i, lim in enumerate((voxels._xlim, voxels._ylim, voxels._zlim))
         ])
 
+        voxels._attrs = dict()
+
         return voxels
 
 
@@ -331,6 +288,7 @@ class Voxels(np.ndarray, PEPTObject):
         self._zlim = getattr(voxels, "_zlim", None)
 
         self._voxel_grids = getattr(voxels, "_voxel_grids", None)
+        self._attrs = getattr(voxels, "_attrs", None)
 
 
     def __reduce__(self):
@@ -349,6 +307,7 @@ class Voxels(np.ndarray, PEPTObject):
             self._ylim,
             self._zlim,
             self._voxel_grids,
+            self._attrs,
         )
 
         # Return a tuple that replaces the parent's __setstate__ tuple with
@@ -362,15 +321,16 @@ class Voxels(np.ndarray, PEPTObject):
         # attributes-when-pickling-subclass-of-numpy-array
 
         # Set the class attributes
-        self._voxel_grids = state[-1]
-        self._zlim = state[-2]
-        self._ylim = state[-3]
-        self._xlim = state[-4]
-        self._voxel_size = state[-5]
-        self._number_of_voxels = state[-6]
+        self._attrs = state[-1]
+        self._voxel_grids = state[-2]
+        self._zlim = state[-3]
+        self._ylim = state[-4]
+        self._xlim = state[-5]
+        self._voxel_size = state[-6]
+        self._number_of_voxels = state[-7]
 
         # Call the parent's __setstate__ with the other tuple elements.
-        super(Voxels, self).__setstate__(state[0:-6])
+        super(Voxels, self).__setstate__(state[0:-7])
 
 
     @property
@@ -406,6 +366,11 @@ class Voxels(np.ndarray, PEPTObject):
     @property
     def voxel_grids(self):
         return self._voxel_grids
+
+
+    @property
+    def attrs(self):
+        return self._attrs
 
 
     @staticmethod

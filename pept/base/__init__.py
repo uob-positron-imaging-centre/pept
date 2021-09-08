@@ -28,6 +28,7 @@ from    .pipelines          import  Transformer
 from    .pipelines          import  Filter
 from    .pipelines          import  LineDataFilter
 from    .pipelines          import  PointDataFilter
+from    .pipelines          import  VoxelsFilter
 from    .pipelines          import  Reducer
 from    .pipelines          import  Pipeline
 

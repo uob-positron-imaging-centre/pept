@@ -37,7 +37,8 @@
 import  pickle
 import  operator
 import  textwrap
-from    textwrap            import  indent
+from    copy                import  copy as shallowcopy
+from    copy                import  deepcopy
 from    dataclasses         import  dataclass
 from    numbers             import  Number
 from    collections.abc     import  Collection
@@ -53,67 +54,82 @@ from    tqdm                import  tqdm
 class PEPTObject:
     '''Base class for all PEPT-oriented objects.'''
 
-    def extra_attributes(self, exclude = {}):
-        '''Return a dictionary of *extra* attributes defined on this class
-        instance; this corresponds to all non-callable attributes whose name
-        does not start with an underscore (which are considered hidden).
-
-        You can also define a set `exclude` of attribute names to ignore.
-        '''
-        exclude = set(exclude)
-        attrs = dict()
-
-        for attr in dir(self):
-            if not attr.startswith("_") and attr not in exclude:
-                memb = getattr(self, attr)
-                if not callable(memb):
-                    attrs[attr] = memb
-
-        return attrs
-
-
-    def hidden_attributes(self, exclude = {}):
-        '''Return a dictionary of *hidden* attributes defined on this class
-        instance; this corresponds to all non-callable attributes whose name
-        starts with an underscore, but not *two* underscores (which are
-        considered private).
-
-        You can also define a set `exclude` of attribute names to ignore.
-        '''
-        exclude = set(exclude) | {"_abc_impl"}
-        attrs = dict()
-
-        for attr in dir(self):
-            if attr.startswith("_") and not attr.startswith("__") and \
-                    attr not in exclude:
-                memb = getattr(self, attr)
-                if not callable(memb):
-                    attrs[attr] = memb
-
-        return attrs
-
-
-    def copy(self):
+    def copy(self, deep = True):
         '''Create a deep copy of an instance of this class, including all
         inner attributes.
         '''
-        return pickle.loads(pickle.dumps(self))
+        return deepcopy(self) if deep else shallowcopy(self)
 
 
-    def __repr__(self, **kwargs):
+    def save(self, filepath):
+        '''Save a `PEPTObject` instance as a binary `pickle` object.
+
+        Saves the full object state, including inner attributes, in a
+        portable binary format. Load back the object using the `load` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Examples
+        --------
+        Save a `LineData` instance, then load it back:
+
+        >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+        >>> lines.save("lines.pickle")
+
+        >>> lines_reloaded = pept.LineData.load("lines.pickle")
+
+        '''
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(filepath):
+        '''Load a saved / pickled `PEPTObject` object from `filepath`.
+
+        Most often the full object state was saved using the `.save` method.
+
+        Parameters
+        ----------
+        filepath : filename or file handle
+            If filepath is a path (rather than file handle), it is relative
+            to where python is called.
+
+        Returns
+        -------
+        pept.PEPTObject subclass instance
+            The loaded object.
+
+        Examples
+        --------
+        Save a `LineData` instance, then load it back:
+
+        >>> lines = pept.LineData([[1, 2, 3, 4, 5, 6, 7]])
+        >>> lines.save("lines.pickle")
+
+        >>> lines_reloaded = pept.LineData.load("lines.pickle")
+
+        '''
+        with open(filepath, "rb") as f:
+            obj = pickle.load(f)
+
+        return obj
+
+
+    def __repr__(self):
         # Return pretty string representation of an arbitrary object
-        attrs = self.extra_attributes()
-        attrs.update(kwargs)
-
         docs = []
-        for attr, memb in attrs.items():
-            if (isinstance(memb, np.ndarray) and memb.ndim > 1) or \
-                    isinstance(memb, PEPTObject):
-                docs.append(f"{attr} = \n{indent(str(memb), '  ')}")
-            else:
-                docs.append(f"{attr} = {memb}")
+        for attr in dir(self):
+            if not attr.startswith("_"):
+                memb = getattr(self, attr)
+                if not callable(memb):
+                    docs.append(f"{attr} = {memb}")
 
-        name = type(self).__name__
+        name = self.__class__.__name__
         underline = "-" * len(name)
         return f"{name}\n{underline}\n" + "\n".join(docs)
 
@@ -275,7 +291,14 @@ class IterableSamples(PEPTObject, Collection):
 
     '''
 
-    def __init__(self, data, sample_size = None, overlap = None, **kwargs):
+    def __init__(
+        self,
+        data,
+        sample_size = None,
+        overlap = None,
+        columns = [],
+        **kwargs,
+    ):
         '''`IterableSamples` class constructor.
 
         Parameters
@@ -284,7 +307,7 @@ class IterableSamples(PEPTObject, Collection):
             The data that will be iterated over in samples; most commonly a
             NumPy array.
 
-        sample_size : int or Iterable[Int]
+        sample_size : int or Iterable[Int], optional
             The number of rows in `data` to be returned in a single sample. A
             `sample_size` of 0 yields all the data as a single sample.
 
@@ -296,9 +319,23 @@ class IterableSamples(PEPTObject, Collection):
 
         '''
 
-        # Allow creating an IterableSamples from a list of samples by stacking
-        self._data = np.asarray(data, dtype = float, order = "C")
+        # If not enough columns were supplied, append "col4", "col5", etc.
+        if len(columns) < data.shape[1]:
+            columns = list(columns) + [
+                f"col{i}" for i in range(len(columns), data.shape[1])
+            ]
+        elif len(columns) > data.shape[1]:
+            columns = columns[:data.shape[1]]
 
+        self._data = np.asarray(data, dtype = float, order = "C")
+        self._columns = columns
+        self._attrs = kwargs
+
+        self._set(sample_size = sample_size, overlap = overlap)
+        self._index = 0
+
+
+    def _set(self, sample_size = None, overlap = None):
         # If the overlap is defined, ensure it has the same type as sample_size
         if overlap is not None and not isinstance(overlap, type(sample_size)):
             raise TypeError(textwrap.fill((
@@ -310,22 +347,28 @@ class IterableSamples(PEPTObject, Collection):
         self._overlap = overlap
         self.sample_size = sample_size
 
-        self._index = 0
-
-        # Set extra attributes passed as keyword arguments
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
 
     @property
     def data(self):
         return self._data
 
 
-    @data.setter
-    def data(self, data):
-        self._data = np.asarray(data, dtype = float, order = "C")
-        self.sample_size = self.sample_size    # Re-run type-checking
+    @property
+    def columns(self):
+        return self._columns
+
+
+    @property
+    def attrs(self):
+        return self._attrs
+
+
+    def extra_attrs(self):
+        return {k: v for k, v in self.attrs.items() if not k.startswith("_")}
+
+
+    def hidden_attrs(self):
+        return {k: v for k, v in self.attrs.items() if k.startswith("_")}
 
 
     @property
@@ -346,6 +389,8 @@ class IterableSamples(PEPTObject, Collection):
                 f"Received array with shape `{samples_indices.shape}`."
             )))
 
+        self._sample_size = None
+        self._overlap = None
         self._samples_indices = samples_indices
 
 
@@ -357,8 +402,8 @@ class IterableSamples(PEPTObject, Collection):
     @sample_size.setter
     def sample_size(self, sample_size):
         if sample_size is None:
-            self._sample_size = None
-            self._overlap = None
+            self._sample_size = len(self.data)
+            self._overlap = 0
             self._samples_indices = np.array([[0, len(self.data)]])
         elif isinstance(sample_size, Number):
             # If the overlap is of a different type, reset it
@@ -419,48 +464,46 @@ class IterableSamples(PEPTObject, Collection):
         self.sample_size = self._sample_size
 
 
-    def extra_attributes(self, exclude={}):
-        exclude = set(exclude) | {"sample_size", "overlap",
-                                  "samples_indices", "data"}
-        return PEPTObject.extra_attributes(self, exclude)
-
-
-    def hidden_attributes(self, exclude={}):
-        exclude = set(exclude) | {"_sample_size", "_overlap", "_index",
-                                  "_samples_indices", "_data"}
-        return PEPTObject.hidden_attributes(self, exclude)
-
-
     def copy(
         self,
+        deep = True,
         data = None,
-        sample_size = None,
-        overlap = None,
         extra = True,
         hidden = True,
-        **kwargs
+        **attrs,
     ):
-        '''Construct a similar object, optionally with different `data`,
-        `sample_size` and `overlap`.
+        '''Construct a similar object, optionally with different `data`. If
+        `extra`, extra attributes are propagated; same for `hidden`.
         '''
 
+        # Propagate needed attributes
+        if extra and hidden:
+            attrs.update(self.attrs)
+        elif extra:
+            attrs.update(self.extra_attrs())
+        elif hidden:
+            attrs.update(self.hidden_attrs())
+
+        set_samples_indices = False
         if data is None:
-            return PEPTObject.copy(self)
+            data = self.data.copy() if deep else self.data
+            attrs["columns"] = self.columns
 
-        new_instance = self.__class__(data, sample_size, overlap)
+            # If copying the existing inner data and we have custom
+            # samples_indices, set them afterwards
+            if self.sample_size is None:
+                set_samples_indices = True
+            else:
+                attrs["sample_size"] = self.sample_size
+                attrs["overlap"] = self.overlap
 
-        # Propagate all hidden / extra attributes
-        if extra:
-            for k, v in self.extra_attributes().items():
-                setattr(new_instance, k, v)
+        if "columns" not in attrs:
+            attrs["columns"] = self.columns
 
-        if hidden:
-            for k, v in self.hidden_attributes().items():
-                setattr(new_instance, k, v)
+        new_instance = self.__class__(data, **attrs)
 
-        for k, v in kwargs.items():
-            setattr(new_instance, k, v)
-
+        if set_samples_indices:
+            new_instance.samples_indices = self.samples_indices
         return new_instance
 
 
@@ -474,11 +517,13 @@ class IterableSamples(PEPTObject, Collection):
 
 
     def __getitem__(self, n):
-        # Defined so that samples can be accessed as class_instance[0]
-        indices = self.samples_indices
-        samples_indices = None
+        # String indexing into columns
+        if isinstance(n, str):
+            return self.data[:, self.columns.index(n)]
 
-        # If n is a slice or iterable, return another IterableSamples
+        # Numeric indexing into samples
+        indices = self.samples_indices
+
         if isinstance(n, slice):
             # Construct explicit list of indices from slice
             n = np.arange(len(self.samples_indices))[n]
@@ -499,23 +544,21 @@ class IterableSamples(PEPTObject, Collection):
                 samples_indices[i, :] = indices[nsample] - offset
 
             data = self.data[mask]
-            sample_sizes = None
 
-        else:
-            # Otherwise return a single sample
-            while n < 0:
-                n += len(self)
+            new_instance = self.__class__(
+                data, columns = self.columns, **self.attrs
+            )
+            new_instance.samples_indices = samples_indices
+            return new_instance
 
-            data = self.data[indices[n, 0]:indices[n, 1]]
-            sample_sizes = len(data)
+        # Otherwise return a single sample
+        while n < 0:
+            n += len(self)
 
-        new_instance = self.copy(data, sample_sizes)
-
-        # Set `samples_indices` directly if needed (e.g. for slices)
-        if samples_indices is not None:
-            new_instance._samples_indices = samples_indices
-
-        return new_instance
+        data = self.data[indices[n, 0]:indices[n, 1]]
+        return self.__class__(
+            data, len(data), columns = self.columns, **self.attrs
+        )
 
 
     def __iter__(self):
