@@ -128,10 +128,20 @@ class Velocity(PointDataFilter):
         self.degree = int(degree)
         self.absolute = bool(absolute)
 
+        assert self.window > self.degree, "The `window` must be >`degree`!"
+
 
     def fit_sample(self, samples):
         if not isinstance(samples, PointData):
             samples = PointData(samples)
+
+        print(f"len(samples.points) = {len(samples.points)}")
+
+        if not len(samples.points):
+            return self._empty_sample(samples)
+
+        if self.window >= len(samples.points):
+            return self._invalid_sample(samples)
 
         vels = compute_velocities(samples.points, self.window, self.degree)
 
@@ -147,3 +157,29 @@ class Velocity(PointDataFilter):
         new_sample = samples.copy(data = points, columns = columns)
 
         return new_sample
+
+
+    def _empty_sample(self, samples):
+        if self.absolute:
+            columns = samples.columns + ["v"]
+        else:
+            columns = samples.columns + ["vx", "vy", "vz"]
+
+        return samples.copy(
+            data = np.empty((0, len(columns))),
+            columns = columns,
+        )
+
+
+    def _invalid_sample(self, samples):
+        if self.absolute:
+            columns = samples.columns + ["v"]
+            vels = np.full(len(samples.points), np.nan)
+        else:
+            columns = samples.columns + ["vx", "vy", "vz"]
+            vels = np.full((len(samples.points), 3), np.nan)
+
+        return samples.copy(
+            data = np.c_[samples.points, vels],
+            columns = columns,
+        )

@@ -338,7 +338,6 @@ def test_voxelizer():
 
 
 def test_interpolate():
-    rng = np.random.default_rng(0)
     points_raw = np.arange(60).reshape(10, 6)
 
     points = pept.PointData(
@@ -371,8 +370,8 @@ def test_velocity():
     assert "v" in Velocity(5, absolute = True).fit_sample(points).columns
 
     # Testing different settings
-    Velocity(11).fit(points, "sequential")
-    Velocity(window = 7, degree = 5).fit(points, "sequential")
+    Velocity(3).fit(points, "sequential")
+    Velocity(window = 9, degree = 5).fit(points, "sequential")
 
 
 def test_segregate():

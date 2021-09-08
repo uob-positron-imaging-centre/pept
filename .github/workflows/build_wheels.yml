@@ -30,9 +30,6 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install Python dependencies
-        uses: py-actions/py-dependency-install@v2
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.1.1
 
@@ -50,9 +47,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.8'
-
-      - name: Install Python dependencies
-        uses: py-actions/py-dependency-install@v2
 
       - name: Build sdist
         run: python setup.py sdist
