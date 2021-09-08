@@ -10,7 +10,6 @@ import  os
 import  sys
 import  time
 import  textwrap
-from    textwrap            import  indent
 from    abc                 import  ABC, abstractmethod
 
 if sys.version_info.minor >= 9:
@@ -56,7 +55,8 @@ class Transformer(ABC, PEPTObject):
                 # If it's a nested collection, print it on a new, indented line
                 if (isinstance(memb, np.ndarray) and memb.ndim > 1) or \
                         isinstance(memb, PEPTObject):
-                    docs.append(f"{attr} = \n{indent(str(memb), '  ')}")
+                    memb_str = textwrap.indent(str(memb), '  ')
+                    docs.append(f"{attr} = \n{memb_str}")
                 else:
                     docs.append(f"{attr} = {memb}")
 

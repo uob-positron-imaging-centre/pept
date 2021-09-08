@@ -206,7 +206,6 @@ class SplitLabels(Filter):
 
         # For each unique label, create a new PointData / LineData cluster that
         # maintains / propagates all attributes (which needs a copy)
-        labels_unique = np.unique(labels[labels != -1])
         clusters = [
             self._get_cluster(sample, labels == label, lines_cols)
             for label in labels_unique

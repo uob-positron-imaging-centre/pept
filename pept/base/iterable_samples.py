@@ -438,9 +438,6 @@ class IterableSamples(PEPTObject, Collection):
             self._samples_indices = samples_indices_iterable(
                 self.data, self._sample_size
             )
-        elif sample_size is None:
-            self._overlap = None
-            self._sample_size = None
         else:
             raise TypeError("The input `sample_size` has an unknown type.")
 

@@ -52,7 +52,6 @@ from    scipy.spatial               import  cKDTree
 from    scipy.sparse.csgraph        import  minimum_spanning_tree
 
 import  pept
-from    pept                        import  PointData
 import  hdbscan
 
 from    .tco                        import  with_continuations
@@ -228,9 +227,11 @@ class Segregate(pept.base.Reducer):
 
 
     @beartype
-    def fit(self, points: Iterable[PointData]):
+    def fit(self, points: Iterable[pept.PointData]):
         # Stack the input points into a single PointData
-        points = PointData(points)
+        if not isinstance(points, pept.PointData):
+            points = pept.PointData(points)
+
         if len(points.points) == 0:
             return points.copy(
                 data = points.points[0:0],

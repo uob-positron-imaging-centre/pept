@@ -96,8 +96,6 @@ def modular_camera(
     if verbose:
         start = time.time()
 
-    data_file = data_file
-
     x = 10
 
     header_buffer_size = 1000
