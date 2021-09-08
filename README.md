@@ -98,19 +98,18 @@ The main purpose of the `pept` library is to provide a common, consistent founda
 
 For these algorithm-agnostic steps, `pept` provides five base data structures upon which the rest of the library is built:
 
-1. [`pept.LineData`](https://pept.readthedocs.io/en/latest/pept_api.html#linedata): general 3D line samples, formatted as *[time, x1, y1, z1, x2, y2, z2, extra...]*.
-2. [`pept.PointData`](https://pept.readthedocs.io/en/latest/pept_api.html#pointdata): general 3D point samples, formatted as *[time, x, y, z, extra...]*.
-3. [`pept.Pixels`](https://pept.readthedocs.io/en/latest/pept_api.html#pixels): single 2D pixellised space with physical dimensions, including fast line traversal.
-4. [`pept.Voxels`](https://pept.readthedocs.io/en/latest/pept_api.html#voxels): single 3D voxellised space with physical dimensions, including fast line traversal.
-5. [`pept.VoxelData`](https://pept.readthedocs.io/en/latest/pept_api.html#voxeldata): multiple samples of voxels, generated on demand, in parallel.
+1. [`pept.LineData`](https://pept.readthedocs.io/en/latest/manual/generated/pept.LineData.html): general 3D line samples, formatted as *[time, x1, y1, z1, x2, y2, z2, extra...]*.
+2. [`pept.PointData`](https://pept.readthedocs.io/en/latest/manual/generated/pept.PointData.html): general 3D point samples, formatted as *[time, x, y, z, extra...]*.
+3. [`pept.Pixels`](https://pept.readthedocs.io/en/latest/manual/generated/pept.Pixels.html): single 2D pixellised space with physical dimensions, including fast line traversal.
+4. [`pept.Voxels`](https://pept.readthedocs.io/en/latest/manual/generated/pept.Voxels.html): single 3D voxellised space with physical dimensions, including fast line traversal.
 
 All the data structures above are built on top of NumPy and integrate natively with the rest of the Python / SciPy ecosystem. The rest of the `pept` library is organised into submodules:
 
-- [`pept.scanners`](https://pept.readthedocs.io/en/latest/api/pept.scanners.html): converters between native scanner data and the base classes.
-- [`pept.tracking`](https://pept.readthedocs.io/en/latest/api/pept.tracking.html): radioactive tracer tracking algorithms, e.g. the Birmingham method, PEPT-ML, FPI.
-- [`pept.visualisation`](https://pept.readthedocs.io/en/latest/api/pept.visualisation.html): PEPT data visualisation subroutines.
-- [`pept.utilities`](https://pept.readthedocs.io/en/latest/api/pept.utilities.html): general-purpose helpers, e.g. `read_csv`, `traverse3d`.
-- [`pept.processing`](https://pept.readthedocs.io/en/latest/api/pept.processing.html): PEPT-oriented post-processing algorithms, e.g. `occupancy2d`.
+- [`pept.scanners`](https://pept.readthedocs.io/en/latest/manual/pept.scanners.html): converters between native scanner data and the base classes.
+- [`pept.tracking`](https://pept.readthedocs.io/en/latest/manual/pept.tracking.html): radioactive tracer tracking algorithms, e.g. the Birmingham method, PEPT-ML, FPI.
+- [`pept.plots`](https://pept.readthedocs.io/en/latest/manual/pept.plots.html): PEPT data visualisation subroutines.
+- [`pept.utilities`](https://pept.readthedocs.io/en/latest/manual/pept.utilities.html): general-purpose helpers, e.g. `read_csv`, `traverse3d`.
+- [`pept.processing`](https://pept.readthedocs.io/en/latest/manual/pept.processing.html): PEPT-oriented post-processing algorithms, e.g. `occupancy2d`.
 
 
 ## Performance

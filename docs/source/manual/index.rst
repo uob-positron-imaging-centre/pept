@@ -28,6 +28,7 @@ Base Classes
 
    pept.LineData
    pept.PointData
+   pept.Pixels
    pept.Voxels
    pept.Pipeline
 
