@@ -9,5 +9,4 @@ tqdm>=4.41.1
 pandas>=1.0.3
 cma>=3.0.3
 beartype>=0.7.1
-numba>=0.50.0
 natsort>=5.5.0

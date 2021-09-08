@@ -60,13 +60,20 @@ from    .trajectory_separation  import  Segregate
 
 # Import other objects defined elsewhere that should be available here
 from    .transformers           import  Stack
+
 from    .transformers           import  SplitLabels
+from    .transformers           import  SplitAll
+
 from    .transformers           import  Centroids
 from    .transformers           import  LinesCentroids
-from    .transformers           import  Condition
 
-from    .space_transformers     import  Voxelliser
-from    .space_transformers     import  Velocity
+from    .transformers           import  Condition
+from    .transformers           import  Remove
+
+from    .space_transformers     import  Voxelize
+from    .space_transformers     import  Interpolate
+
+from    .post                   import  Velocity
 
 
 __license__ = "GNU v3.0"
