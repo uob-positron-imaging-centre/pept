@@ -166,19 +166,21 @@ class BirminghamMethod(pept.base.LineDataFilter):
             sample = pept.LineData(sample)
 
         locations, used = birmingham_method(sample.lines, self.fopt)
-        columns = ["t", "x", "y", "z", "error"]
 
         # Propagate any LineData attributes besides `columns`
-        attributes = sample.extra_attributes()
-        attributes["columns"] = columns
+        attrs = sample.extra_attrs()
 
-        locations = pept.PointData([locations], **attributes)
+        locations = pept.PointData(
+            [locations],
+            columns = ["t", "x", "y", "z", "error"],
+            **attrs,
+        )
 
-        # If `get_used`, also attach a `._lines` attribute with lines
+        # If `get_used`, also attach a `._lines` attribute with the lines used
         if self.get_used:
-            lines = sample.copy()
-            lines.lines = np.c_[lines.lines, used]
-            lines.columns += ["used"]
-            locations._lines = lines
+            locations.attrs["_lines"] = sample.copy(
+                data = np.c_[sample.lines, used],
+                columns = sample.columns + ["used"],
+            )
 
         return locations

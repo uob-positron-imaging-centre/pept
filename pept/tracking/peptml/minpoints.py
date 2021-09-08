@@ -406,10 +406,11 @@ class Minpoints(pept.base.LineDataFilter):
 
         # Add optional metadata to the points; because they have an underscore,
         # they won't be propagated when new objects are constructed
-        points._num_lines = self.num_lines
-        points._max_distance = self.max_distance
-        points._cutoffs = self.cutoffs
+        points.attrs["_num_lines"] = self.num_lines
+        points.attrs["_max_distance"] = self.max_distance
+        points.attrs["_cutoffs"] = self.cutoffs
+
         if self.append_indices:
-            points._lines = sample_lines
+            points.attrs["_lines"] = sample_lines
 
         return points

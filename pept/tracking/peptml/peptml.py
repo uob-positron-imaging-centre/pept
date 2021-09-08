@@ -1428,11 +1428,10 @@ class HDBSCAN(pept.base.PointDataFilter):
 
         # If there are no points, return empty PointData with the same attrs
         if len(points) <= 1:
-            clustered_points = np.empty((0, points.shape[1] + 1))
-            clustered_points = sample_points.copy(data = clustered_points)
-            clustered_points.columns = clustered_points.columns + ["labels"]
-
-            return clustered_points
+            return sample_points.copy(
+                data = np.empty((0, points.shape[1] + 1)),
+                columns = sample_points.columns + ["label"],
+            )
 
         # Inject artificial cluster outside FoV to enforce characteristic
         # length. Will remove labels given to those points after fitting
@@ -1469,7 +1468,7 @@ class HDBSCAN(pept.base.PointDataFilter):
         _, labels[good] = np.unique(labels[good], return_inverse = True)
 
         # Construct new PointData instance with the same attributes
-        clustered_points = sample_points.copy(data = np.c_[points, labels])
-        clustered_points.columns = clustered_points.columns + ["labels"]
-
-        return clustered_points
+        return sample_points.copy(
+            data = np.c_[points, labels],
+            columns = sample_points.columns + ["label"],
+        )

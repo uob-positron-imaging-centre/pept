@@ -37,9 +37,9 @@
 
 import  os
 import  sys
+import  warnings
 
 from    beartype                    import  beartype
-from    typing                      import  Union
 
 if sys.version_info.minor >= 9:
     # Python 3.9
@@ -57,7 +57,6 @@ import  hdbscan
 
 from    .tco                        import  with_continuations
 from    .distance_matrix_reachable  import  distance_matrix_reachable
-from    ..transformers              import  Stack
 
 
 
@@ -117,6 +116,13 @@ def trajectory_errors(
 class Segregate(pept.base.Reducer):
     '''Segregate the intertwined points from multiple trajectories into
     individual paths.
+
+    Reducer signature:
+
+    ::
+
+        pept.PointData -> Segregate.fit_sample -> pept.PointData
+        list[pept.PointData] -> Segregate.fit_sample -> pept.PointData
 
     The points in `point_data` (a numpy array or `pept.PointData`) are used
     to construct a minimum spanning tree in which every point can only be
@@ -226,7 +232,10 @@ class Segregate(pept.base.Reducer):
         # Stack the input points into a single PointData
         points = PointData(points)
         if len(points.points) == 0:
-            raise ValueError("No points to segregate.")
+            return points.copy(
+                data = points.points[0:0],
+                columns = points.columns + ["label"],
+            )
 
         pts = points.points
 
@@ -248,25 +257,29 @@ class Segregate(pept.base.Reducer):
         mst_edges = np.vstack((mst.row, mst.col, mst.data)).T
         mst_edges = mst_edges[mst_edges[:, 2].argsort()]
 
-        # Create the single linkage tree from the minimum spanning tree edges
-        # using internal hdbscan methods (because they're damn fast). This
-        # should be a fairly quick step.
-        linkage_tree = hdbscan._hdbscan_linkage.label(mst_edges)
-        linkage_tree = hdbscan.plots.SingleLinkageTree(linkage_tree)
+        # Ignore deprecation warning from HDBSCAN's use of `np.bool`
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category = DeprecationWarning)
 
-        # Cut the single linkage tree at `trajectory_cut_distance` and get the
-        # cluster labels, setting clusters smaller than `min_trajectory_size`
-        # to -1 (i.e. noise).
-        labels = linkage_tree.get_clusters(
-            self.cut_distance,
-            self.min_trajectory_size,
-        )
+            # Create the single linkage tree from the minimum spanning tree
+            # edges using internal hdbscan methods (because they're damn fast).
+            # This should be a fairly quick step.
+            linkage_tree = hdbscan._hdbscan_linkage.label(mst_edges)
+            linkage_tree = hdbscan.plots.SingleLinkageTree(linkage_tree)
+
+            # Cut the single linkage tree at `trajectory_cut_distance` and get
+            # the cluster labels, setting clusters smaller than
+            # `min_trajectory_size` to -1 (i.e. noise).
+            labels = linkage_tree.get_clusters(
+                self.cut_distance,
+                self.min_trajectory_size,
+            )
 
         # Append the labels to `pts`.
-        pts = np.append(pts, labels[:, np.newaxis], axis = 1)
-        attributes = points.extra_attributes()
-        attributes["columns"] = attributes["columns"] + ["labels"]
-        return pept.PointData(pts, **attributes)
+        return points.copy(
+            data = np.c_[pts, labels],
+            columns = points.columns + ["label"],
+        )
 
 
 
