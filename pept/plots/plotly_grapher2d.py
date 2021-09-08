@@ -43,7 +43,6 @@ import  plotly.graph_objects    as          go
 from    plotly.subplots         import      make_subplots
 
 import  pept
-from    pept.tracking           import      Stack
 
 
 
@@ -101,43 +100,6 @@ class PlotlyGrapher2D:
         A Plotly.Figure instance, with any number of subplots (as defined by
         `rows` and `cols`) pre-configured for PEPT data.
 
-    Methods
-    -------
-    create_figure()
-        Create a Plotly figure, pre-configured for PEPT data.
-
-    add_points(points, row = 1, col = 1, size = 2.0, color = None,\
-               opacity = 0.8, colorbar = True, colorbar_col = -1,\
-               colorscale = "Magma", colorbar_title = None)
-        Create and plot a trace for all the points in a numpy array, with
-        possible color-coding.
-
-    add_lines(lines, row = 1, col = 1, width = 2.0, color = None,\
-              opacity = 0.6, colorbar = True, colorbar_col = 0,\
-              colorscale = "Magma", colorbar_title = None)
-        Create and plot a trace for all the lines in a numpy array, with
-        possible color-coding.
-
-    add_pixels(pixels, row = 1, col = 1, colorscale = "Magma",
-               transpose = True, xgap = 0., ygap = 0.)
-        Create and plot a trace with all the pixels in this class, with
-        possible filtering.
-
-    add_trace(trace, row = 1, col = 1)
-        Add a precomputed Plotly trace to a given subplot.
-
-    add_traces(traces, row = 1, col = 1)
-        Add a list of precomputed Plotly traces to a given subplot.
-
-    equalise_axes()
-        Equalise the axes' limits of all subplots.
-
-    to_html(filepath, equal_axes = True, include_plotlyjs = True)
-        Save the current Plotly figure as a self-contained HTML webpage.
-
-    show(equal_axes = True)
-        Show the Plotly figure, optionally setting equal axes limits.
-
     Examples
     --------
     The figure is created when instantiating the class.
@@ -161,7 +123,13 @@ class PlotlyGrapher2D:
     If you'd like to show the plot in your browser, you can set the default
     Plotly renderer:
 
+    >>> import plotly
     >>> plotly.io.renderers.default = "browser"
+
+    Return pre-computed traces that you can add to other figures:
+
+    >>> PlotlyGrapher2D.lines_trace(lines)
+    >>> PlotlyGrapher2D.points_trace(points)
 
     More examples are given in the docstrings of the `add_points`, `add_lines`
     methods.
@@ -385,6 +353,86 @@ class PlotlyGrapher2D:
         return self._fig
 
 
+    @staticmethod
+    def timeseries_trace(
+        points,
+        size = 6.0,
+        color = None,
+        opacity = 0.8,
+        colorbar = True,
+        colorbar_col = -1,
+        colorscale = "Magma",
+        colorbar_title = None,
+    ):
+        '''Static method for creating a list of 3 Plotly traces of timeseries.
+        See `PlotlyGrapher2D.add_timeseries` for the full documentation.
+        '''
+
+        if not isinstance(points, pept.PointData):
+            points = pept.PointData(points)
+
+        pts = points.points
+
+        # No need to type-check the other parameters as Plotly will do that
+        # anyway...
+
+        # Create the dictionary of marker properties
+        marker = dict(
+            size = size,
+            color = color,
+            opacity = opacity
+        )
+
+        # Update `marker` if a colorbar is requested AND color is None.
+        if colorbar and color is None:
+            if isinstance(colorbar_col, str):
+                color_data = points[colorbar_col]
+            else:
+                color_data = pts[:, colorbar_col]
+
+            marker.update(colorscale = colorscale)
+            if colorbar_title is not None:
+                marker["colorbar"] = dict(title = colorbar_title)
+
+            # Special case: if there are less than 10 values in the colorbar
+            # column, add them as separate traces for better distinction
+            # between colours.
+            labels = np.unique(color_data)
+
+            if len(labels) <= 10:
+                traces = [[], [], []]
+                for label in labels:
+                    selected = pts[color_data == label]
+
+                    for i in range(3):
+                        traces[i].append(
+                            go.Scatter(
+                                x = selected[:, 0],
+                                y = selected[:, i + 1],
+                                mode = "markers",
+                                marker = marker
+                            )
+                        )
+                return traces
+
+            # Otherwise just use a typical continuous colorbar for all the
+            # values in colorbar_col.
+            else:
+                marker['color'] = color_data
+
+        traces = []
+        for i in range(3):
+            traces.append(
+                go.Scatter(
+                    x = pts[:, 0],
+                    y = pts[:, i + 1],
+                    mode = "markers",
+                    marker = marker
+                )
+            )
+        return traces
+
+
     def add_timeseries(
         self,
         points,
@@ -397,17 +445,87 @@ class PlotlyGrapher2D:
         colorscale = "Magma",
         colorbar_title = None
     ):
-        # If a pept.PointData instance (or subclass thereof!) is received, just
-        # take the inner `points`. Otherwise treat it as an array.
-        points = Stack().fit(points)
-        if not isinstance(points, pept.PointData):
-            points = pept.PointData(points)
+        '''Add a timeseries plot for each dimension in `points` vs. time.
 
-        points = points.points
+        If the current PlotlyGrapher2D figure does not have enough rows and
+        columns to accommodate the three subplots (at coordinates `rows_cols`),
+        the inner figure will be regenerated with enough rows and columns.
 
-        # No need to type-check the other parameters as Plotly will do that
-        # anyway...
+        Parameters
+        ----------
+        points : (M, N >= 4) numpy.ndarray or pept.PointData
+            The expected data columns are: [time, x1, y1, z1, etc.]. If a
+            `pept.PointData` instance (or subclass thereof) is received, the
+            inner `points` will be used.
 
+        rows_cols : list[tuple[2]]
+            A list with 3 tuples, each tuple containing the subplot indices
+            to plot the x, y, and z coordinates (indexed from 1).
+
+        size : float, default 6.0
+            The marker size of the points.
+
+        color : str or list-like, optional
+            Can be a single color (e.g. "black", "rgb(122, 15, 241)") or a
+            colorbar list. Overrides `colorbar` if set. For more information,
+            check the Plotly documentation. The default is None.
+
+        opacity : float, default 0.8
+            The opacity of the lines, where 0 is transparent and 1 is fully
+            opaque.
+
+        colorbar : bool, default True
+            If set to True, will color-code the data in the `points` column
+            `colorbar_col`. Is overridden by `color` if set.
+
+        colorbar_col : int, default -1
+            The column in `points` that will be used to color the points. Only
+            has an effect if `colorbar` is set to True. The default is -1 (the
+            last column).
+
+        colorscale : str, default "Magma"
+            The Plotly scheme for color-coding the `colorbar_col` column in the
+            input data. Typical ones include "Cividis", "Viridis" and "Magma".
+            A full list is given at `plotly.com/python/builtin-colorscales/`.
+            Only has an effect if `colorbar = True` and `color` is not set.
+
+        colorbar_title : str, optional
+            If set, the colorbar will have this title above it.
+
+        Raises
+        ------
+        ValueError
+            If `points` is not a numpy.ndarray with shape (M, N), where N >= 4.
+
+        Notes
+        -----
+        If a colorbar is to be used (i.e. `colorbar = True` and `color = None`)
+        and there are fewer than 10 unique values in the `colorbar_col` column
+        in `points`, then the points for each unique label will be added as
+        separate traces.
+
+        This is helpful for cases such as when plotting points with labelled
+        trajectories, as when there are fewer than 10 trajectories, the
+        distinct colours automatically used by Plotly when adding multiple
+        traces allow the points to be better distinguished.
+
+        Examples
+        --------
+        Add an array of 3D points (data columns: [time, x, y, z]) to a
+        `PlotlyGrapher2D` instance:
+
+        >>> grapher = PlotlyGrapher2D()
+        >>> points_raw = np.array(...)      # shape (N, M >= 4)
+        >>> grapher.add_timeseries(points_raw)
+        >>> grapher.show()
+
+        Add all the points in a `PointData` instance:
+
+        >>> point_data = pept.PointData(...)    # Some example data
+        >>> grapher.add_timeseries(point_data)
+        >>> grapher.show()
+
+        '''
         # If the current figure does not have enough cols / rows, regenerate it
         rows = max((rc[0] for rc in rows_cols))
         cols = max((rc[1] for rc in rows_cols))
@@ -423,6 +541,54 @@ class PlotlyGrapher2D:
             self.xlabel("t (ms)", rc[0], rc[1])
             self.ylabel(xyz[i], rc[0], rc[1])
 
+        traces = PlotlyGrapher2D.timeseries_trace(
+            points,
+            size = size,
+            color = color,
+            opacity = opacity,
+            colorbar = colorbar,
+            colorbar_col = colorbar_col,
+            colorscale = colorscale,
+            colorbar_title = colorbar_title,
+        )
+
+        for t, rc in zip(traces, rows_cols):
+            if isinstance(t, list):
+                self.add_traces(t, row = rc[0], col = rc[1])
+            else:
+                self.add_trace(t, row = rc[0], col = rc[1])
+
+        self.equalise_separate()
+        return self
+
+
+    @staticmethod
+    def points_trace(
+        points,
+        size = 2.0,
+        color = None,
+        opacity = 0.8,
+        colorbar = True,
+        colorbar_col = -1,
+        colorscale = "Magma",
+        colorbar_title = None,
+    ):
+        '''Static method for creating a Plotly trace of points. See
+        `PlotlyGrapher2D.add_points` for the full documentation.
+        '''
+
+        points = np.asarray(points, dtype = float)
+
+        # Check that points has shape (M, 3)
+        if points.ndim != 2 or points.shape[1] < 3:
+            raise ValueError((
+                "\n[ERROR]: `points` should have dimensions (M, N), where "
+                "N >= 3. Received {}\n".format(points.shape)
+            ))
+
+        # No need to type-check the other parameters as Plotly will do that
+        # anyway...
+
         # Create the dictionary of marker properties
         marker = dict(
             size = size,
@@ -432,6 +598,8 @@ class PlotlyGrapher2D:
 
         # Update `marker` if a colorbar is requested AND color is None.
         if colorbar and color is None:
+            color_data = points[:, colorbar_col]
+
             marker.update(colorscale = colorscale)
             if colorbar_title is not None:
                 marker["colorbar"] = dict(title = colorbar_title)
@@ -439,45 +607,34 @@ class PlotlyGrapher2D:
             # Special case: if there are less than 10 values in the colorbar
             # column, add them as separate traces for better distinction
             # between colours.
-            labels = np.unique(points[:, colorbar_col])
+            labels = np.unique(color_data)
 
             if len(labels) <= 10:
+                traces = []
                 for label in labels:
-                    selected = points[points[:, colorbar_col] == label]
+                    selected = points[color_data == label]
 
-                    for i, rc in enumerate(rows_cols):
-                        self.add_trace(
-                            go.Scatter(
-                                x = selected[:, 0],
-                                y = selected[:, i + 1],
-                                mode = "markers",
-                                marker = marker
-                            ),
-                            row = rc[0],
-                            col = rc[1],
+                    traces.append(
+                        go.Scatter(
+                            x = selected[:, 1],
+                            y = selected[:, 2],
+                            mode = "markers",
+                            marker = marker
                         )
-                self.equalise_separate()
-                return self
+                    )
+                return traces
 
             # Otherwise just use a typical continuous colorbar for all the
             # values in colorbar_col.
             else:
-                marker['color'] = points[:, colorbar_col]
+                marker['color'] = color_data
 
-        for i, rc in enumerate(rows_cols):
-            self.add_trace(
-                go.Scatter(
-                    x = points[:, 0],
-                    y = points[:, i + 1],
-                    mode = "markers",
-                    marker = marker
-                ),
-                row = rc[0],
-                col = rc[1],
-            )
-
-        self.equalise_separate()
-        return self
+        return go.Scatter(
+            x = points[:, 1],
+            y = points[:, 2],
+            mode = "markers",
+            marker = marker
+        )
 
 
     def add_points(
@@ -566,45 +723,69 @@ class PlotlyGrapher2D:
 
         '''
 
-        points = np.asarray(points, dtype = float)
-
-        # Check that points has shape (M, 3)
-        if points.ndim != 2 or points.shape[1] < 3:
-            raise ValueError((
-                "\n[ERROR]: `points` should have dimensions (M, N), where "
-                "N >= 3. Received {}\n".format(points.shape)
-            ))
-
         # No need to type-check the other parameters as Plotly will do that
         # anyway...
 
-        # Create the dictionary of marker properties
-        marker = dict(
+        trace = PlotlyGrapher2D.points_trace(
+            points,
             size = size,
             color = color,
-            opacity = opacity
+            opacity = opacity,
+            colorbar = colorbar,
+            colorbar_col = colorbar_col,
+            colorscale = colorscale,
+            colorbar_title = colorbar_title,
         )
 
-        # Update `marker` if a colorbar is requested AND color is None.
-        if colorbar and color is None:
-            marker.update(colorscale = colorscale)
-            marker['color'] = points[:, colorbar_col]
+        # May be list of traces
+        if isinstance(trace, list):
+            self.add_traces(trace, row = row, col = col)
+        else:
+            self.add_trace(trace, row = row, col = col)
 
-            if colorbar_title is not None:
-                marker["colorbar"] = dict(title = colorbar_title)
+        return self
 
-        coords_x = points[:, 1]
-        coords_y = points[:, 2]
 
-        trace = go.Scatter(
+    @staticmethod
+    def lines_trace(
+        lines,
+        width = 2.0,
+        color = None,
+        opacity = 0.6,
+    ):
+        '''Static method for creating a Plotly trace of lines. See
+        `PlotlyGrapher2D.add_lines` for the full documentation.
+        '''
+
+        lines = np.asarray(lines, dtype = float)
+
+        # Check that lines has shape (N, 5)
+        if lines.ndim != 2 or lines.shape[1] < 5:
+            raise ValueError((
+                "\n[ERROR]: `lines` should have dimensions (M, N), where "
+                "N >= 4. Received {}\n".format(lines.shape)
+            ))
+
+        marker = dict(
+            width = width,
+            color = color,
+        )
+
+        coords_x = np.full(3 * len(lines), np.nan)
+        coords_x[0::3] = lines[:, 1]
+        coords_x[1::3] = lines[:, 3]
+
+        coords_y = np.full(3 * len(lines), np.nan)
+        coords_y[0::3] = lines[:, 2]
+        coords_y[1::3] = lines[:, 4]
+
+        return go.Scatter(
             x = coords_x,
             y = coords_y,
-            mode = "markers",
-            marker = marker
+            mode = 'lines',
+            opacity = opacity,
+            line = marker
         )
-
-        self._fig.add_trace(trace, row = row, col = col)
-        return self
 
 
     def add_lines(
@@ -670,36 +851,11 @@ class PlotlyGrapher2D:
 
         '''
 
-        lines = np.asarray(lines, dtype = float)
-
-        # Check that lines has shape (N, 5)
-        if lines.ndim != 2 or lines.shape[1] < 5:
-            raise ValueError((
-                "\n[ERROR]: `lines` should have dimensions (M, N), where "
-                "N >= 4. Received {}\n".format(lines.shape)
-            ))
-
-        marker = dict(
+        trace = PlotlyGrapher2D.lines_trace(
+            lines,
             width = width,
             color = color,
-        )
-
-        coords_x = []
-        coords_y = []
-
-        for line in lines:
-            coords_x.extend([line[1], line[3], None])
-            coords_y.extend([line[2], line[4], None])
-
-        coords_x = np.array(coords_x, dtype = float)
-        coords_y = np.array(coords_y, dtype = float)
-
-        trace = go.Scatter(
-            x = coords_x,
-            y = coords_y,
-            mode = 'lines',
             opacity = opacity,
-            line = marker
         )
 
         self._fig.add_trace(trace, row = row, col = col)
