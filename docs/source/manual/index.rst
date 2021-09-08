@@ -26,12 +26,22 @@ Base Classes
 .. autosummary::
    :toctree: generated/
 
-   pept.TimeWindow
    pept.LineData
    pept.PointData
    pept.Voxels
-   pept.VoxelData
    pept.Pipeline
+
+
+
+
+Auxilliaries
+============
+
+.. autosummary::
+   :toctree: generated/
+
+   pept.TimeWindow
+
 
 
 

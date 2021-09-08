@@ -14,9 +14,11 @@ General-Purpose Transformers
 
    pept.tracking.Stack
    pept.tracking.SplitLabels
+   pept.tracking.SplitAll
    pept.tracking.Centroids
    pept.tracking.LinesCentroids
    pept.tracking.Condition
+   pept.tracking.Remove
 
 
 
@@ -26,7 +28,8 @@ Space Transformers
 .. autosummary::
    :toctree: generated/
 
-   pept.tracking.Voxelliser
+   pept.tracking.Voxelize
+   pept.tracking.Interpolate
 
 
 
@@ -38,6 +41,7 @@ Tracer Locating Algorithms
 
    pept.tracking.BirminghamMethod
    pept.tracking.Cutpoints
+   pept.tracking.Minpoints
    pept.tracking.HDBSCAN
    pept.tracking.FPI
 
@@ -52,5 +56,11 @@ Trajectory Separation Algorithms
    pept.tracking.Segregate
 
 
+Post Processing Algorithms
+--------------------------
 
+.. autosummary::
+   :toctree: generated/
+
+   pept.tracking.Velocity
 

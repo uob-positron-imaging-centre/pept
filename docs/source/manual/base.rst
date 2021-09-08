@@ -12,4 +12,5 @@ Base / Abstract Classes (``pept.base``)
    pept.base.Reducer
    pept.base.PointDataFilter
    pept.base.LineDataFilter
+   pept.base.VoxelsFilter
 
