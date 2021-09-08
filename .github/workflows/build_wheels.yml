@@ -1,7 +1,7 @@
 name: Build and upload pept to PyPI on a OS and Python version matrix
 
 env:
-  CIBW_SKIP: cp36-*
+  CIBW_BUILD: cp37-* cp38-* cp39-*
   CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: "pytest {project}/tests"
 
@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install Python dependencies
+      - name: Install package dependencies
         uses: py-actions/py-dependency-install@v2
 
       - name: Build sdist
@@ -62,7 +62,7 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     # upload to PyPI on every tag starting with 'v'
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     # alternatively, to publish when a GitHub Release is created, use the following rule:
     # if: github.event_name == 'release' && github.event.action == 'published'
     steps:
