@@ -105,11 +105,11 @@ For these algorithm-agnostic steps, `pept` provides five base data structures up
 
 All the data structures above are built on top of NumPy and integrate natively with the rest of the Python / SciPy ecosystem. The rest of the `pept` library is organised into submodules:
 
-- [`pept.scanners`](https://pept.readthedocs.io/en/latest/manual/pept.scanners.html): converters between native scanner data and the base classes.
-- [`pept.tracking`](https://pept.readthedocs.io/en/latest/manual/pept.tracking.html): radioactive tracer tracking algorithms, e.g. the Birmingham method, PEPT-ML, FPI.
-- [`pept.plots`](https://pept.readthedocs.io/en/latest/manual/pept.plots.html): PEPT data visualisation subroutines.
-- [`pept.utilities`](https://pept.readthedocs.io/en/latest/manual/pept.utilities.html): general-purpose helpers, e.g. `read_csv`, `traverse3d`.
-- [`pept.processing`](https://pept.readthedocs.io/en/latest/manual/pept.processing.html): PEPT-oriented post-processing algorithms, e.g. `occupancy2d`.
+- [`pept.scanners`](https://pept.readthedocs.io/en/latest/manual/scanners.html): converters between native scanner data and the base classes.
+- [`pept.tracking`](https://pept.readthedocs.io/en/latest/manual/tracking.html): radioactive tracer tracking algorithms, e.g. the Birmingham method, PEPT-ML, FPI.
+- [`pept.plots`](https://pept.readthedocs.io/en/latest/manual/plots.html): PEPT data visualisation subroutines.
+- [`pept.utilities`](https://pept.readthedocs.io/en/latest/manual/utilities.html): general-purpose helpers, e.g. `read_csv`, `traverse3d`.
+- [`pept.processing`](https://pept.readthedocs.io/en/latest/manual/processing.html): PEPT-oriented post-processing algorithms, e.g. `occupancy2d`.
 
 
 ## Performance
