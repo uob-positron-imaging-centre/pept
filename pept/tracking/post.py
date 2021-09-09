@@ -135,8 +135,6 @@ class Velocity(PointDataFilter):
         if not isinstance(samples, PointData):
             samples = PointData(samples)
 
-        print(f"len(samples.points) = {len(samples.points)}")
-
         if not len(samples.points):
             return self._empty_sample(samples)
 
