@@ -1,10 +1,17 @@
 PEPT-ML
 =======
 
+PEPT using Machine Learning is a modern clustering-based tracking method that was developed specifically for noisy, fast applications.
+
+If you are using PEPT-ML in your research, you are kindly asked to cite the following paper:
+
+    *Nicuşan AL, Windows-Yule CR. Positron emission particle tracking using machine learning. Review of Scientific Instruments. 2020 Jan 1;91(1):013329.*
 
 
 PEPT-ML one pass of clustering recipe
 -------------------------------------
+
+The LoRs are first converted into ``Cutpoints``, which are then assigned cluster labels using ``HDBSCAN``; the cutpoints are then grouped into clusters using ``SplitLabels`` and the clusters' ``Centroids`` are taken as the particle locations. Finally, stack all centroids into a single ``PointData``.
 
 ::
 
@@ -15,7 +22,7 @@ PEPT-ML one pass of clustering recipe
 
     pipeline = pept.Pipeline([
         Cutpoints(max_distance = 0.5),
-        HDBSCAN(true_fraction = 0.15, max_tracers = max_tracers),
+        HDBSCAN(true_fraction = 0.2, max_tracers = max_tracers),
         SplitLabels() + Centroids(),
         Stack(),
     ])
@@ -26,6 +33,11 @@ PEPT-ML one pass of clustering recipe
 
 PEPT-ML second pass of clustering recipe
 ----------------------------------------
+
+The particle locations will always have a bit of *scatter* to them; we can *tighten* those points into accurate, dense trajectories using a *second pass of clustering*.
+
+Set a very small sample size and maximum overlap to minimise temporal smoothing effects, then recluster the tracer locations, split according to cluster label, compute centroids, and stack into a final ``PointData``.
+
 
 ::
 
@@ -85,8 +97,8 @@ trajectory separation, plotting and saving trajectories as CSV.
     pipeline = pept.Pipeline([
 
         # First pass of clustering
-        Cutpoints(max_distance = 0.5),
-        HDBSCAN(true_fraction = 0.15, max_tracers = max_tracers),
+        Cutpoints(max_distance = 0.2),
+        HDBSCAN(true_fraction = 0.2, max_tracers = max_tracers),
         SplitLabels() + Centroids(),
 
         # Second pass of clustering
@@ -96,6 +108,7 @@ trajectory separation, plotting and saving trajectories as CSV.
 
         # Trajectory separation
         Segregate(window = 20 * max_tracers, cut_distance = 10),
+        Stack(),
     ])
 
 

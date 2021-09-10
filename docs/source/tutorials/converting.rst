@@ -19,6 +19,16 @@ be converted using ``pept.scanners.adac_forte(binary_file)``:
     lines = pept.scanners.adac_forte("binary_file.da01")
 
 
+If you have multiple files from the same experiment, e.g. "data.da01", "data.da02", etc., you can stitch them all together using a *glob*, "data.da*":
+
+::
+
+    import pept
+
+    # Multiple files starting with `binary_file.da`
+    lines = pept.scanners.adac_forte("binary_file.da*")
+
+
 
 Parallel Screens
 ----------------

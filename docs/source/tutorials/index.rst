@@ -18,13 +18,17 @@ initialise, track, post-process and visualise your PEPT data.
 .. toctree::
    :caption: Tracking
 
-   peptml
    birmingham
+   peptml
+   fpi
 
 
 
 .. toctree::
    :caption: Post-processing
 
+   trajectory_separation
+   filtering
+   velocities
 
 
