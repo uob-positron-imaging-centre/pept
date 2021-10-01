@@ -19,6 +19,7 @@ General-Purpose Transformers
    pept.tracking.LinesCentroids
    pept.tracking.Condition
    pept.tracking.Remove
+   pept.tracking.Swap
 
 
 
@@ -54,6 +55,19 @@ Trajectory Separation Algorithms
    :toctree: generated/
 
    pept.tracking.Segregate
+
+
+
+Time Of Flight Algorithms
+-------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   pept.tracking.TimeOfFlight
+   pept.tracking.CutpointsToF
+   pept.tracking.GaussianDensity
+
 
 
 Post Processing Algorithms

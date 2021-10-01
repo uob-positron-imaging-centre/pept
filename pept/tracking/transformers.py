@@ -41,13 +41,13 @@ class Stack(Reducer):
 
     ::
 
-        list[LineData] -> Stack.fit -> LineData
-        list[PointData] -> Stack.fit -> PointData
+             list[LineData] -> Stack.fit -> LineData
+            list[PointData] -> Stack.fit -> PointData
 
-        list[list[Any]] -> Stack.fit -> list[Any]
+            list[list[Any]] -> Stack.fit -> list[Any]
         list[numpy.ndarray] -> Stack.fit -> numpy.ndarray
 
-        other -> Stack.fit -> other
+                      other -> Stack.fit -> other
 
     Can optionally set a given `sample_size` and `overlap`. This is useful
     when collecting a list of processed samples back into a single object.
@@ -109,16 +109,15 @@ class SplitLabels(Filter):
     ::
 
         # `extract_lines` = False (default)
-        LineData -> SplitLabels.fit_sample -> list[LineData]
+         LineData -> SplitLabels.fit_sample -> list[LineData]
         PointData -> SplitLabels.fit_sample -> list[PointData]
 
-        # `extract_lines` = True and PointData.lines exists
+        # `extract_lines` = True and PointData.attrs["_lines"] exists
         PointData -> SplitLabels.fit_sample -> list[LineData]
 
 
-    The sample of data must have a column named exactly "label". The filter
-    normally removes the "label" column in the output (if
-    ``remove_label = True``).
+    The sample of data must have a column named exactly "label". If
+    ``remove_label = True`` (default), the "label" column is removed.
     '''
 
     def __init__(
@@ -229,6 +228,14 @@ class SplitLabels(Filter):
 
 
 
+def _wstd(x, w):
+    '''Weighted standard deviation'''
+    avg = np.average(x, weights = w)
+    return np.sqrt(np.average((x - avg)**2, weights = w))
+
+
+
+
 class Centroids(Filter):
     '''Compute the geometric centroids of a list of samples of points.
 
@@ -236,46 +243,72 @@ class Centroids(Filter):
 
     ::
 
-        PointData -> Centroids.fit_sample -> PointData
+              PointData -> Centroids.fit_sample -> PointData
         list[PointData] -> Centroids.fit_sample -> PointData
-        numpy.ndarray -> Centroids.fit_sample -> PointData
+          numpy.ndarray -> Centroids.fit_sample -> PointData
 
     This filter can be used right after ``pept.tracking.SplitLabels``, e.g.:
 
     >>> (SplitLabels() + Centroids()).fit(points)
 
+    If `error = True`, append a measure of error on the computed centroid as
+    the standard deviation in distances from centroid to all points. It is
+    saved in an extra column "error".
+
+    If `cluster_size = True`, append the number of points used for each
+    centroid in an extra column "cluster_size" - unless `weight = True`, in
+    which case it is the sum of weights.
+
+    If `weight = True` and there is a column "weight" in the PointData, compute
+    weighted centroids and standard deviations (if `error = True`) and the sum
+    of weights (if `cluster_size = True`). The "weight" column is removed in
+    the output centroid.
+
     '''
 
 
-    def __init__(self, error = False, cluster_size = False):
+    def __init__(self, error = False, cluster_size = False, weight = True):
         self.error = bool(error)
         self.cluster_size = bool(cluster_size)
+        self.weight = bool(weight)
 
 
-    def _empty_centroid(self, points):
+    def _empty_centroid(self, points, weighted: bool):
         # Return an empty centroid with the correct number of columns
         ncols = points.shape[1]
         if self.error:
             ncols += 1
         if self.cluster_size:
             ncols += 1
+        if weighted:
+            ncols -= 1
         return np.empty((0, ncols))
 
 
-    def _centroid(self, points):
-        if len(points) == 0:
-            return self._empty_centroid(points)
+    def _centroid(self, point_data, weighted: bool):
+        # Extract the NumPy array of points
+        points = point_data.points
 
-        c = points.mean(axis = 0)
+        if len(points) == 0:
+            return self._empty_centroid(points, weighted)
+
+        if weighted:
+            weightcol = point_data.columns.index("weight")
+            weights = point_data.points[:, weightcol]
+
+            c = np.average(points, weights = weights, axis = 0)
+            c = np.delete(c, weightcol)
+        else:
+            c = points.mean(axis = 0)
 
         # If error is requested, compute std-dev of distances from centroid
         if self.error:
-            err = np.linalg.norm(points - c, axis = 1).std()
-            c = np.r_[c, err]
+            d = np.linalg.norm(points[:, 1:4] - c[1:4], axis = 1)
+            c = np.r_[c, _wstd(d, weights) if weighted else d.std()]
 
         # If cluster_size is requested, also append the number of points
         if self.cluster_size:
-            c = np.r_[c, len(points)]
+            c = np.r_[c, weights.sum() if weighted else len(points)]
 
         return c
 
@@ -287,14 +320,29 @@ class Centroids(Filter):
         elif isinstance(points, np.ndarray):
             list_points = [PointData(points)]
         else:
-            list_points = list(points)
+            list_points = [
+                p if isinstance(p, PointData) else PointData(p)
+                for p in list(points)
+            ]
+
+        if not len(list_points):
+            raise ValueError("Must receive at least one PointData.")
+
+        # If self.weight and there is a `weight` column, compute weighted
+        # centroids
+        weigh = (self.weight and "weight" in list_points[0].columns)
 
         # Compute centroid for each PointData and stack centroid arrays
-        centroids = np.vstack([self._centroid(p.points) for p in list_points])
+        centroids = np.vstack([self._centroid(p, weigh) for p in list_points])
         attributes = list_points[0].extra_attrs()
 
         # If error or cluster_size are requested, append those columns
         columns = list_points[0].columns
+
+        # Omit the `weight` column if weigh
+        if weigh:
+            weightcol = list_points[0].columns.index("weight")
+            columns = columns[:weightcol] + columns[weightcol + 1:]
 
         if self.error:
             columns.append("error")
@@ -316,11 +364,11 @@ class LinesCentroids(Filter):
     ::
 
         list[LineData] -> LinesCentroids.fit_sample -> PointData
-        LineData -> LinesCentroids.fit_sample -> PointData
-        numpy.ndarray -> LinesCentroids.fit_sample -> PointData
+              LineData -> LinesCentroids.fit_sample -> PointData
+         numpy.ndarray -> LinesCentroids.fit_sample -> PointData
 
     The code below is adapted from the PEPT-EM algorithm developed by Antoine
-    Renaud and Sam Manger
+    Renaud and Sam Manger.
     '''
 
     def __init__(self, remove = 0.1, iterations = 6):
@@ -395,7 +443,7 @@ class Condition(Filter):
     ::
 
         PointData -> Condition.fit_sample -> PointData
-        LineData -> Condition.fit_sample -> LineData
+         LineData -> Condition.fit_sample -> LineData
 
     In the simplest case, a column name is specified, plus a comparison, e.g.
     ``Condition("error < 15, y > 100")``; multiple conditions may be
@@ -525,7 +573,7 @@ class Remove(Filter):
 
     ::
 
-        pept.LineData  -> Remove.fit_sample -> pept.LineData
+         pept.LineData -> Remove.fit_sample -> pept.LineData
         pept.PointData -> Remove.fit_sample -> pept.PointData
 
     Examples
@@ -629,13 +677,13 @@ class SplitAll(Reducer):
 
     ::
 
-        LineData -> SplitAll.fit -> list[LineData]
-        list[LineData] -> SplitAll.fit -> list[LineData]
+                   LineData -> SplitAll.fit -> list[LineData]
+             list[LineData] -> SplitAll.fit -> list[LineData]
 
-        PointData -> SplitAll.fit -> list[PointData]
-        list[PointData] -> SplitAll.fit -> list[PointData]
+                  PointData -> SplitAll.fit -> list[PointData]
+            list[PointData] -> SplitAll.fit -> list[PointData]
 
-        numpy.ndarray -> SplitAll.fit -> list[numpy.ndarray]
+              numpy.ndarray -> SplitAll.fit -> list[numpy.ndarray]
         list[numpy.ndarray] -> SplitAll.fit -> list[numpy.ndarray]
 
     If using a LineData / PointData, you can use a columns name as a string,
@@ -701,3 +749,95 @@ class SplitAll(Reducer):
             samples.copy(data = samples.data[col_data == label])
             for label in labels
         ]
+
+
+
+
+class Swap(Filter):
+    '''Swap two columns in a LineData or PointData.
+
+    Filter signature:
+
+    ::
+
+         LineData -> Swap.fit_sample -> LineData
+        PointData -> Swap.fit_sample -> PointData
+
+    For example, swap the Y and Z axes: ``Swap("y, z").fit_sample(points)``.
+    Add multiple swaps as separate arguments: ``Swap("y, z", "label, x")``.
+
+    You can also swap columns at numerical indices by single-quoting them:
+    ``Swap("'0', '1'")``.
+
+    *New in pept-0.4.3*
+    '''
+
+    def __init__(self, *swaps, inplace = True):
+        # Calls swaps.setter which does type-checking
+        self.swaps = swaps
+        self.inplace = bool(inplace)
+
+
+    @property
+    def swaps(self):
+        return self._swaps
+
+
+    @swaps.setter
+    def swaps(self, swaps):
+        commands = []
+
+        # Compile regex object to find quoted strings
+        finder = re.compile(r"'\w+'")
+
+        for i in range(len(swaps)):
+            s = swaps[i].replace(" ", "").split(",")
+            if len(s) != 2:
+                raise ValueError(textwrap.fill((
+                    f"The input `swaps[{i}] = {swaps[i]}` does not have a "
+                    'single comma. It must be formatted as "col1, col2".'
+                )))
+
+            # Replace single-quoted column numbers / names
+            for j in range(2):
+                if "'" in s[j]:
+                    s[j] = finder.sub(Swap._replace_quoted, s[j])
+                else:
+                    s[j] = Swap._replace_term(s[j])
+
+            commands.append(
+                f"aux = {s[0]}.copy() ; {s[0]} = {s[1]} ; {s[1]} = aux;\n"
+            )
+
+        self._swaps = tuple(commands)
+
+
+    @staticmethod
+    def _replace_term(term: str):
+        return f"data[:, sample.columns.index('{term}')]"
+
+
+    @staticmethod
+    def _replace_quoted(term):
+        # Remove single quotes
+        if isinstance(term, re.Match):
+            term = term.group()
+        term = term.split("'")[1]
+
+        try:
+            index = int(term)
+            return f"data[:, {index}]"
+        except ValueError:
+            return f"data[:, sample.columns.index('{term}')]"
+
+
+    @beartype
+    def fit_sample(self, sample: IterableSamples):
+        if not self.inplace:
+            sample = sample.copy()
+
+        data = sample.data
+        for s in self.swaps:
+            exec(s, locals(), globals())
+
+        return sample

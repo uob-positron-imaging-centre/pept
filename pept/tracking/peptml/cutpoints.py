@@ -271,10 +271,6 @@ class Cutpoints(pept.base.LineDataFilter):
 
         Parameters
         ----------
-        line_data : instance of pept.LineData
-            The LoRs for which the cutpoints will be computed. It must be an
-            instance of `pept.LineData`.
-
         max_distance : float
             The maximum distance between any two lines for their cutpoint to be
             considered. A good starting value would be 0.1 mm for small tracers
@@ -356,24 +352,32 @@ class Cutpoints(pept.base.LineDataFilter):
         else:
             cutoffs = get_cutoffs(sample_lines.lines)
 
-        sample_cutpoints = pept.utilities.find_cutpoints(
-            sample_lines.lines,
-            self.max_distance,
-            cutoffs,
-            append_indices = self.append_indices,
-        )
+        # Only compute cutpoints if there are at least 2 LoRs
+        if len(sample_lines.lines) >= 2:
+            sample_cutpoints = pept.utilities.find_cutpoints(
+                sample_lines.lines,
+                self.max_distance,
+                cutoffs,
+                append_indices = self.append_indices,
+            )
+        else:
+            sample_cutpoints = np.empty((0, 6 if self.append_indices else 4))
 
+        # Column names
         columns = ["t", "x", "y", "z"]
         if self.append_indices:
             columns += ["line_index1", "line_index2"]
 
+        # Encapsulate points in a PointData
         points = pept.PointData(sample_cutpoints, columns = columns)
 
         # Add optional metadata to the points; because they have an underscore,
         # they won't be propagated when new objects are constructed
         points.attrs["_max_distance"] = self.max_distance
-        points.attrs["_cutoffs"] = self.cutoffs
+        points.attrs["_cutoffs"] = cutoffs
 
+        # If LoR indices were appended, also include the cutpoints' constituent
+        # lines
         if self.append_indices:
             points.attrs["_lines"] = sample_lines
 
