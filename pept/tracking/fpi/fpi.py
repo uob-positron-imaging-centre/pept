@@ -200,19 +200,26 @@ class FPI(pept.base.VoxelsFilter):
             thereof).
         '''
 
-        points = fpi_ext(
-            voxels.voxels,
+        positions = fpi_ext(
+            np.asarray(voxels.voxels, dtype = float, order = "C"),
             self.w,
             self.r,
             self.lld_counts,
         )
 
-        # Insert the time column and translate the coordinates from the voxel
-        # space to the physical space
-        points[:, 1:4] *= voxels.voxel_size
-        points[:, 1:4] += [voxels.xlim[0], voxels.ylim[0], voxels.zlim[0]]
+        # Translate the coordinates from the voxel space to the physical space
+        positions[:, :3] *= voxels.voxel_size
+        positions[:, :3] += [voxels.xlim[0], voxels.ylim[0], voxels.zlim[0]]
 
-        points = np.insert(points, 0, np.nan, axis = 1)
+        # Convert errors to physical space too
+        positions[:, 3:] *= voxels.voxel_size
+
+        # Create points array to store [t, x, y, z, xerr, yerr, zerr, err]
+        points = np.full((len(positions), 8), np.nan)
+        points[:, 1:7] = positions
+        points[:, 7] = np.linalg.norm(positions[:, 3:6], axis = 1)
+
+        # Set the timestamp if `_lines` exists
         if "_lines" in voxels.attrs:
             points[:, 0] = voxels.attrs["_lines"].lines[:, 0].mean()
         else:
@@ -223,5 +230,7 @@ class FPI(pept.base.VoxelsFilter):
 
         return pept.PointData(
             points,
-            columns = ["t", "x", "y", "z", "error_x", "error_y", "error_z"],
+            columns = ["t", "x", "y", "z",
+                       "error_x", "error_y", "error_z",
+                       "error"],
         )
