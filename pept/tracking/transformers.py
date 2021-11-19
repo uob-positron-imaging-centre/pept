@@ -296,6 +296,10 @@ class Centroids(Filter):
             weightcol = point_data.columns.index("weight")
             weights = point_data.points[:, weightcol]
 
+            # If all weights are zero, no cluster had been found
+            if weights.sum() == 0.:
+                return self._empty_centroid(points, weighted)
+
             c = np.average(points, weights = weights, axis = 0)
             c = np.delete(c, weightcol)
         else:
