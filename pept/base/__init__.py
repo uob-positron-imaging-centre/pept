@@ -11,13 +11,10 @@
 
 
 from    .line_data          import  LineData
-
 from    .point_data         import  PointData
 
-from    .pixel_data         import  Pixels
-
-from    .voxel_data         import  Voxels
-from    .voxel_data         import  VoxelData
+from    konigcell           import  Pixels
+from    konigcell           import  Voxels
 
 from    .iterable_samples   import  IterableSamples
 from    .iterable_samples   import  TimeWindow
@@ -32,6 +29,10 @@ from    .pipelines          import  VoxelsFilter
 from    .pipelines          import  Reducer
 from    .pipelines          import  Pipeline
 
+
+# Execute code here to add dynamic methods
+from    .                   import  pixels
+from    .                   import  voxels
 
 
 

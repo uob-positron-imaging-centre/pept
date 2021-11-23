@@ -120,13 +120,8 @@ cy_extensions = [
         **cy_extension_kw
     ),
     Extension(
-        'pept.processing.circles_ext',
-        ['pept/processing/circles_ext.pyx'],
-        **cy_extension_kw
-    ),
-    Extension(
-        'pept.processing.occupancy_ext',
-        ['pept/processing/occupancy_ext.pyx'],
+        'pept.tracking.tof.cutpoints_tof',
+        ['pept/tracking/tof/cutpoints_tof.pyx'],
         **cy_extension_kw
     ),
     Extension(

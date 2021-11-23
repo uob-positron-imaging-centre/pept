@@ -22,8 +22,8 @@ The LoRs are first converted into ``Cutpoints``, which are then assigned cluster
 
     pipeline = pept.Pipeline([
         Cutpoints(max_distance = 0.5),
-        HDBSCAN(true_fraction = 0.2, max_tracers = max_tracers),
-        SplitLabels() + Centroids(),
+        HDBSCAN(true_fraction = 0.15, max_tracers = max_tracers),
+        SplitLabels() + Centroids(error = True),
         Stack(),
     ])
 
@@ -49,7 +49,7 @@ Set a very small sample size and maximum overlap to minimise temporal smoothing 
     pipeline = pept.Pipeline([
         Stack(sample_size = 30 * max_tracers, overlap = 30 * max_tracers - 1),
         HDBSCAN(true_fraction = 0.6, max_tracers = max_tracers),
-        SplitLabels() + Centroids(),
+        SplitLabels() + Centroids(error = True),
         Stack(),
     ])
 
@@ -98,8 +98,8 @@ trajectory separation, plotting and saving trajectories as CSV.
 
         # First pass of clustering
         Cutpoints(max_distance = 0.2),
-        HDBSCAN(true_fraction = 0.2, max_tracers = max_tracers),
-        SplitLabels() + Centroids(),
+        HDBSCAN(true_fraction = 0.15, max_tracers = max_tracers),
+        SplitLabels() + Centroids(error = True),
 
         # Second pass of clustering
         Stack(sample_size = 30 * max_tracers, overlap = 30 * max_tracers - 1),
@@ -113,15 +113,46 @@ trajectory separation, plotting and saving trajectories as CSV.
 
 
     # Process all samples in `lors` in parallel, using `max_workers` threads
-    trajectories = pipeline.fit(lors, max_workers = 16)
+    trajectories = pipeline.fit(lors)
 
 
     # Save trajectories as CSV
     trajectories.to_csv(filepath + ".csv")
 
+    # Save as a fast binary; you can load them back with `pept.load("path")`
+    trajectories.save(filepath + ".pickle")
+
 
     # Plot trajectories - first a 2D timeseries, then all 3D positions
     PlotlyGrapher2D().add_timeseries(trajectories).show()
     PlotlyGrapher().add_points(trajectories).show()
+
+
+
+Histogram of Tracking Errors
+----------------------------
+
+The ``Centroids(error = True)`` filter appends a column "error" representing the relative error
+in the tracked position. You can select a named column via indexing, e.g. ``trajectories["error"]``;
+you can then plot a histogram of the relative errors with:
+
+::
+
+    import plotly.express as px
+    px.histogram(trajectories["error"]).show()
+
+
+It is often useful to remove points with an error higher than a certain value, e.g. 20 mm:
+
+::
+
+    trajectories = Condition("error < 20").fit(trajectories)
+
+    # Or simply append the `Condition` to the `pept.Pipeline`
+    pipeline = pept.Pipeline([
+        ...
+        Condition("error < 20"),
+        ...
+    ])
 
 

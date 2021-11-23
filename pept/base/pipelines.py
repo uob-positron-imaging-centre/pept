@@ -27,7 +27,7 @@ from    joblib              import  Parallel, delayed
 from    .iterable_samples   import  PEPTObject
 from    .point_data         import  PointData
 from    .line_data          import  LineData
-from    .voxel_data         import  Voxels
+from    .voxels             import  Voxels
 
 
 

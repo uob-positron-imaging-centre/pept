@@ -390,26 +390,34 @@ class Minpoints(pept.base.LineDataFilter):
         else:
             cutoffs = get_cutoffs(sample_lines.lines)
 
-        sample_cutpoints = pept.utilities.find_minpoints(
-            sample_lines.lines,
-            self.num_lines,
-            self.max_distance,
-            cutoffs,
-            append_indices = self.append_indices,
-        )
+        # Only compute minpoints if there are at least num_lines LoRs
+        if len(sample_lines.lines) >= self.num_lines:
+            sample_minpoints = pept.utilities.find_minpoints(
+                sample_lines.lines,
+                self.num_lines,
+                self.max_distance,
+                cutoffs,
+                append_indices = self.append_indices,
+            )
+        else:
+            ncols = 4 + self.num_lines if self.append_indices else 4
+            sample_minpoints = np.empty((0, ncols))
 
+        # Column names
         columns = ["t", "x", "y", "z"]
         if self.append_indices:
             columns += [f"line_index{i + 1}" for i in range(self.num_lines)]
 
-        points = pept.PointData(sample_cutpoints, columns = columns)
+        # Encapsulate minpoints in a PointData
+        points = pept.PointData(sample_minpoints, columns = columns)
 
         # Add optional metadata to the points; because they have an underscore,
         # they won't be propagated when new objects are constructed
         points.attrs["_num_lines"] = self.num_lines
         points.attrs["_max_distance"] = self.max_distance
-        points.attrs["_cutoffs"] = self.cutoffs
+        points.attrs["_cutoffs"] = cutoffs
 
+        # If LoR indices were appended, also include the constituent LoRs
         if self.append_indices:
             points.attrs["_lines"] = sample_lines
 

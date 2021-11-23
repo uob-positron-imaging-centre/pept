@@ -136,6 +136,32 @@ def test_centroids():
     Centroids(error = True).fit_sample(points[0])
     Centroids(error = True, cluster_size = True).fit_sample(points[0])
 
+    # Test weighted centroid computation
+    points_raw = np.arange(50).reshape(10, 5)   # Last column is "weight"
+    points_raw[:, -1] = 1.                      # Start with equal weights
+    points = pept.PointData(points_raw,
+                            columns = ["t", "x", "y", "z", "weight"],
+                            sample_size = 4)
+
+    # Test `fit_sample`
+    s1 = f1.fit_sample(points_raw).points
+    s2 = points_raw.mean(axis = 0)
+    assert np.allclose(s1[:, :4], s2[:4]), "Single sample weighted centroid"
+
+    s1 = f1.fit_sample(points[0]).points
+    s2 = points[0].points.mean(axis = 0)
+    assert np.allclose(s1[:, :4], s2[:4]), "Single sample weighted centroid"
+
+    # Ensure "weight" is removed
+    assert "weight" not in f1.fit_sample(points).columns
+
+    # Test `fit`
+    traversed = f1.fit(points)
+
+    # Test different settings
+    Centroids(error = True).fit_sample(points[0])
+    Centroids(error = True, cluster_size = True).fit_sample(points[0])
+
 
 def test_stack():
     rng = np.random.default_rng(0)
@@ -295,6 +321,38 @@ def test_condition():
     Condition("x < 2, 'x' > 0, 1 > 'x'").fit(points)
     Condition(lambda arr: arr[:, 0] > 10).fit(points)
     Condition(lambda x: x[:, -1] < 50, 'x > 10').fit(points)
+
+
+def test_swap():
+    rng = np.random.default_rng(0)
+    points_raw = rng.random((10, 4)) * 100
+    labels = rng.integers(3, size=10)
+
+    points = pept.PointData(
+        np.c_[points_raw, labels],
+        columns = ["t", "x", "y", "z", "label"],
+    )
+    points.samples_indices = [[0, 10], [5, 5], [5, 10]]
+
+    # Simple, single swap
+    p2 = Swap("y, z").fit_sample(points.copy())
+    assert np.all(p2["y"] == points["z"]), "Swap not done"
+    assert np.all(p2["z"] == points["y"]), "Swap not done"
+
+    # Single swap with quoted column names
+    p2 = Swap("'y', 'z'").fit_sample(points.copy())
+    assert np.all(p2["y"] == points["z"]), "Swap not done"
+    assert np.all(p2["z"] == points["y"]), "Swap not done"
+
+    # Single swap with quoted column indices
+    p2 = Swap("'2', '3'").fit_sample(points.copy())
+    assert np.all(p2["y"] == points["z"]), "Swap not done"
+    assert np.all(p2["z"] == points["y"]), "Swap not done"
+
+    # Testing different settings
+    Swap("y, z").fit(points)
+    Swap("label, 'z'").fit(points)
+    Swap("'0', '1'", "'y', 'z'", "x, z").fit(points)
 
 
 def test_remove():

@@ -287,9 +287,12 @@ class PlotlyGrapher(pept.base.PEPTObject):
                     aspectratio = dict(x = 1, y = 1, z = 1),
                     camera = dict(
                         up = dict(x = 0, y = 1, z = 0),
-                        eye = dict(x = 1, y = 1, z = 1)
+                        eye = dict(x = 1.5, y = 1.5, z = 1.5)
                     ),
                 )
+
+        # Set default zoom out level to include the whole graphs
+        self._fig.update_scenes(camera_eye = dict(x=1.5, y=1.5, z=1.5))
 
         format_fig(self._fig, size = 15)
         return self._fig
@@ -1169,3 +1172,8 @@ class PlotlyGrapher(pept.base.PEPTObject):
             filepath,
             include_plotlyjs = include_plotlyjs,
         )
+
+
+    def __repr__(self):
+        self.equalise_axes()
+        return self.fig.__repr__()

@@ -17,11 +17,8 @@ and integrate with the `pept` library's base classes.
 '''
 
 
-from    .occupancy      import  circles2d
-from    .occupancy      import  occupancy2d
-
-from    .circles_ext    import  circles2d_ext
-from    .occupancy_ext  import  occupancy2d_ext
+from    .grids  import  DynamicProbability2D, ResidenceDistribution2D
+from    .grids  import  DynamicProbability3D, ResidenceDistribution3D
 
 
 __license__ = "GNU v3.0"

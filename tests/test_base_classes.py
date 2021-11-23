@@ -194,52 +194,6 @@ def test_line_data():
         pept.LineData(np.arange(12).reshape(2, 2, 3))
 
 
-def test_voxels():
-    voxels_raw = np.arange(125).reshape(5, 5, 5)
-    xlim = [10, 20]
-    ylim = [-10, 0]
-    zlim = [20, 30]
-
-    voxels = pept.Voxels(voxels_raw, xlim, ylim, zlim)
-    print(voxels)
-
-    assert float(voxels.sum()) == float(voxels_raw.sum())
-
-    # Testing different functions
-    voxels.copy()
-
-
-def test_voxel_data():
-    lines_raw = np.arange(70).reshape(10, 7)
-    lines = pept.LineData(lines_raw, sample_size=4)
-
-    resolution = (5, 5, 5)
-    xlim = [0, 100]
-    ylim = [0, 100]
-    zlim = [0, 100]
-    voxel_data = pept.VoxelData(lines, resolution, xlim, ylim, zlim)
-    print(voxel_data)
-
-    # Test copying
-    assert voxel_data.copy() is not voxel_data, "Copy is not deep"
-    assert (voxel_data.copy()[0] == voxel_data[0]).all(), "Incorrent copying"
-
-    # Test a single sample voxellisation is done correctly
-    assert (voxel_data[0] == pept.Voxels.from_lines(
-        lines[0], resolution, xlim, ylim, zlim)
-    ).all()
-
-    # Test traversal is done correctly
-    traversed = voxel_data.traverse()
-    manual = [
-        pept.Voxels.from_lines(ln, resolution, xlim, ylim, zlim)
-        for ln in lines
-    ]
-
-    assert all([(t == m).all() for t, m in zip(traversed, manual)]), \
-        "Traversed list of voxels not found correctly"
-
-
 def f(x):
     return 2 * x.data
 

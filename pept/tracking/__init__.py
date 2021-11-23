@@ -69,11 +69,16 @@ from    .transformers           import  LinesCentroids
 
 from    .transformers           import  Condition
 from    .transformers           import  Remove
+from    .transformers           import  Swap
 
 from    .space_transformers     import  Voxelize
 from    .space_transformers     import  Interpolate
 
 from    .post                   import  Velocity
+
+from    .tof                    import  TimeOfFlight
+from    .tof                    import  CutpointsToF
+from    .tof                    import  GaussianDensity
 
 
 __license__ = "GNU v3.0"
