@@ -125,16 +125,6 @@ cy_extensions = [
         **cy_extension_kw
     ),
     Extension(
-        'pept.processing.circles_ext',
-        ['pept/processing/circles_ext.pyx'],
-        **cy_extension_kw
-    ),
-    Extension(
-        'pept.processing.occupancy_ext',
-        ['pept/processing/occupancy_ext.pyx'],
-        **cy_extension_kw
-    ),
-    Extension(
         'pept.scanners.modular_camera.extensions.get_pept_event',
         ['pept/scanners/modular_camera/extensions/get_pept_event.pyx'],
         **cy_extension_kw

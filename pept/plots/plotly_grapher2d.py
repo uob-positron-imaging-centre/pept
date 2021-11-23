@@ -266,6 +266,8 @@ class PlotlyGrapher2D:
                 self._fig["layout"][yaxis].update(
                     range = self._ylim,
                     title = dict(text = "<i>y</i> (mm)"),
+                    scaleanchor = f"x{index}" if index != 1 else "x",
+                    scaleratio = 1,
                 )
 
         format_fig(self._fig)
@@ -1156,13 +1158,5 @@ class PlotlyGrapher2D:
 
 
     def __repr__(self):
-        # Shown when writing the class on a REPL
-        docstr = (
-            "Class instance that inherits from `pept.visualisation."
-            "PlotlyGrapher2D`.\n"
-            f"Type:\n{type(self)}\n\n"
-            "Attributes\n----------\n"
-            f"{self.__str__()}\n\n"
-        )
-
-        return docstr
+        self.equalise_axes()
+        return self.fig.__repr__()

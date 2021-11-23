@@ -185,9 +185,8 @@ A more in-depth tutorial is available on
 from    .base           import  TimeWindow
 from    .base           import  LineData
 from    .base           import  PointData
-from    .base           import  Pixels
-from    .base           import  Voxels
-from    .base           import  VoxelData
+from    konigcell       import  Pixels
+from    konigcell       import  Voxels
 
 # Import other general-purpose subroutines
 from    .base           import  Pipeline

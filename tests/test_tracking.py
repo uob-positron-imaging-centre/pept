@@ -355,7 +355,6 @@ def test_swap():
     Swap("'0', '1'", "'y', 'z'", "x, z").fit(points)
 
 
-
 def test_remove():
     rng = np.random.default_rng(0)
     points_raw = rng.random((10, 4)) * 100

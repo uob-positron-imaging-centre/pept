@@ -10,3 +10,4 @@ pandas>=1.0.3
 cma>=3.0.3
 beartype>=0.7.1
 natsort>=5.5.0
+konigcell>=0.1.0
