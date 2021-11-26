@@ -19,6 +19,8 @@ and integrate with the `pept` library's base classes.
 
 from    .grids  import  DynamicProbability2D, ResidenceDistribution2D
 from    .grids  import  DynamicProbability3D, ResidenceDistribution3D
+from    .grids  import  VectorField2D, VectorField3D
+from    .grids  import  VectorGrid2D, VectorGrid3D
 
 
 __license__ = "GNU v3.0"

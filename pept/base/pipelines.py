@@ -7,10 +7,14 @@
 
 
 import  os
+import  re
 import  sys
 import  time
+import  numbers
 import  textwrap
+import  warnings
 from    abc                 import  ABC, abstractmethod
+from    concurrent.futures  import  ProcessPoolExecutor
 
 if sys.version_info.minor >= 9:
     # Python 3.9
@@ -19,7 +23,10 @@ else:
     from typing             import  Iterable
 
 import  numpy               as      np
+import  pandas              as      pd
+import  cma
 
+import  attr
 from    beartype            import  beartype
 from    tqdm                import  tqdm
 from    joblib              import  Parallel, delayed
@@ -49,16 +56,16 @@ class Transformer(ABC, PEPTObject):
         # Select all attributes from dir(obj) that are not callable (i.e. not
         # methods) and don't start with "_" (i.e. they're private)
         docs = []
-        for attr in dir(self):
-            memb = getattr(self, attr)
-            if not callable(memb) and not attr.startswith("_"):
+        for att in dir(self):
+            memb = getattr(self, att)
+            if not callable(memb) and not att.startswith("_"):
                 # If it's a nested collection, print it on a new, indented line
                 if (isinstance(memb, np.ndarray) and memb.ndim > 1) or \
                         isinstance(memb, PEPTObject):
                     memb_str = textwrap.indent(str(memb), '  ')
-                    docs.append(f"{attr} = \n{memb_str}")
+                    docs.append(f"{att} = \n{memb_str}")
                 else:
-                    docs.append(f"{attr} = {memb}")
+                    docs.append(f"{att} = {memb}")
 
         return f"{type(self).__name__}(" + ", ".join(docs) + ")"
 
@@ -505,6 +512,100 @@ class Pipeline(PEPTObject):
         return order
 
 
+    def optimise(
+        self,
+        lines,
+        # group_by = "label",
+        # error = ["frequency", "error"],
+        max_evals = 200,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+        **free_parameters,
+    ):
+
+        # Type-checking
+        if not isinstance(lines, LineData):
+            lines = LineData(lines)
+
+        if not len(free_parameters):
+            raise ValueError(textwrap.fill((
+                "Must define at least one free parameter to optimise, given "
+                "as `param_name = [range_min, range_max]`."
+            )))
+
+        # The free parameters for each transformer - prepend the input `lors` s
+        # sample_size and overlap
+        # This is a list[tuple[transformer, set[parameter_name]]]
+        pipe_parameters = parameters_list(self)
+
+        # Find transformer free parameters
+        # This is a list[OptParam] saving the transformer and param name
+        opt_parameters = [
+            OptParam(pipe_parameters, param, bounds)
+            for param, bounds in free_parameters.items()
+        ]
+
+        if verbose:
+            _print_pipe_params(opt_parameters)
+
+        bounds = np.array([op.bounds for op in opt_parameters])
+        scaling = 0.4 * (bounds[:, 1] - bounds[:, 0])
+        bounds_scaled = bounds / scaling[:, None]
+
+        x0 = 0.5 * (bounds[:, 0] + bounds[:, 1]) / scaling
+        sigma0 = 1.
+
+        es = cma.CMAEvolutionStrategy(x0, sigma0, dict(
+            bounds = [bounds_scaled[:, 0], bounds_scaled[:, 1]],
+            tolflatfitness = 10,
+            maxfevals = int(max_evals),
+            verbose = 3 if verbose else -9,
+        ))
+
+        # Store optimisation pipeline parameters
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
+        with ProcessPoolExecutor(max_workers = max_workers) as executor:
+            popt = OptPipeline(self, opt_parameters, lines, executor)
+
+            # Save optimisation evolution
+            history = []
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+
+                while not es.stop():
+                    solutions = es.ask()
+                    results = _try_solutions(solutions * scaling, popt)
+                    es.tell(solutions, results[:, -1])
+
+                    _print_after_eval(
+                        es,
+                        opt_parameters,
+                        solutions * scaling,
+                        results,
+                    )
+                    history.append(np.c_[solutions * scaling, results])
+
+                    if es.sigma < 0.1:
+                        break
+
+        print(es.result)
+
+        best_solution = es.result.xfavorite * scaling
+        for op, sol in zip(popt.parameters, best_solution):
+            if isinstance(op.default, numbers.Integral):
+                sol = int(sol)
+
+            setattr(op.trans, op.param, sol)
+
+
+        return np.vstack(history)
+
+
+
     def __add__(self, other):
         if isinstance(other, Transformer):
             return Pipeline(self.transformers + [other])
@@ -524,3 +625,202 @@ class Pipeline(PEPTObject):
         return f"{name}\n{underline}\ntransformers = [\n" + textwrap.indent(
             "\n".join((t.__str__() for t in self.transformers)), '    '
         ) + "\n]"
+
+
+
+
+@attr.s(auto_attribs = True, slots = True, auto_detect = True)
+class OptParam:
+    '''Class storing a single pipeline optimisation free parameter, including
+    its parent transformer (`trans`), name (`param`), range (`bounds`) and
+    initial value (`default`).
+    '''
+    index: int
+    trans: PEPTObject
+    param: str
+    bounds: np.ndarray
+    default: float
+
+    def __init__(self, pipe_parameters, param, bounds):
+
+        # Type-checking
+        param = str(param)
+        bounds = np.asarray(bounds, dtype = float)
+        if bounds.ndim != 1 or len(bounds) != 2:
+            raise ValueError(textwrap.fill((
+                f"The parameter range given for `{param}` is incorrect. "
+                "It must be a list formatted as [min, max]. Received "
+                f"`{bounds}`."
+            )))
+
+        # Parameter name may have a number appended, e.g. "sample_size2" means
+        # the second pipeline free parameter named `sample_size`
+        match = re.search(r"(\d+)$", param)
+        if match is None:
+            pnum = 1                            # Parameter number
+        else:
+            pnum = int(match.group())
+            param = param[:match.span()[0]]     # Remove parameter number
+
+        self.param = param
+        self.bounds = bounds
+
+        # Find index of transformer containing the `param` free parameter
+        pcur = 1
+        for i, (trans, param_names) in enumerate(pipe_parameters):
+            if param in param_names:
+                if pcur == pnum:
+                    self.index = i
+                    self.trans = trans
+                    self.default = getattr(trans, param)
+                    break
+                else:
+                    pcur += 1
+        else:
+            raise ValueError(textwrap.fill((
+                f"No free parameter named `{param}` was found in the pipeline "
+                f"while looking for the N={pnum} parameter with this name."
+            )))
+
+
+
+
+@attr.s(auto_attribs = True, slots = True, auto_detect = True)
+class OptPipeline:
+    '''Class storing a single pipeline optimisation free parameter, including
+    its parent transformer (`trans`), name (`param`), range (`bounds`) and
+    initial value (`default`).
+    '''
+    pipeline: Pipeline
+    parameters: OptParam
+    lines: LineData
+    executor: ProcessPoolExecutor
+
+
+
+
+
+def parameters_list(pipeline: Pipeline):
+    '''Return a list[tuple[TransformerName, set[str]]], where for each
+    transformer in a pipeline the corresponding set contains its free parameter
+    names.
+    '''
+    parameters = []
+    for trans in pipeline.transformers:
+        # Save the names of the transformer's attributes that are not hidden
+        # (i.e. start with "_") and are not callable (i.e. not methods)
+        trans_params = (trans, set())
+        for att in dir(trans):
+            if not att.startswith("_") and not callable(getattr(trans, att)):
+                trans_params[1].add(att)
+
+        parameters.append(trans_params)
+
+    return parameters
+
+
+def _print_pipe_params(opt_parameters):
+    trans_strs = [
+        f"{op.trans.__class__.__name__}.{op.param}"
+        for op in opt_parameters
+    ]
+    max_len = max([len(ts) for ts in trans_strs])
+
+    print("\nOptimising Pipeline Parameters:")
+    for trans, op in zip(trans_strs, opt_parameters):
+        trans = trans + (max_len - len(trans)) * ' '
+        print(f"  {op.index} : {trans} : {op.bounds}")
+    print()
+
+
+def _try_solution(pipeline, lines):
+    start = time.time()
+    try:
+        out = pipeline.fit(
+            lines,
+            executor = "sequential",
+            verbose = False,
+        )
+    except ValueError:
+        out = PointData(
+            np.empty((0, 5)),
+            columns = ["t", "x", "y", "z", "error"],
+        )
+    end = time.time()
+    print(f"Pipe eval: {end - start}")
+
+    print(out)
+
+    # Try to keep the frequency of points ~ freq LoRs / 100
+    # Calculate the difference of frequency of points to lines / 100
+    times = lines["t"]
+    dt = times[-1] - times[0]
+    pfreq = len(out.points) / dt
+    lfreq = len(lines.lines) / dt
+
+    freq_err = (pfreq - lfreq / 100) ** 2 if pfreq else np.inf
+
+    # Error in particle positions
+    spatial_err = np.nanmedian(out["error"]) if pfreq else np.inf
+
+    return [freq_err, spatial_err, freq_err * spatial_err]
+
+
+
+def _try_solutions(solutions, popt: OptPipeline):
+
+    # Create pipeline copies holding the different parameter combinations
+    pipes = [popt.pipeline.copy() for _ in range(len(solutions))]
+
+    for sol_set in solutions:
+        # Set transformers' parameters to the values in `sol_set`
+        for i, op in enumerate(popt.parameters):
+            sol = sol_set[i]
+            if isinstance(op.default, numbers.Integral):
+                sol = int(sol)
+
+            setattr(pipes[i].transformers[op.index], op.param, sol)
+
+    # Execute the different pipelines in parallel
+    futures = [
+        popt.executor.submit(_try_solution, pipe, popt.lines)
+        for pipe in pipes
+    ]
+    results = [f.result() for f in futures]
+    del futures
+
+    # Reset pipeline parameters to their default values
+    # for op in popt.parameters:
+    #     setattr(op.trans, op.param, op.default)
+
+    return np.array(results)
+
+
+def _print_after_eval(es, parameters, solutions, results):
+    # Display evaluation results: solutions, error values, etc.
+    cols = [p.param for p in parameters] + ["freq_err", "spatial_err", "error"]
+    sols_results = np.c_[solutions, results]
+
+    # Store solutions and results in a DataFrame for easy pretty printing
+    sols_results = pd.DataFrame(
+        data = sols_results,
+        columns = cols,
+        index = None,
+    )
+
+    # Display all the DataFrame columns and rows
+    old_max_columns = pd.get_option("display.max_columns")
+    old_max_rows = pd.get_option("display.max_rows")
+
+    pd.set_option("display.max_columns", None)
+    pd.set_option("display.max_rows", None)
+
+    print((
+        f"{sols_results}\n"
+        f"    Overall Convergence: {es.sigma}\n"
+        f"  Parameter Convergence: {es.result.stds}\n"
+        f"   Function evaluations: {es.result.evaluations}\n---"
+    ), flush = True)
+
+    pd.set_option("display.max_columns", old_max_columns)
+    pd.set_option("display.max_rows", old_max_rows)

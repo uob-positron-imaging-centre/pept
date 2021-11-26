@@ -283,7 +283,6 @@ __all__ = [
     'PointData',
     'Pixels',
     'Voxels',
-    'VoxelData',
 
     'Pipeline',
 

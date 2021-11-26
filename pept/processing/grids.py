@@ -6,14 +6,24 @@
 # Date   : 19.11.2021
 
 
+import  time
 import  textwrap
 
+import  attr
 import  numpy           as      np
 import  konigcell       as      kc
 
 from    pept.base       import  Reducer
-from    pept            import  PointData
+from    pept            import  PointData, Voxels, Pixels
 from    pept.tracking   import  Stack
+
+# PyVista plotting is optional
+try:
+    import  pyvista     as      pv
+except ImportError:
+    pass
+
+import  plotly.figure_factory as ff
 
 
 
@@ -61,10 +71,6 @@ class DynamicProbability2D(Reducer):
         The physical limits in the y dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    max_workers: int, optional
-        The maximum number of threads to use for computing the probability
-        grid.
-
     Examples
     --------
     Compute the velocity probability distribution of a single tracer trajectory
@@ -99,7 +105,6 @@ class DynamicProbability2D(Reducer):
         resolution = (512, 512),
         xlim = None,
         ylim = None,
-        max_workers = None,
     ):
         # Type-checking inputs
         self.dimensions = [None, None]
@@ -137,10 +142,8 @@ class DynamicProbability2D(Reducer):
         self.xlim = xlim
         self.ylim = ylim
 
-        self.max_workers = max_workers
 
-
-    def fit(self, samples, verbose = True):
+    def fit(self, samples, max_workers = None, verbose = True):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
         verbose = bool(verbose)
@@ -177,7 +180,7 @@ class DynamicProbability2D(Reducer):
             resolution = self.resolution,
             xlim = self.xlim,
             ylim = self.ylim,
-            max_workers = self.max_workers,
+            max_workers = max_workers,
             verbose = verbose,
         )
 
@@ -229,10 +232,6 @@ class ResidenceDistribution2D(Reducer):
         The physical limits in the y dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    max_workers: int, optional
-        The maximum number of threads to use for computing the probability
-        grid.
-
     Examples
     --------
     Compute the residence time distribution of a single tracer trajectory:
@@ -266,7 +265,6 @@ class ResidenceDistribution2D(Reducer):
         resolution = (512, 512),
         xlim = None,
         ylim = None,
-        max_workers = None,
     ):
         # Type-checking inputs
         self.dimensions = [None, None]
@@ -304,10 +302,8 @@ class ResidenceDistribution2D(Reducer):
         self.xlim = xlim
         self.ylim = ylim
 
-        self.max_workers = max_workers
 
-
-    def fit(self, samples, verbose = True):
+    def fit(self, samples, max_workers = None, verbose = True):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
         verbose = bool(verbose)
@@ -346,7 +342,7 @@ class ResidenceDistribution2D(Reducer):
             resolution = self.resolution,
             xlim = self.xlim,
             ylim = self.ylim,
-            max_workers = self.max_workers,
+            max_workers = max_workers,
             verbose = verbose,
         )
 
@@ -402,10 +398,6 @@ class DynamicProbability3D(Reducer):
         The physical limits in the z dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    max_workers: int, optional
-        The maximum number of threads to use for computing the probability
-        grid.
-
     Examples
     --------
     Compute the velocity probability distribution of a single tracer trajectory
@@ -441,7 +433,6 @@ class DynamicProbability3D(Reducer):
         xlim = None,
         ylim = None,
         zlim = None,
-        max_workers = None,
     ):
         # Type-checking inputs
         self.dimensions = [None, None, None]
@@ -483,10 +474,8 @@ class DynamicProbability3D(Reducer):
         self.ylim = ylim
         self.zlim = zlim
 
-        self.max_workers = max_workers
 
-
-    def fit(self, samples, verbose = True):
+    def fit(self, samples, max_workers = None, verbose = True):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
         verbose = bool(verbose)
@@ -524,7 +513,7 @@ class DynamicProbability3D(Reducer):
             xlim = self.xlim,
             ylim = self.ylim,
             zlim = self.zlim,
-            max_workers = self.max_workers,
+            max_workers = max_workers,
             verbose = verbose,
         )
 
@@ -609,7 +598,6 @@ class ResidenceDistribution3D(Reducer):
 
     '''
 
-
     def __init__(
         self,
         diameter,
@@ -619,7 +607,6 @@ class ResidenceDistribution3D(Reducer):
         xlim = None,
         ylim = None,
         zlim = None,
-        max_workers = None,
     ):
         # Type-checking inputs
         self.dimensions = [None, None, None]
@@ -661,10 +648,8 @@ class ResidenceDistribution3D(Reducer):
         self.ylim = ylim
         self.zlim = zlim
 
-        self.max_workers = max_workers
 
-
-    def fit(self, samples, verbose = True):
+    def fit(self, samples, max_workers = None, verbose = True):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
         verbose = bool(verbose)
@@ -704,8 +689,397 @@ class ResidenceDistribution3D(Reducer):
             xlim = self.xlim,
             ylim = self.ylim,
             zlim = self.zlim,
-            max_workers = self.max_workers,
+            max_workers = max_workers,
             verbose = verbose,
         )
 
         return voxels
+
+
+
+
+class VectorField2D(Reducer):
+    '''Compute a 2D vector field - effectively two 2D grids computed from
+    two columns, for example X and Y velocities.
+
+    Reducer signature:
+
+    ::
+
+              PointData -> VectorField2D.fit -> VectorGrid2D
+        list[PointData] -> VectorField2D.fit -> VectorGrid2D
+          numpy.ndarray -> VectorField2D.fit -> VectorGrid2D
+
+    Examples
+    --------
+    Compute a velocity vector field in the Y and Z dimensions (velocities
+    were first calculated using ``pept.tracking.Velocity``):
+
+    >>> from pept.processing import *
+    >>> trajectories = pept.PointData(...)
+    >>> field = VectorField2D(0.6, ["vy", "vz"], "yz").fit(trajectories)
+    >>> field
+    VectorGrid2D(xpixels, ypixels)
+
+    Create a quiver plot using Plotly (may be a bit slow):
+
+    >>> scaling = 16
+    >>> fig = field.quiver(scaling)
+    >>> fig.show()
+
+    Create a 2D vector field (needs PyVista):
+
+    >>> scaling = 16
+    >>> fig = field.vectors(scaling)
+    >>> fig.plot(cmap = "magma")
+
+    '''
+
+    def __init__(
+        self,
+        diameter,
+        columns = ["vx", "vy"],
+        dimensions = "xy",
+        resolution = (50, 50),
+        xlim = None,
+        ylim = None,
+    ):
+        # Type-checking inputs
+        self.dimensions = [None, None]
+        if isinstance(dimensions, str):
+            d = str(dimensions)
+            if len(d) != 2 or d[0] not in "xyz" or d[1] not in "xyz":
+                raise ValueError(textwrap.fill((
+                    "The input `dimensions`, if given as a str, must have "
+                    "exactly two characters containing 'x' or 'y'; "
+                    f"e.g. 'xy', 'zy'. Received `{d}`."
+                )))
+
+            # Transform x -> 1, y -> 2, z -> 3 using ASCII integer `ord`er
+            self.dimensions[0] = ord(d[0]) - ord('x') + 1
+            self.dimensions[1] = ord(d[1]) - ord('x') + 1
+        else:
+            d = np.asarray(dimensions, dtype = int)
+            if d.ndim != 1 or len(d) != 2:
+                raise ValueError(textwrap.fill((
+                    "The input `dimensions`, if given as a list, must contain "
+                    "exactly two integers representing the column indices "
+                    "to use; e.g. `[1, 2]` for xy, `[3, 1]` for zx. "
+                    f"Received `{d}`."
+                )))
+            self.dimensions[0] = d[0]
+            self.dimensions[1] = d[1]
+
+        self.diameter = float(diameter)
+
+        columns = list(columns)
+        if len(columns) != 2:
+            raise ValueError(textwrap.fill((
+                "The input `columns` must be a list-like with exactly two "
+                "elements, either column names (str, e.g. 'vx') or column "
+                f"indices (int, e.g. 4). Received {columns}."
+            )))
+
+        self.columns = [None, None]
+        for i, col in enumerate(columns):
+            if isinstance(col, str):
+                self.columns[i] = str(col)
+            else:
+                self.columns[i] = int(col)
+
+        self.resolution = resolution
+        self.xlim = xlim
+        self.ylim = ylim
+
+
+    def fit(self, samples, max_workers = None, verbose = True):
+        if verbose:
+            start = time.time()
+
+        # Reduce / stack list of samples onto a single PointData / array
+        samples = Stack().fit(samples)
+        verbose = bool(verbose)
+
+        if not isinstance(samples, PointData):
+            samples = PointData(samples)
+
+        grids = [None, None]
+        for i, col in enumerate(self.columns):
+            if verbose:
+                print(f"Step {i + 1} / {len(self.columns)}:")
+
+            pixelizer = DynamicProbability2D(
+                self.diameter,
+                col,
+                self.dimensions,
+                self.resolution,
+                self.xlim,
+                self.ylim,
+            )
+            grids[i] = pixelizer.fit(samples, max_workers, verbose = False)
+
+        if verbose:
+            end = time.time()
+            print(f"Compute 3D vector field in {end - start:4.4f} s.")
+
+        return VectorGrid2D(*grids)
+
+
+
+
+@attr.s(auto_attribs = True, slots = True, auto_detect = True)
+class VectorGrid2D:
+    '''Object produced by ``VectorField2D`` storing 2 grids of voxels
+    `xpixels`, `ypixels`, for example velocity vector fields / quiver plots.
+
+    Examples
+    --------
+    Compute a velocity vector field in the Y and Z dimensions (velocities
+    were first calculated using ``pept.tracking.Velocity``):
+
+    >>> from pept.processing import *
+    >>> trajectories = pept.PointData(...)
+    >>> field = VectorField2D(0.6, ["vy", "vz"], "yz").fit(trajectories)
+    >>> field
+    VectorGrid2D(xpixels, ypixels)
+
+    Create a quiver plot using Plotly (may be a bit slow):
+
+    >>> scaling = 16
+    >>> fig = field.quiver(scaling)
+    >>> fig.show()
+
+    Create a 2D vector field (needs PyVista):
+
+    >>> scaling = 16
+    >>> fig = field.vectors(scaling)
+    >>> fig.plot(cmap = "magma")
+
+    '''
+    xpixels: Pixels
+    ypixels: Pixels
+
+    def vectors(self, factor = 1):
+        # You need to install PyVista to use this function!
+        grid = pv.UniformGrid()
+
+        shape = self.xpixels.pixels.shape
+        grid.dimensions = [shape[0] + 1, shape[1] + 1, 1]
+        grid.origin = list(self.xpixels.lower) + [0]
+        grid.spacing = list(self.xpixels.pixel_size) + [0]
+        grid.cell_data.values = self.xpixels.pixels.flatten(order="F")
+
+        vectors = grid.cell_centers()
+
+        vectors["vectors"] = np.vstack((
+            self.xpixels.pixels.flatten(order="F"),
+            self.ypixels.pixels.flatten(order="F"),
+            np.zeros(len(self.xpixels.pixels.flatten())),
+        )).T
+
+        vectors.active_vectors_name = 'vectors'
+        return vectors.glyph(factor = factor)
+
+
+    def quiver(self, factor = 1):
+        xg, yg = self.xpixels.pixel_grids
+        xg = 0.5 * (xg[1:] + xg[:-1])
+        yg = 0.5 * (yg[1:] + yg[:-1])
+
+        x, y = np.meshgrid(xg, yg)
+        fig = ff.create_quiver(
+            x,
+            y,
+            self.xpixels.pixels.T,
+            self.ypixels.pixels.T,
+            scale = factor,
+        )
+        return fig
+
+
+    def __repr__(self):
+        return "VectorGrid2D(xpixels, ypixels)"
+
+
+
+
+class VectorField3D(Reducer):
+    '''Compute a 3D vector field - effectively three 3D grids computed from
+    three columns, for example X, Y and Z velocities.
+
+    Reducer signature:
+
+    ::
+
+              PointData -> VectorField3D.fit -> VectorGrid3D
+        list[PointData] -> VectorField3D.fit -> VectorGrid3D
+          numpy.ndarray -> VectorField3D.fit -> VectorGrid3D
+
+    Examples
+    --------
+    Compute a 3D velocity vector field (velocities were first calculated using
+    ``pept.tracking.Velocity``):
+
+    >>> from pept.processing import *
+    >>> trajectories = pept.PointData(...)
+    >>> field = VectorField3D(0.6).fit(trajectories)
+    >>> field
+    VectorGrid3D(xvoxels, yvoxels, zvoxels)
+
+    Create a 3D vector field (needs PyVista):
+
+    >>> scaling = 16
+    >>> fig = field.vectors(scaling)
+    >>> fig.plot(cmap = "magma")
+
+    '''
+
+    def __init__(
+        self,
+        diameter,
+        columns = ["vx", "vy", "vz"],
+        dimensions = "xyz",
+        resolution = (50, 50, 50),
+        xlim = None,
+        ylim = None,
+        zlim = None,
+    ):
+        # Type-checking inputs
+        self.dimensions = [None, None, None]
+        if isinstance(dimensions, str):
+            d = str(dimensions)
+            if len(d) != 3 or d[0] not in "xyz" or d[1] not in "xyz" or \
+                    d[2] not in "xyz":
+                raise ValueError(textwrap.fill((
+                    "The input `dimensions`, if given as a str, must have "
+                    "exactly three characters containing 'x', 'y', or 'z'; "
+                    f"e.g. 'xyz', 'zxy'. Received `{d}`."
+                )))
+
+            # Transform x -> 1, y -> 2, z -> 3 using ASCII integer `ord`er
+            self.dimensions[0] = ord(d[0]) - ord('x') + 1
+            self.dimensions[1] = ord(d[1]) - ord('x') + 1
+            self.dimensions[2] = ord(d[2]) - ord('x') + 1
+        else:
+            d = np.asarray(dimensions, dtype = int)
+            if d.ndim != 1 or len(d) != 3:
+                raise ValueError(textwrap.fill((
+                    "The input `dimensions`, if given as a list, must contain "
+                    "exactly three integers representing the column indices "
+                    "to use; e.g. `[1, 2, 3]` for xyz, `[3, 1, 2]` for zxy. "
+                    f"Received `{d}`."
+                )))
+            self.dimensions[0] = d[0]
+            self.dimensions[1] = d[1]
+            self.dimensions[2] = d[2]
+
+        self.diameter = float(diameter)
+
+        columns = list(columns)
+        if len(columns) != 3:
+            raise ValueError(textwrap.fill((
+                "The input `columns` must be a list-like with exactly 3 "
+                "elements, either column names (str, e.g. 'vx') or column "
+                f"indices (int, e.g. 4). Received {columns}."
+            )))
+
+        self.columns = [None, None, None]
+        for i, col in enumerate(columns):
+            if isinstance(col, str):
+                self.columns[i] = str(col)
+            else:
+                self.columns[i] = int(col)
+
+        self.resolution = resolution
+        self.xlim = xlim
+        self.ylim = ylim
+        self.zlim = zlim
+
+
+    def fit(self, samples, max_workers = None, verbose = True):
+
+        if verbose:
+            start = time.time()
+
+        # Reduce / stack list of samples onto a single PointData / array
+        samples = Stack().fit(samples)
+        verbose = bool(verbose)
+
+        if not isinstance(samples, PointData):
+            samples = PointData(samples)
+
+        grids = [None, None, None]
+        for i, col in enumerate(self.columns):
+            if verbose:
+                print(f"Step {i + 1} / {len(self.columns)}...")
+
+            voxelizer = DynamicProbability3D(
+                self.diameter,
+                col,
+                self.dimensions,
+                self.resolution,
+                self.xlim,
+                self.ylim,
+                self.zlim,
+            )
+            grids[i] = voxelizer.fit(samples, max_workers, verbose = False)
+
+        if verbose:
+            end = time.time()
+            print(f"Compute 3D vector field in {end - start:4.4f} s.")
+
+        return VectorGrid3D(*grids)
+
+
+
+
+@attr.s(auto_attribs = True, slots = True, auto_detect = True)
+class VectorGrid3D:
+    '''Object produced by ``VectorField3D`` storing 3 grids of voxels
+    `xvoxels`, `yvoxels`, `zvoxels`, for example velocity vector fields /
+    quiver plots.
+
+    Examples
+    --------
+    Compute a 3D velocity vector field (velocities were first calculated using
+    ``pept.tracking.Velocity``):
+
+    >>> from pept.processing import *
+    >>> trajectories = pept.PointData(...)
+    >>> field = VectorField3D(0.6).fit(trajectories)
+    >>> field
+    VectorGrid3D(xvoxels, yvoxels, zvoxels)
+
+    Create a 3D vector field (needs PyVista):
+
+    >>> scaling = 16
+    >>> fig = field.vectors(scaling)
+    >>> fig.plot(cmap = "magma")
+
+    '''
+    xvoxels: Voxels
+    yvoxels: Voxels
+    zvoxels: Voxels
+
+    def vectors(self, factor = 1):
+        # You need to install PyVista to use this function!
+        grid = pv.UniformGrid()
+        grid.dimensions = np.array(self.xvoxels.voxels.shape) + 1
+        grid.origin = self.xvoxels.lower
+        grid.spacing = self.xvoxels.voxel_size
+        grid.cell_data.values = self.xvoxels.voxels.flatten(order="F")
+
+        vectors = grid.cell_centers()
+
+        vectors["vectors"] = np.vstack((
+            self.xvoxels.voxels.flatten(order="F"),
+            self.yvoxels.voxels.flatten(order="F"),
+            self.zvoxels.voxels.flatten(order="F"),
+        )).T
+
+        vectors.active_vectors_name = 'vectors'
+        return vectors.glyph(factor = factor)
+
+
+    def __repr__(self):
+        return "VectorGrid3D(xvoxels, yvoxels, zvoxels)"

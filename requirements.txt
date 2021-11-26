@@ -11,3 +11,4 @@ cma>=3.0.3
 beartype>=0.7.1
 natsort>=5.5.0
 konigcell>=0.1.0
+attrs>=20.1.0

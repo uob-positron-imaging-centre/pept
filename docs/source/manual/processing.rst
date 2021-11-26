@@ -5,6 +5,8 @@ Post Processing (``pept.processing``)
 .. automodule:: pept.processing
 
 
+Probability / Residence Distributions
+-------------------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -14,3 +16,16 @@ Post Processing (``pept.processing``)
    pept.processing.ResidenceDistribution2D
    pept.processing.ResidenceDistribution3D
 
+
+
+
+Vector Grids
+------------
+
+.. autosummary::
+   :toctree: generated/
+
+   pept.processing.VectorField2D
+   pept.processing.VectorGrid2D
+   pept.processing.VectorField3D
+   pept.processing.VectorGrid3D

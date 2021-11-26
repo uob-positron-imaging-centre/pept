@@ -561,6 +561,16 @@ class PlotlyGrapher2D:
                 self.add_trace(t, row = rc[0], col = rc[1])
 
         self.equalise_separate()
+
+        for i in range(self._rows):
+            for j in range(self._cols):
+                index = i * self._cols + j + 1
+                yaxis = f"yaxis{index}" if index != 1 else "yaxis"
+                self._fig["layout"][yaxis].update(
+                    scaleanchor = None,
+                    scaleratio = None,
+                )
+
         return self
 
 

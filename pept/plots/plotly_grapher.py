@@ -898,8 +898,8 @@ class PlotlyGrapher(pept.base.PEPTObject):
         colorscale = "Magma",
         colorbar_title = None,
     ):
-        '''Create and plot a trace for all the voxels in a `pept.Voxels` or
-        `pept.VoxelData` instance, with possible filtering.
+        '''Create and plot a trace for all the voxels in a `pept.Voxels`
+        instance, with possible filtering.
 
         Creates a `plotly.graph_objects.Scatter3d` object for the centres of
         all voxels encapsulated in a `pept.Voxels` instance, colour-coding the
@@ -913,12 +913,8 @@ class PlotlyGrapher(pept.base.PEPTObject):
 
         Parameters
         ----------
-        voxels : pept.Voxels or pept.VoxelData
-            The voxel space, encapsulated in a `pept.Voxels` or
-            `pept.VoxelData` instance (or subclass thereof). If a `VoxelData`
-            is received, all the voxels will be accumulated / superimpoesd.
-            Only these classes are accepted as raw voxels on their own do not
-            contain data about the spatial coordinates of the voxel box.
+        voxels : pept.Voxels
+            The voxel space, encapsulated in a `pept.Voxels` object.
 
         row : int, default 1
             The row of the subplot to add a trace to.
@@ -981,16 +977,13 @@ class PlotlyGrapher(pept.base.PEPTObject):
 
         '''
 
-        if isinstance(voxels, pept.VoxelData):
-            voxels = voxels.accumulate(verbose = False)
-        elif not isinstance(voxels, pept.Voxels):
+        if not isinstance(voxels, pept.Voxels):
             raise TypeError(textwrap.fill((
-                "The input `voxels` must be an instance of `pept.Voxels` or "
-                "`pept.VoxelData` (or subclass thereof). Received "
-                f"{type(voxels)}."
+                "The input `voxels` must be an instance of `pept.Voxels`. "
+                f"Received {type(voxels)}."
             )))
 
-        trace = voxels.voxels_trace(
+        trace = voxels.scatter_trace(
             condition = condition,
             size = size,
             color = color,
