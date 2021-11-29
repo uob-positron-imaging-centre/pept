@@ -55,6 +55,7 @@ Trajectory Separation Algorithms
    :toctree: generated/
 
    pept.tracking.Segregate
+   pept.tracking.Reconnect
 
 
 

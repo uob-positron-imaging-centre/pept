@@ -56,9 +56,6 @@ from    .peptml                 import  Cutpoints, Minpoints
 from    .peptml                 import  HDBSCAN, HDBSCANClusterer
 from    .fpi                    import  FPI
 
-from    .trajectory_separation  import  Segregate
-
-# Import other objects defined elsewhere that should be available here
 from    .transformers           import  Stack
 
 from    .transformers           import  SplitLabels
@@ -79,6 +76,9 @@ from    .post                   import  Velocity
 from    .tof                    import  TimeOfFlight
 from    .tof                    import  CutpointsToF
 from    .tof                    import  GaussianDensity
+
+from    .trajectory_separation  import  Segregate
+from    .trajectory_separation  import  Reconnect
 
 
 __license__ = "GNU v3.0"

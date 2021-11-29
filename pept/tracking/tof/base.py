@@ -21,6 +21,7 @@ from    .cutpoints_tof  import  find_cutpoints_tof
 
 
 
+
 class TimeOfFlight(LineDataFilter):
     '''Compute the positron annihilation locations of each LoR as given by the
     Time Of Flight (ToF) data of the two LoR timestamps.
@@ -44,7 +45,7 @@ class TimeOfFlight(LineDataFilter):
     m / s or mm / ms, but not mm / s). If it is set, the "temporal_resolution"
     and "spatial_resolution" extra attributes are set on the ToF points.
 
-    *New in pept-0.4.3*
+    *New in pept-0.4.2*
 
     Examples
     --------
@@ -223,7 +224,7 @@ class CutpointsToF(LineDataFilter):
     If `cutpoints_only = False` (default), the Time Of Flight-predicted
     positron annihilation locations are also appended to the returned points.
 
-    *New in pept-0.4.3*
+    *New in pept-0.4.2*
 
     Examples
     --------
@@ -385,6 +386,7 @@ class CutpointsToF(LineDataFilter):
 
 
 
+
 def _gaussian_probs(x, points, sigma):
     '''Probabilities from x to Gaussian-distributed points.'''
     dists = np.sum((x[:3] - points)**2, axis = 1)
@@ -428,7 +430,7 @@ class GaussianDensity(Filter):
     where the tracer is. For multiple particle tracking (or just more
     robustness to noise) you can use `HDBSCAN + SplitLabels` beforehand.
 
-    *New in pept-0.4.3*
+    *New in pept-0.4.2*
     '''
 
     def __init__(self, sigma = None):

@@ -54,7 +54,6 @@ from    scipy.sparse.csgraph        import  minimum_spanning_tree
 import  pept
 import  hdbscan
 
-from    .tco                        import  with_continuations
 from    .distance_matrix_reachable  import  distance_matrix_reachable
 
 
@@ -120,8 +119,9 @@ class Segregate(pept.base.Reducer):
 
     ::
 
-        pept.PointData -> Segregate.fit_sample -> pept.PointData
-        list[pept.PointData] -> Segregate.fit_sample -> pept.PointData
+              pept.PointData -> Segregate.fit -> pept.PointData
+        list[pept.PointData] -> Segregate.fit -> pept.PointData
+               numpy.ndarray -> Segregate.fit -> pept.PointData
 
     The points in `point_data` (a numpy array or `pept.PointData`) are used
     to construct a minimum spanning tree in which every point can only be
@@ -285,239 +285,151 @@ class Segregate(pept.base.Reducer):
 
 
 
-def connect_trajectories(
-    trajectories_points,
-    max_time_difference,
-    max_signature_difference,
-    points_to_check = 50,
-    signature_col = 4,
-    label_col = -1,
-    as_list = False
-):
-    '''Connect segregated trajectories based on tracer signatures.
+class Reconnect(pept.base.Reducer):
+    '''Best-fit trajectory segment reconstruction based on time, distance and
+    arbitrary tracer signatures.
 
-    A pair of trajectories in `trajectories_points` will be connected if their
-    ends have a timestamp difference that is smaller than `max_time_difference`
-    and the difference between the signature averages of the closest
-    `points_to_check` points is smaller than `max_signature_difference`.
+    Reducer signature:
 
-    The `trajectories_points` are distinguished based on the trajectory
-    indices in the data column `label_col`. This can be achieved using the
-    `segregate_trajectories` function, which appends the labels to the data
-    points.
+    ::
 
-    Because the tracer signature (e.g. cluster size in PEPT-ML) varies with the
-    tracer position in the system, an average of `points_to_check` points
-    is used for connecting pairs of trajectories.
+              pept.PointData -> Segregate.fit -> pept.PointData
+        list[pept.PointData] -> Segregate.fit -> pept.PointData
+               numpy.ndarray -> Segregate.fit -> pept.PointData
 
-    Parameters
-    ----------
-    trajectories_points : (M, N>=6) numpy.ndarray or pept.PointData
-        A numpy array of points that have a timestamp, spatial coordinates,
-        a tracer signature (such as cluster size in PEPT-ML) and a trajectory
-        index (or label). The data columns in `trajectories_points` are then
-        [time, x, y, z, ..., signature, ..., label, ...]. Note that the
-        timestamps and spatial coordinates must be the first 4 columns, while
-        the signature and label columns may be anywhere and are pointed at
-        by `signature_col` and `label_col`.
-    max_time_difference : float
-        Only try to connect trajectories whose ends have a timestamp difference
-        smaller than `max_time_difference`.
-    max_signature_difference : float
-        Connect two trajectories if the difference between the signature
-        averages of the closest `points_to_check` is smaller than this.
-    points_to_check : int, default 50
-        The number of points used when computing the average tracer signature
-        in one trajectory.
-    signature_col : int, default 4
-        The column in `trajectories_points` that contains the tracer
-        signatures. The default is 4 (i.e. the signature comes right after
-        the spatial coordinates).
-    label_col : int, default -1
-        The column in `trajectories_points` that contains the trajectory
-        indices (labels). The default is -1 (i.e. the last column).
-    as_list : bool, default False
-        If True, return a list of arrays, where each array contains the points
-        in a single trajectory. In other words, return separate, single
-        trajectories in a list. If False, return a single array of all points
-        (if `trajectories_points` was a `numpy.ndarray`) or a `pept.PointData`
-        (if `trajectories_points` was a `pept.PointData` instance), but with
-        labels changed to reflect the connected trajectories.
+    After a trajectory segregation step (e.g. using ``Segregate``), you may be
+    left with multiple smaller trajectory segments. Some trajectories can be
+    reconstructed even when losing the tracers for a bit.
 
-    Returns
-    -------
-    numpy.ndarray or pept.PointData or list of numpy.ndarray
-        If `as_list` is True, return separate, single trajectories in a list.
-        If `as_list` is False, return a single array of all points
-        (if `trajectories_points` was a `numpy.ndarray`) or a `pept.PointData`
-        (if `trajectories_points` was a `pept.PointData` instance), but with
-        labels changed to reflect the connected trajectories.
+    When a tracer is lost for less than `tmax` time and `dmax` distance, its
+    trajectory segments are reconnected; if multiple condidates are possible,
+    the best fit is used.
 
-    Raises
-    ------
-    ValueError
-        If `point_data` is a numpy array with fewer than 6 columns.
+    Multiple tracer signatures can be used to improve the reconnection step;
+    supply them as data column names and difference thresholds, e.g. an extra
+    keyword argument ``v = 1`` will join trajectories whose difference in
+    velocity is smaller than 1 m/s.
 
-    Notes
-    -----
-    The labels are changed in-place to reflect the connected trajectories. For
-    example, if there are 3 trajectories with labels 0, 1, 2 and the first two
-    are connected, then all points which previously had the label 1 will be
-    changed to label 0; the last trajectory's label remains unchanged, 2.
+    The last `num_points` points on a segment are averaged before they are
+    connected with the first `num_points` on another segment.
+
+    *New in pept-0.4.2*
 
     Examples
     --------
-    [TODO] - add full tutorial page on Bham PIC GitHub page for this.
+    Reconnect segments that are closer than 1 second in time and 0.1 m apart:
 
-    See Also
-    --------
-    segregate_trajectories : Segregate the intertwined points from multiple
-                             trajectories into individual paths.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+    >>> from pept.tracking import *
+    >>> trajectories = Reconnect(tmax = 1000, dmax = 100).fit(segments)
+
+    You can use the `cluster_size` (set by the ``Centroids`` filter) as a
+    tracer signature; allow segments to be reconnected if the difference in
+    their cluster size is < 100:
+
+    >>> trajectories = Reconnect(1000, 100, cluster_size = 100).fit(segments)
+
+    And a velocity `v` difference < 0.1:
+
+    >>> Reconnect(1000, 100, cluster_size = 100, v = 0.1).fit(segments)
+
     '''
 
-    # Check `point_data` is a numpy array or pept.PointData
-    if isinstance(trajectories_points, pept.PointData):
-        trajs = trajectories_points.points
-    else:
-        trajs = np.asarray(trajectories_points, dtype = float, order = "C")
-        if trajs.ndim != 2 or trajs.shape[1] < 6:
-            raise ValueError((
-                "\n[ERROR]: `trajectories_points` should have dimensions "
-                f"(M, N), where N >= 6. Received {trajs.shape}.\n"
-            ))
+    def __init__(
+        self,
+        tmax,
+        dmax,
+        column = "label",
+        num_points = 10,
+        **signatures,
+    ):
+        self.column = column
+        self.num_points = int(num_points)
 
-    # Type-check the input parameters
-    max_time_difference = float(max_time_difference)
-    max_signature_difference = float(max_signature_difference)
-    points_to_check = int(points_to_check)
-    signature_col = int(signature_col)
-    label_col = int(label_col)
-    as_list = bool(as_list)
+        self.tmax = float(tmax)
+        self.dmax = float(dmax)
 
-    # Separate the trajs array into a list of individual trajectories based on
-    # the `label_col`.
-    trajectory_list = pept.utilities.group_by_column(trajs.copy(), label_col)
-
-    trajectory_list = _connect_trajectories(
-        trajectory_list,
-        max_time_difference,
-        max_signature_difference,
-        points_to_check,
-        signature_col,
-        label_col
-    )
-
-    if as_list:
-        return trajectory_list
-    elif isinstance(trajectories_points, pept.PointData):
-        trajectories_points_connected = pept.PointData(
-            np.vstack(trajectory_list),
-            sample_size = trajectories_points.sample_size,
-            overlap = trajectories_points.overlap,
-            verbose = False
-        )
-        return trajectories_points_connected
-    else:
-        return np.vstack(trajectory_list)
+        self.signatures = dict()
+        for sig, thresh in signatures.items():
+            self.signatures[sig] = float(thresh)
 
 
+    def fit(self, points):
+        points = pept.tracking.Stack().fit(points)
+        if not isinstance(points, pept.PointData):
+            points = pept.PointData(points)
 
+        # Columns corresponding to the signatures
+        sig_cols = [points.columns.index(sn) for sn in self.signatures.keys()]
 
-@with_continuations()       # Use tail-call optimisation from tco.py
-def _connect_trajectories(
-    trajectory_list,
-    max_time_difference,
-    max_signature_difference,
-    points_to_check,
-    signature_col = 4,
-    label_col = -1,
-    self = None
-):
-    number_of_trajectories = len(trajectory_list)
+        trajs = pept.tracking.SplitAll(self.column).fit(points)
+        trajs.sort(key = lambda traj: traj["t"][0])
 
-    # Check all pairs of trajectories. Each trajectory has two ends:
-    # Traj1: [End11, End12]
-    # Traj2: [End21, End22]
-    for i in range(number_of_trajectories - 1):
-        for j in range(i + 1, number_of_trajectories):
+        # List of connections to do, list[tuple[int, int]]
+        connections = []
 
-            t1 = trajectory_list[i]     # Traj1
-            t2 = trajectory_list[j]     # Traj2
+        # Try to forward-connect the end of trajs[i] to the start of trajs[j]
+        start_times = np.array([t["t"][0] for t in trajs])
 
-            # Try to connect End11 with End22
-            # Check the time difference between End11 and End22 is small enough
-            if time_difference(t1, t2) < max_time_difference:
+        for i in range(len(trajs)):
+            # Select all future trajectories whose start time is within tmax
+            cur_traj = trajs[i]
+            indices = np.argwhere(
+                (start_times > cur_traj["t"][-1]) &
+                (start_times - cur_traj["t"][-1] < self.tmax),
+            ).flatten()
 
-                # Check the signature difference of the last `points_to_check`
-                # points is small enough
-                if signature_difference(
-                    t1, t2, points_to_check, signature_col
-                ) < max_signature_difference:
+            # If no feasible times were found, carry on
+            if not indices.any():
+                continue
 
-                    # Assimilate the column labels
-                    t1[:, label_col] = t2[0, label_col]
+            # Compute connection costs between trajectory ends
+            costs = []
+            for j in indices:
+                e2 = trajs[i].points[-self.num_points:].mean(axis = 0)
+                e1 = trajs[j].points[:self.num_points].mean(axis = 0)
 
-                    # Merge the two trajectories
-                    connected_trajectory = np.append(t2, t1, axis = 0)
+                # The first cost is the distance between traj ends; the rest
+                # are the signature differences
+                cost = [np.linalg.norm(e2[1:4] - e1[1:4])]
+                for sc in sig_cols:
+                    cost.append(np.abs(e2[sc] - e1[sc]))
 
-                    # Delete the individual trajectories and append the merged
-                    # trajectories to `trajectory_list`
-                    del trajectory_list[i], trajectory_list[j - 1]
-                    trajectory_list.append(connected_trajectory)
+                costs.append(cost)
 
-                    # Call the function again (to reinitialise
-                    # `number_of_trajectories`) using tail call optimisation
-                    # from tco.py
-                    return self(
-                        trajectory_list,
-                        max_time_difference,
-                        max_signature_difference,
-                        points_to_check,
-                        signature_col,
-                        label_col
-                    )
+            # Keep track of trajectory indices and associated costs
+            costs = np.c_[indices, np.array(costs)]
 
-            # Try to connect End12 with End21
-            elif time_difference(t2, t1) < max_time_difference:
+            # Remove condidate connections that have costs larger than threshs
+            selection = costs[:, 1] < self.dmax
+            for i, sthresh in enumerate(self.signatures.values()):
+                selection = selection & (costs[:, 2 + i] < sthresh)
 
-                if signature_difference(
-                    t2, t1, points_to_check, signature_col
-                ) < max_signature_difference:
+            costs = costs[selection]
 
-                    t2[:, label_col] = t1[0, label_col]
-                    connected_trajectory = np.append(t1, t2, axis = 0)
+            # If no feasible connection was found, carry on
+            if not len(costs):
+                continue
 
-                    del trajectory_list[i], trajectory_list[j - 1]
-                    trajectory_list.append(connected_trajectory)
+            # Otherwise, establish connection with minimum overall cost
+            best = costs[:, 1:].mean(axis = 1).argmin()
+            connection_index = int(costs[best, 0])
+            connections.append((i, connection_index))
 
-                    return self(
-                        trajectory_list,
-                        max_time_difference,
-                        max_signature_difference,
-                        points_to_check,
-                        signature_col,
-                        label_col
-                    )
+        # Set connected labels
+        if isinstance(self.column, str):
+            label_col = points.columns.index(self.column)
+        else:
+            label_col = self.column
 
-    return trajectory_list
+        for i1, i2 in connections:
+            trajs[i2].points[:, label_col] = trajs[i1].points[0, label_col]
 
+        # Stack trajectories and map labels from [0, 2, 2, 3, 0] to
+        # [0, 1, 1, 2, 0]
+        trajs = pept.tracking.Stack().fit(trajs)
 
+        labels = trajs.points[:, label_col]
+        _, ordered = np.unique(labels, return_inverse = True)
+        trajs.points[:, label_col] = ordered
 
-
-def signature_difference(
-    traj1,
-    traj2,
-    points_to_check,
-    signature_col
-):
-    return np.abs(
-        np.average(traj1[:points_to_check, signature_col]) -
-        np.average(traj2[-points_to_check:, signature_col])
-    )
-
-
-
-
-def time_difference(traj1, traj2):
-    return np.abs(traj1[0, 0] - traj2[-1, 0])
+        return trajs
