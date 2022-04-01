@@ -157,27 +157,4 @@ It is often useful to remove points with an error higher than a certain value, e
 
 
 
-Exporting Plotly Graphs as Images
----------------------------------
 
-The standard output of the Plotly grapher is an interactive html, however this can lead to large file sizes and crashes. Plotly allows for graphs to be exported as images to alleviate some of these issues.
-
-Ensure you have imported:
-
-::
-
-      import plotly.express as px
-      import kaleido
-      import plotly.io as pio
-
-There are two main ways of exporting as images:
-
-::
-
-      pio.write_image(grapher.fig, filepath , format="png", width=2560, height=1440,)
-      #format can be changed to other image formats
-      #width and height can be adjusted to give the desired image size
-
-::
-
-      grapher.fig.write_image(filepath + ".png")
