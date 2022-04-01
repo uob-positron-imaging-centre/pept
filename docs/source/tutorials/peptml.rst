@@ -165,6 +165,7 @@ The standard output of the Plotly grapher is an interactive html, however this c
 Ensure you have imported:
 
 ::
+
       import plotly.express as px
       import kaleido
       import plotly.io as pio
@@ -172,9 +173,11 @@ Ensure you have imported:
 There are two main ways of exporting as images:
 
 ::
+
       pio.write_image(grapher.fig, filepath , format="png", width=2560, height=1440,)
       #format can be changed to other image formats
       #width and height can be adjusted to give the desired image size
 
 ::
+
       grapher.fig.write_image(filepath + ".png")
