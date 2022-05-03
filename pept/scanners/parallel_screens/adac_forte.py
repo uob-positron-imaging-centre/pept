@@ -98,6 +98,13 @@ def adac_forte(
         If `overlap` >= `sample_size`. Overlap has to be smaller than
         `sample_size`. Note that it can also be negative.
 
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+
     Examples
     --------
     Initialise a `ParallelScreens` array for three LoRs on a parallel screens
@@ -129,13 +136,6 @@ def adac_forte(
         4.63150000e+02 3.10000000e+02]]
     lines.shape = (32526, 7)
     columns = ['t', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2']
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     if verbose:

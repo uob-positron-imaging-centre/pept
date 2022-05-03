@@ -59,7 +59,7 @@ from    .fpi                    import  FPI
 from    .transformers           import  Stack
 
 from    .transformers           import  SplitLabels
-from    .transformers           import  SplitAll
+from    .transformers           import  SplitAll, GroupBy
 
 from    .transformers           import  Centroids
 from    .transformers           import  LinesCentroids
@@ -70,6 +70,7 @@ from    .transformers           import  Swap
 
 from    .space_transformers     import  Voxelize
 from    .space_transformers     import  Interpolate
+from    .space_transformers     import  Reorient
 
 from    .post                   import  Velocity
 

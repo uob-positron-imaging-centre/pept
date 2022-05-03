@@ -208,6 +208,12 @@ import  pickle
 from    .utilities      import  read_csv
 
 
+# Backwards compatibility
+visualisation = plots
+
+
+
+
 def save(filepath, obj):
     '''Save an object `obj` instance as a binary file at `filepath`.
 

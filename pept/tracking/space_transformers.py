@@ -11,8 +11,9 @@ import  textwrap
 import  numpy               as      np
 from    scipy.interpolate   import  interp1d
 
+import  pept
 from    pept                import  LineData, PointData, Voxels
-from    pept.base           import  LineDataFilter, PointDataFilter
+from    pept.base           import  LineDataFilter, PointDataFilter, Reducer
 
 
 
@@ -59,10 +60,9 @@ class Voxelize(LineDataFilter):
         z-dimension, formatted as [z_min, z_max]. If undefined, it is
         inferred from the bounding box of each sample of lines.
 
-    set_lines : (N, 7) numpy.ndarray or pept.LineData, optional
+    set_lims : (N, 7) numpy.ndarray or pept.LineData, optional
         If defined, set the system limits upon creating the class to the
-        bounding box of the lines in `set_lines`.
-
+        bounding box of the lines in `set_lims`.
     '''
 
     def __init__(
@@ -259,3 +259,152 @@ class Interpolate(PointDataFilter):
 
         data = np.vstack([sampling] + [interp(sampling) for interp in interps])
         return sample.copy(data = data.T)
+
+
+
+
+class Reorient(Reducer):
+    '''Rotate a dataset such that it is oriented according to its principal
+    axes.
+
+    Reducer signature:
+
+    ::
+
+              PointData -> Reorient.fit -> PointData
+        list[PointData] -> Reorient.fit -> PointData
+             np.ndarray -> Reorient.fit -> PointData
+
+    By default, this reducer reorients the points such that the axis along
+    which it is most spread out (e.g. lengthwise in a pipe) becomes the X-axis.
+    The input argument `dimensions` sets this - the default `"xyz"` can be
+    changed to e.g. `"zyx"` so that the longest data axis becomes the Z-axis.
+
+    The reducer also sets three attributes on the returned `PointData`:
+    - `origin`: the origin relative to which the initial data was rotated.
+    - `basis`: the principal components - or change of basis 3x3 matrix.
+    - `eigenvalues`: how spread out the data is in each initial dimension.
+
+    If you'd like to reorient a second dataset to the same basis as a first
+    one, set the `basis` and `origin` arguments.
+
+    *New in pept-0.5.0*
+
+    Examples
+    --------
+    Reorient a dataset by aligning the longest principal component (e.g.
+    lengthwise in a pipe) to the X-axis:
+
+    >>> import pept.tracking as pt
+    >>> data = PointData(...)
+    >>> reoriented = pt.Reorient().fit(data)
+
+    Reorient it such that the longest principal component (e.g. vertical in a
+    mixer) becomes the Z-axis:
+
+    >>> reoriented = pt.Reorient("zyx").fit(data)
+
+    Reorient a second dataset to the same orientation basis as the first one:
+
+    >>> reoriented2 = pt.Reorient(
+    >>>     basis = reoriented.attrs["basis"],
+    >>>     origin = reoriented.attrs["origin"],
+    >>> ).fit(other_data)
+    '''
+
+    def __init__(self, dimensions = "xyz", basis = None, origin = None):
+        # Type-checking inputs
+        self.dimensions = np.array([0, 0, 0])
+        if isinstance(dimensions, str):
+            d = str(dimensions)
+            if len(d) != 3 or d[0] not in "xyz" or d[1] not in "xyz" or \
+                    d[2] not in "xyz":
+                raise ValueError(textwrap.fill((
+                    "The input `dimensions`, if given as a str, must have "
+                    "exactly three characters containing 'x', 'y', or 'z'; "
+                    f"e.g. 'xyz', 'zxy'. Received `{d}`."
+                )))
+
+            # Transform x -> 1, y -> 2, z -> 3 using ASCII integer `ord`er
+            self.dimensions[0] = ord(d[0]) - ord('x') + 1
+            self.dimensions[1] = ord(d[1]) - ord('x') + 1
+            self.dimensions[2] = ord(d[2]) - ord('x') + 1
+        else:
+            d = np.asarray(dimensions, dtype = int)
+            if d.ndim != 1 or len(d) != 3:
+                raise ValueError(textwrap.fill((
+                    "The input `dimensions`, if given as a list, must contain "
+                    "exactly three integers representing the column indices "
+                    "to use; e.g. `[1, 2, 3]` for xyz, `[3, 1, 2]` for zxy. "
+                    f"Received `{d}`."
+                )))
+            self.dimensions[0] = d[0]
+            self.dimensions[1] = d[1]
+            self.dimensions[2] = d[2]
+
+        if (basis is None and origin is not None) or \
+                (basis is not None and origin is None):
+            raise ValueError(textwrap.fill((
+                "If a change of `basis` matrix is given, an `origin` is "
+                "required too to do the rotation relative to."
+            )))
+
+        if basis is not None:
+            basis = np.asarray(basis, dtype = float)
+            if basis.ndim != 2 or basis.shape != (3, 3):
+                raise ValueError(textwrap.fill((
+                    "The input `basis`, if defined, must be a 3x3 matrix. "
+                    f"Received `{basis.shape}` matrix."
+                )))
+
+        if origin is not None:
+            origin = np.asarray(origin, dtype = float)
+            if origin.ndim != 1 or basis.shape[0] != 3:
+                raise ValueError(textwrap.fill((
+                    "The input `origin`, if defined, must be a (3,) vector. "
+                    f"Received `{origin.shape}` matrix."
+                )))
+
+        self.basis = basis
+        self.origin = origin
+
+
+    def fit(self, samples):
+        # Reduce / stack list of samples onto a single PointData / array
+        samples = pept.tracking.Stack().fit(samples)
+
+        if not isinstance(samples, PointData):
+            samples = PointData(samples)
+
+        points = samples.points[:, 1:4]
+
+        # Compute principal components - i.e. eigenvectors of covariance matrix
+        if self.basis is None:
+            points_mean = points.mean(axis = 0)
+            points_centred = points - points_mean
+
+            cov = np.cov(points_centred.T)
+            evals, evecs = np.linalg.eig(cov)
+
+            # Order eigenvectors such that the largest eigenvalue (i.e. the
+            # dimensions that's most spread out) corresponds to the first of
+            # `self.dimesions`
+            reorder = evals.argsort()[2 - self.dimensions.argsort()]
+            eigenvalues = evals[reorder]
+            basis = evecs[:, reorder]
+
+        else:
+            points_mean = self.origin
+            points_centred = points - points_mean
+            basis = self.basis
+            eigenvalues = None
+
+        rotpoints = samples.points.copy()
+        rotpoints[:, 1:4] = points_mean + points_centred @ basis
+
+        return samples.copy(
+            data = rotpoints,
+            eigenvalues = eigenvalues,
+            basis = basis,
+            origin = points_mean,
+        )

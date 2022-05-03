@@ -171,6 +171,11 @@ class Segregate(pept.base.Reducer):
         After the trajectories have been cut, declare all trajectories with
         fewer points than `min_trajectory_size` as noise.
 
+    See Also
+    --------
+    Reconnet : Connect segregated trajectories based on tracer signatures.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+
     Examples
     --------
     A typical workflow would involve transforming LoRs into points using some
@@ -207,12 +212,6 @@ class Segregate(pept.base.Reducer):
                x (5, label = 0)      x (7, label = 1)
                x (6, label = 0)     x (9, label = 1)
               x (8, label = 0)      x (10, label = 1)
-
-    See Also
-    --------
-    connect_trajectories : Connect segregated trajectories based on tracer
-                           signatures.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     def __init__(

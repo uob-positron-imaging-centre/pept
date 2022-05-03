@@ -15,6 +15,7 @@ General-Purpose Transformers
    pept.tracking.Stack
    pept.tracking.SplitLabels
    pept.tracking.SplitAll
+   pept.tracking.GroupBy
    pept.tracking.Centroids
    pept.tracking.LinesCentroids
    pept.tracking.Condition
@@ -31,6 +32,7 @@ Space Transformers
 
    pept.tracking.Voxelize
    pept.tracking.Interpolate
+   pept.tracking.Reorient
 
 
 

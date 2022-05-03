@@ -60,31 +60,31 @@ def find_minpoints(
 
     Parameters
     ----------
-    sample_lines: (M, N) numpy.ndarray
+    sample_lines : (M, N) numpy.ndarray
         A 2D array of lines, where each line is defined by two points such that
         every row is formatted as `[t, x1, y1, z1, x2, y2, z2, etc.]`. It
         *must* have at least 2 lines and the combination size `num_lines`
         *must* be smaller or equal to the number of lines. Put differently:
         2 <= num_lines <= len(sample_lines).
 
-    num_lines: int
+    num_lines : int
         The number of lines in each combination of LoRs used to compute the
         MDP. This function considers every combination of `numlines` from the
         input `sample_lines`. It must be smaller or equal to the number of
         input lines `sample_lines`.
 
-    max_distance: float
+    max_distance : float
         The maximum allowed distance between an MDP and its constituent lines.
         If any distance from the MDP to one of its lines is larger than
         `max_distance`, the MDP is thrown away.
 
-    cutoffs: (6,) numpy.ndarray, optional
+    cutoffs : (6,) numpy.ndarray, optional
         An array of spatial cutoff coordinates with *exactly 6 elements* as
         [x_min, x_max, y_min, y_max, z_min, z_max]. If any MDP lies outside
         this region, it is thrown away. If it is `None`, they are computed
         automatically by calling `get_cutoffs`. The default is `None`.
 
-    append_indices: bool, default False
+    append_indices : bool, default False
         A boolean specifying whether to include the indices of the lines used
         to compute each MDP. If `False`, the output array will only contain the
         [time, x, y, z] of the MDPs. If `True`, the output array will have
@@ -93,7 +93,7 @@ def find_minpoints(
 
     Returns
     -------
-    minpoints: (M, N) numpy.ndarray
+    minpoints : (M, N) numpy.ndarray
         A 2D array of `float`s containing the time and coordinates of the MDPs
         [time, x, y, z]. The time is computed as the average of the constituent
         lines. If `append_indices` is `True`, then `num_lines` indices of the
@@ -196,13 +196,13 @@ class Minpoints(pept.base.LineDataFilter):
         The LoRs for which the cutpoints will be computed. It must be an
         instance of `pept.LineData`.
 
-    num_lines: int
+    num_lines : int
         The number of lines in each combination of LoRs used to compute the
         MDP. This function considers every combination of `num_lines` from the
         input `sample_lines`. It must be smaller or equal to the number of
         input lines `sample_lines`.
 
-    max_distance: float
+    max_distance : float
         The maximum allowed distance between an MDP and its constituent lines.
         If any distance from the MDP to one of its lines is larger than
         `max_distance`, the MDP is thrown away. A good starting value would be
@@ -216,25 +216,15 @@ class Minpoints(pept.base.LineDataFilter):
         default is None, in which case they are automatically computed using
         `pept.tracking.peptml.get_cutoffs`.
 
-    sample_size, overlap, number_of_lines, etc. : inherited from pept.PointData
-        Additional attributes and methods are inherited from the base class
-        `PointData`. Check its documentation for more information.
-
-    Methods
-    -------
-    find_minpoints(line_data, num_lines, max_distance, cutoffs = None,\
-                   append_indices = False, max_workers = None, verbose = True)
-        Compute the minpoints from the samples in a `LineData` instance.
-
-    sample, to_csv, plot, etc. : inherited from pept.PointData
-        Additional attributes and methods are inherited from the base class
-        `PointData`. Check its documentation for more information.
-
-    Notes
-    -----
-    Once instantiated with a `LineData`, the class computes the minpoints and
-    *automatically sets the sample_size* to the average number of minpoints
-    found per sample of LoRs.
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.tracking.peptml.HDBSCANClusterer : Efficient, parallel HDBSCAN-based
+                                            clustering of cutpoints.
+    pept.scanners.ParallelScreens : Read in and initialise a `pept.LineData`
+                                    instance from parallel screens PET/PEPT
+                                    detectors.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
 
     Examples
     --------
@@ -248,16 +238,6 @@ class Minpoints(pept.base.LineDataFilter):
 
     >>> sample = line_data[0]
     >>> cutpts_sample = peptml.find_minpoints(sample, 3, 0.1)
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.tracking.peptml.HDBSCANClusterer : Efficient, parallel HDBSCAN-based
-                                            clustering of cutpoints.
-    pept.scanners.ParallelScreens : Read in and initialise a `pept.LineData`
-                                    instance from parallel screens PET/PEPT
-                                    detectors.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
     '''
 
     def __init__(
@@ -267,27 +247,22 @@ class Minpoints(pept.base.LineDataFilter):
         cutoffs = None,
         append_indices = False,
     ):
-        '''Cutpoints class constructor.
+        '''Minpoints class constructor.
 
         Parameters
         ----------
-        line_data : instance of pept.LineData
-            The LoRs for which the cutpoints will be computed. It must be an
-            instance of `pept.LineData`.
-
-        num_lines: int
+        num_lines : int
             The number of lines in each combination of LoRs used to compute the
             MDP. This function considers every combination of `num_lines` from
             the input `sample_lines`. It must be smaller or equal to the number
             of input lines `sample_lines`.
 
-        max_distance: float
+        max_distance : float
             The maximum allowed distance between an MDP and its constituent
             lines. If any distance from the MDP to one of its lines is larger
             than `max_distance`, the MDP is thrown away. A good starting value
             would be 0.1 mm for small tracers and/or clean data, or 0.2 mm for
             larger tracers and/or noisy data.
-
 
         cutoffs : list-like of length 6, optional
             A list (or equivalent) of the cutoff distances for every axis,
@@ -299,14 +274,6 @@ class Minpoints(pept.base.LineDataFilter):
         append_indices : bool, default False
             If set to `True`, the indices of the individual LoRs that were used
             to compute each minpoint are also appended to the returned array.
-
-        max_workers : int, optional
-            The maximum number of threads that will be used for asynchronously
-            computing the minpoints from the samples of LoRs in `line_data`.
-
-        verbose : bool, default True
-            Provide extra information when computing the cutpoints: time the
-            operation and show a progress bar.
 
         Raises
         ------

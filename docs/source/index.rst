@@ -67,9 +67,12 @@ Copyright (C) 2021 the `pept` developers. Until now, this library was built dire
 - Dr. Sam Manger (University of Birmingham)
 - Matthew Herald (University of Birmingham)
 - Chris Jones (University of Birmingham)
+- Mark Al-Shemmeri (University of Birmingham)
 - Prof. David Parker (University of Birmingham)
 - Dr. Antoine Renaud (University of Edinburgh)
 - Dr. Cody Wiggins (Virginia Commonwealth University)
+- Dawid Michał Hampel
+- Dr. Tom Leadbeater
 
 Thank you.
 

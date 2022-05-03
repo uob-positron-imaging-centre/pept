@@ -66,6 +66,15 @@ class BirminghamMethod(pept.base.LineDataFilter):
         If True, attach an attribute ``._lines`` to the output PointData
         containing the sample of LoRs used (+ a column `used`).
 
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+    pept.scanners.ParallelScreens : Initialise a `pept.LineData` instance from
+                                    parallel screens PEPT detectors.
+
     Examples
     --------
     A typical workflow would involve reading LoRs from a file, instantiating a
@@ -82,15 +91,6 @@ class BirminghamMethod(pept.base.LineDataFilter):
     >>> grapher = PlotlyGrapher()
     >>> grapher.add_points(locations)
     >>> grapher.show()
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-    pept.scanners.ParallelScreens : Initialise a `pept.LineData` instance from
-                                    parallel screens PEPT detectors.
     '''
 
     def __init__(self, fopt = 0.5, get_used = False):
@@ -129,21 +129,6 @@ class BirminghamMethod(pept.base.LineDataFilter):
             a timestamps and a line defined by two points; the data columns are
             then `[time, x1, y1, z1, x2, y2, z2, extra...]`.
 
-        get_used : bool, default False
-            If `True`, the function will also return a boolean mask of the LoRs
-            used to compute the tracer location - that is, a vector of the same
-            length as `sample`, containing 1 for the rows that were used, and 0
-            otherwise.
-
-        as_array : bool, default True
-            If set to True, the tracked locations are returned as numpy arrays.
-            If set to False, they are returned inside an instance of
-            `pept.PointData` for ease of iteration and plotting.
-
-        verbose : bool, default False
-            Provide extra information when tracking a location: time the
-            operation and show a progress bar.
-
         Returns
         -------
         locations : numpy.ndarray or pept.PointData
@@ -154,7 +139,7 @@ class BirminghamMethod(pept.base.LineDataFilter):
             used to compute the tracer location - that is, a vector of the same
             length as `sample`, containing 1 for the rows that were used, and 0
             otherwise.
-            [ Used for multi-particle tracking, not implemented yet]
+            [Used for multi-particle tracking, not implemented yet].
 
         Raises
         ------

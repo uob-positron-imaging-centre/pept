@@ -120,6 +120,14 @@ class PointData(IterableSamples):
         `sample_size`, unless `sample_size` is 0. Note that it can also be
         negative.
 
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+    pept.plots.PlotlyGrapher :
+        Easy, publication-ready plotting of PEPT-oriented data.
+    pept.tracking.Cutpoints : Compute cutpoints from `pept.LineData`.
+
     Notes
     -----
     This class saves `points` as a **C-contiguous** numpy array for efficient
@@ -264,14 +272,6 @@ class PointData(IterableSamples):
            [28., 29., 30., 31.],
            [32., 33., 34., 35.],
            [36., 37., 38., 39.]])
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.read_csv : Fast CSV file reading into numpy arrays.
-    pept.plots.PlotlyGrapher :
-        Easy, publication-ready plotting of PEPT-oriented data.
-    pept.tracking.Cutpoints : Compute cutpoints from `pept.LineData`.
     '''
 
     def __init__(

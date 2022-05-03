@@ -757,6 +757,12 @@ class SplitAll(Reducer):
 
 
 
+# Use standard names, Leonard...
+GroupBy = SplitAll
+
+
+
+
 class Swap(Filter):
     '''Swap two columns in a LineData or PointData.
 

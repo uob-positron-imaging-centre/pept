@@ -68,20 +68,27 @@ class FPI(pept.base.VoxelsFilter):
 
     Attributes
     ----------
-    w: double
+    w : double
         Search range to be used in local maxima calculation. Typical values for
         w are 2 - 5 (lower number for more particles or smaller particle
         separation).
 
-    r: double
+    r : double
         Fraction of peak value used as threshold. Typical values for r are
         usually between 0.3 and 0.6 (lower for more particles, higher for
         greater background noise)
 
-    lld_counts: double, default 0
+    lld_counts : double, default 0
         A secondary lld to prevent assigning local maxima to voxels with very
         low values. The parameter lld_counts is not used much in practice -
         for most cases, it can be set to zero.
+
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
 
     Examples
     --------
@@ -115,14 +122,6 @@ class FPI(pept.base.VoxelsFilter):
 
     >>> from pept.plots import PlotlyGrapher2D
     >>> PlotlyGrapher2D().add_timeseries(positions).show()
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-
     '''
 
     def __init__(
@@ -136,24 +135,23 @@ class FPI(pept.base.VoxelsFilter):
 
         Parameters
         ----------
-        w: double
+        w : double
             Search range to be used in local maxima calculation. Typical values
             for w are 2 - 5 (lower number for more particles or smaller
             particle separation).
 
-        r: double
+        r : double
             Fraction of peak value used as threshold. Typical values for r are
             usually between 0.3 and 0.6 (lower for more particles, higher for
             greater background noise)
 
-        lld_counts: double, default 0
+        lld_counts : double, default 0
             A secondary lld to prevent assigning local maxima to voxels with
             very low values. The parameter `lld_counts` is not used much in
             practice - for most cases, it can be set to zero.
 
-        verbose: bool, default False
+        verbose : bool, default False
             Show extra information on class instantiation.
-
         '''
         self.w = float(w)
         self.r = float(r)
@@ -170,24 +168,13 @@ class FPI(pept.base.VoxelsFilter):
 
         Parameters
         ----------
-        voxels: pept.Voxels
+        voxels : pept.Voxels
             A single voxellised space (i.e. from a single sample of LoRs) for
             which the tracers' locations will be found using the FPI method.
 
-        timestamp: float, default 0.
-            The timestamp to associate with the tracer positions found in this
-            voxel space.
-
-        as_array: bool, default False
-            If `True`, return the found tracers' locations as a NumPy array.
-            Otherwise, return them in a `pept.PointData` instance.
-
-        verbose: bool, default False
-            Show extra information on the sample processing step.
-
         Returns
         -------
-        locations: numpy.ndarray or pept.PointData
+        locations : numpy.ndarray or pept.PointData
             The tracked locations found; if `as_array` is True, they are
             returned as a NumPy array with columns [time, x, y, z, error_x,
             error_y, error_z]. If `as_array` is False, the points are returned

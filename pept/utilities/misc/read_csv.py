@@ -100,7 +100,7 @@ def read_csv(
         directly onto memory and access the data directly from there. Using
         this option can improve performance because there is no longer any I/O
         overhead.
-    kwargs : optional
+    **kwargs : optional
         Extra keyword arguments that will be passed to `pandas.read_csv`.
     '''
 
@@ -205,7 +205,7 @@ def read_csv_chunks(
         directly onto memory and access the data directly from there. Using
         this option can improve performance because there is no longer any I/O
         overhead.
-    kwargs : optional
+    **kwargs : optional
         Extra keyword arguments that will be passed to `pandas.read_csv`.
     '''
 
@@ -282,6 +282,12 @@ class ChunkReader:
         Upon access to a non-existent chunk using subscript notation
         (i.e. `data[100]` when there are 50 chunks).
 
+    See Also
+    --------
+    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+
     Examples
     --------
     Say "data.csv" contains 1_000_000 lines of data. Read chunks of 10_000
@@ -302,12 +308,6 @@ class ChunkReader:
     >>> chunks[0]   # First chunk
     >>> chunks[-1]  # Last chunk
     >>> chunks[100] # IndexError
-
-    See Also
-    --------
-    pept.utilities.read_csv : Fast CSV file reading into numpy arrays.
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
     '''
 
     def __init__(
@@ -371,7 +371,7 @@ class ChunkReader:
             object directly onto memory and access the data directly from
             there. Using this option can improve performance because there is
             no longer any I/O overhead.
-        kwargs : optional
+        **kwargs : optional
             Extra keyword arguments that will be passed to `pandas.read_csv`.
 
         Raises

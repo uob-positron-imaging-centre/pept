@@ -186,7 +186,7 @@ def samples_indices_iterable(data, sample_size):
 @dataclass
 class TimeWindow:
     '''Define a `sample_size` as a fixed time window / slice. You can use this
-    as a direct replacement of the `sample_size` and `overlap`:
+    as a direct replacement of the `sample_size` and `overlap`.
 
     ::
 

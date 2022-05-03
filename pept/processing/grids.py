@@ -47,29 +47,38 @@ class DynamicProbability2D(Reducer):
 
     Parameters
     ----------
-    diameter: float
+    diameter : float
         The diameter of the imaged tracer.
 
-    column: str or int
+    column : str or int
         The `PointData` column used to compute the probability distribution,
         given as a name (`str`) or index (`int`).
 
-    dimensions: str or list[int], default "xy"
+    dimensions : str or list[int], default "xy"
         The tracer coordinates used to rasterize its trajectory, given as a
         string (e.g. "xy" projects the points onto the XY plane) or a list with
         two column indices (e.g. [1, 3] for XZ).
 
-    resolution: tuple[int, int], default (512, 512)
+    resolution : tuple[int, int], default (512, 512)
         The number of pixels used for the rasterization grid in the X and Y
         dimensions.
 
-    xlim: tuple[float, float], optional
+    xlim : tuple[float, float], optional
         The physical limits in the X dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    ylim: tuple[float, float], optional
+    ylim : tuple[float, float], optional
         The physical limits in the y dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
+
+    max_workers : int, optional
+        The maximum number of workers (threads, processes or ranks) to use by
+        the parallel executor; if 1, it is sequential (and produces the
+        clearest error messages should they happen). If unset, the
+        ``os.cpu_count()`` is used.
+
+    verbose : bool or str default True
+        If True, time the computation and print the state of the execution.
 
     Examples
     --------
@@ -105,6 +114,8 @@ class DynamicProbability2D(Reducer):
         resolution = (512, 512),
         xlim = None,
         ylim = None,
+        max_workers = None,
+        verbose = True,
     ):
         # Type-checking inputs
         self.dimensions = [None, None]
@@ -142,11 +153,13 @@ class DynamicProbability2D(Reducer):
         self.xlim = xlim
         self.ylim = ylim
 
+        self.max_workers = max_workers
+        self.verbose = verbose
 
-    def fit(self, samples, max_workers = None, verbose = True):
+
+    def fit(self, samples):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
-        verbose = bool(verbose)
 
         if not isinstance(samples, PointData):
             samples = PointData(samples)
@@ -180,8 +193,8 @@ class DynamicProbability2D(Reducer):
             resolution = self.resolution,
             xlim = self.xlim,
             ylim = self.ylim,
-            max_workers = max_workers,
-            verbose = verbose,
+            max_workers = self.max_workers,
+            verbose = self.verbose,
         )
 
         return pixels
@@ -208,29 +221,38 @@ class ResidenceDistribution2D(Reducer):
 
     Parameters
     ----------
-    diameter: float
+    diameter : float
         The diameter of the imaged tracer.
 
-    column: str or int, default "t"
+    column : str or int, default "t"
         The `PointData` column used to compute the residence distribution,
         given as a name (`str`) or index (`int`).
 
-    dimensions: str or list[int], default "xy"
+    dimensions : str or list[int], default "xy"
         The tracer coordinates used to rasterize its trajectory, given as a
         string (e.g. "xy" projects the points onto the XY plane) or a list with
         two column indices (e.g. [1, 3] for XZ).
 
-    resolution: tuple[int, int], default (512, 512)
+    resolution : tuple[int, int], default (512, 512)
         The number of pixels used for the rasterization grid in the X and Y
         dimensions.
 
-    xlim: tuple[float, float], optional
+    xlim : tuple[float, float], optional
         The physical limits in the X dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    ylim: tuple[float, float], optional
+    ylim : tuple[float, float], optional
         The physical limits in the y dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
+
+    max_workers : int, optional
+        The maximum number of workers (threads, processes or ranks) to use by
+        the parallel executor; if 1, it is sequential (and produces the
+        clearest error messages should they happen). If unset, the
+        ``os.cpu_count()`` is used.
+
+    verbose : bool or str default True
+        If True, time the computation and print the state of the execution.
 
     Examples
     --------
@@ -265,6 +287,8 @@ class ResidenceDistribution2D(Reducer):
         resolution = (512, 512),
         xlim = None,
         ylim = None,
+        max_workers = None,
+        verbose = True,
     ):
         # Type-checking inputs
         self.dimensions = [None, None]
@@ -302,11 +326,13 @@ class ResidenceDistribution2D(Reducer):
         self.xlim = xlim
         self.ylim = ylim
 
+        self.max_workers = max_workers
+        self.verbose = verbose
 
-    def fit(self, samples, max_workers = None, verbose = True):
+
+    def fit(self, samples):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
-        verbose = bool(verbose)
 
         if not isinstance(samples, PointData):
             samples = PointData(samples)
@@ -342,8 +368,8 @@ class ResidenceDistribution2D(Reducer):
             resolution = self.resolution,
             xlim = self.xlim,
             ylim = self.ylim,
-            max_workers = max_workers,
-            verbose = verbose,
+            max_workers = self.max_workers,
+            verbose = self.verbose,
         )
 
         return pixels
@@ -370,33 +396,42 @@ class DynamicProbability3D(Reducer):
 
     Parameters
     ----------
-    diameter: float
+    diameter : float
         The diameter of the imaged tracer.
 
-    column: str or int
+    column : str or int
         The `PointData` column used to compute the probability distribution,
         given as a name (`str`) or index (`int`).
 
-    dimensions: str or list[int], default "xyz"
+    dimensions : str or list[int], default "xyz"
         The tracer coordinates used to rasterize its trajectory, given as a
         string (e.g. "xyz" or "zyx") or a list with
         three column indices (e.g. [1, 2, 3] for XYZ).
 
-    resolution: tuple[int, int, int], default (50, 50, 50)
+    resolution : tuple[int, int, int], default (50, 50, 50)
         The number of pixels used for the rasterization grid in the X, Y, Z
         dimensions.
 
-    xlim: tuple[float, float], optional
+    xlim : tuple[float, float], optional
         The physical limits in the X dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    ylim: tuple[float, float], optional
+    ylim : tuple[float, float], optional
         The physical limits in the y dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    zlim: tuple[float, float], optional
+    zlim : tuple[float, float], optional
         The physical limits in the z dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
+
+    max_workers : int, optional
+        The maximum number of workers (threads, processes or ranks) to use by
+        the parallel executor; if 1, it is sequential (and produces the
+        clearest error messages should they happen). If unset, the
+        ``os.cpu_count()`` is used.
+
+    verbose : bool or str default True
+        If True, time the computation and print the state of the execution.
 
     Examples
     --------
@@ -433,6 +468,8 @@ class DynamicProbability3D(Reducer):
         xlim = None,
         ylim = None,
         zlim = None,
+        max_workers = None,
+        verbose = True,
     ):
         # Type-checking inputs
         self.dimensions = [None, None, None]
@@ -474,11 +511,13 @@ class DynamicProbability3D(Reducer):
         self.ylim = ylim
         self.zlim = zlim
 
+        self.max_workers = max_workers
+        self.verbose = verbose
 
-    def fit(self, samples, max_workers = None, verbose = True):
+
+    def fit(self, samples):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
-        verbose = bool(verbose)
 
         if not isinstance(samples, PointData):
             samples = PointData(samples)
@@ -513,8 +552,8 @@ class DynamicProbability3D(Reducer):
             xlim = self.xlim,
             ylim = self.ylim,
             zlim = self.zlim,
-            max_workers = max_workers,
-            verbose = verbose,
+            max_workers = self.max_workers,
+            verbose = self.verbose,
         )
 
         return voxels
@@ -541,37 +580,42 @@ class ResidenceDistribution3D(Reducer):
 
     Parameters
     ----------
-    diameter: float
+    diameter : float
         The diameter of the imaged tracer.
 
-    column: str or int
+    column : str or int
         The `PointData` column used to compute the probability distribution,
         given as a name (`str`) or index (`int`).
 
-    dimensions: str or list[int], default "xyz"
+    dimensions : str or list[int], default "xyz"
         The tracer coordinates used to rasterize its trajectory, given as a
         string (e.g. "xyz" or "zyx") or a list with
         three column indices (e.g. [1, 2, 3] for XYZ).
 
-    resolution: tuple[int, int, int], default (50, 50, 50)
+    resolution : tuple[int, int, int], default (50, 50, 50)
         The number of pixels used for the rasterization grid in the X, Y, Z
         dimensions.
 
-    xlim: tuple[float, float], optional
+    xlim : tuple[float, float], optional
         The physical limits in the X dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    ylim: tuple[float, float], optional
+    ylim : tuple[float, float], optional
         The physical limits in the y dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    zlim: tuple[float, float], optional
+    zlim : tuple[float, float], optional
         The physical limits in the z dimension of the pixel grid. If unset, it
         is automatically computed to contain all tracer positions (default).
 
-    max_workers: int, optional
-        The maximum number of threads to use for computing the probability
-        grid.
+    max_workers : int, optional
+        The maximum number of workers (threads, processes or ranks) to use by
+        the parallel executor; if 1, it is sequential (and produces the
+        clearest error messages should they happen). If unset, the
+        ``os.cpu_count()`` is used.
+
+    verbose : bool or str default True
+        If True, time the computation and print the state of the execution.
 
     Examples
     --------
@@ -607,6 +651,8 @@ class ResidenceDistribution3D(Reducer):
         xlim = None,
         ylim = None,
         zlim = None,
+        max_workers = None,
+        verbose = True,
     ):
         # Type-checking inputs
         self.dimensions = [None, None, None]
@@ -648,11 +694,13 @@ class ResidenceDistribution3D(Reducer):
         self.ylim = ylim
         self.zlim = zlim
 
+        self.max_workers = max_workers
+        self.verbose = verbose
 
-    def fit(self, samples, max_workers = None, verbose = True):
+
+    def fit(self, samples):
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
-        verbose = bool(verbose)
 
         if not isinstance(samples, PointData):
             samples = PointData(samples)
@@ -689,8 +737,8 @@ class ResidenceDistribution3D(Reducer):
             xlim = self.xlim,
             ylim = self.ylim,
             zlim = self.zlim,
-            max_workers = max_workers,
-            verbose = verbose,
+            max_workers = self.max_workers,
+            verbose = self.verbose,
         )
 
         return voxels
@@ -743,6 +791,8 @@ class VectorField2D(Reducer):
         resolution = (50, 50),
         xlim = None,
         ylim = None,
+        max_workers = None,
+        verbose = True,
     ):
         # Type-checking inputs
         self.dimensions = [None, None]
@@ -791,21 +841,23 @@ class VectorField2D(Reducer):
         self.xlim = xlim
         self.ylim = ylim
 
+        self.max_workers = max_workers
+        self.verbose = verbose
 
-    def fit(self, samples, max_workers = None, verbose = True):
-        if verbose:
+
+    def fit(self, samples):
+        if self.verbose:
             start = time.time()
 
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
-        verbose = bool(verbose)
 
         if not isinstance(samples, PointData):
             samples = PointData(samples)
 
         grids = [None, None]
         for i, col in enumerate(self.columns):
-            if verbose:
+            if self.verbose:
                 print(f"Step {i + 1} / {len(self.columns)}:")
 
             pixelizer = DynamicProbability2D(
@@ -815,10 +867,12 @@ class VectorField2D(Reducer):
                 self.resolution,
                 self.xlim,
                 self.ylim,
+                max_workers = self.max_workers,
+                verbose = self.verbose,
             )
-            grids[i] = pixelizer.fit(samples, max_workers, verbose = False)
+            grids[i] = pixelizer.fit(samples)
 
-        if verbose:
+        if self.verbose:
             end = time.time()
             print(f"Compute 3D vector field in {end - start:4.4f} s.")
 
@@ -943,6 +997,8 @@ class VectorField3D(Reducer):
         xlim = None,
         ylim = None,
         zlim = None,
+        max_workers = None,
+        verbose = True,
     ):
         # Type-checking inputs
         self.dimensions = [None, None, None]
@@ -995,22 +1051,24 @@ class VectorField3D(Reducer):
         self.ylim = ylim
         self.zlim = zlim
 
+        self.max_workers = max_workers
+        self.verbose = verbose
 
-    def fit(self, samples, max_workers = None, verbose = True):
 
-        if verbose:
+    def fit(self, samples):
+
+        if self.verbose:
             start = time.time()
 
         # Reduce / stack list of samples onto a single PointData / array
         samples = Stack().fit(samples)
-        verbose = bool(verbose)
 
         if not isinstance(samples, PointData):
             samples = PointData(samples)
 
         grids = [None, None, None]
         for i, col in enumerate(self.columns):
-            if verbose:
+            if self.verbose:
                 print(f"Step {i + 1} / {len(self.columns)}...")
 
             voxelizer = DynamicProbability3D(
@@ -1021,10 +1079,12 @@ class VectorField3D(Reducer):
                 self.xlim,
                 self.ylim,
                 self.zlim,
+                max_workers = self.max_workers,
+                verbose = self.verbose,
             )
-            grids[i] = voxelizer.fit(samples, max_workers, verbose = False)
+            grids[i] = voxelizer.fit(samples)
 
-        if verbose:
+        if self.verbose:
             end = time.time()
             print(f"Compute 3D vector field in {end - start:4.4f} s.")
 

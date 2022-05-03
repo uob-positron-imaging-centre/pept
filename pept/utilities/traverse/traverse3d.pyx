@@ -165,6 +165,14 @@ cpdef void traverse3d(
         voxels in the z-dimension. It must be *sorted* in ascending order
         with *equally-spaced* numbers and length Z + 1 (voxels.shape[2] + 1).
 
+    Notes
+    -----
+    This function is an adaptation of a widely-used algorithm [1]_, optimised
+    for PEPT LoRs traversal.
+
+    .. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
+       InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10)..
+
     Examples
     --------
     The input parameters can be easily generated using numpy before calling the
@@ -191,15 +199,6 @@ cpdef void traverse3d(
     Calling `traverse3d` will modify `voxels` in-place.
 
     >>> traverse3d(voxels, random_lines, grid_x, grid_y, grid_z)
-
-    Notes
-    -----
-    This function is an adaptation of a widely-used algorithm [1]_, optimised
-    for PEPT LoRs traversal.
-
-    .. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
-       InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10)..
-
     '''
 
     cdef Py_ssize_t n_lines = lines.shape[0]

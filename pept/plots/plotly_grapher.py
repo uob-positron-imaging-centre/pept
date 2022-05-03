@@ -825,7 +825,7 @@ class PlotlyGrapher(pept.base.PEPTObject):
 
         Parameters
         ----------
-        voxels : pept.Pixels
+        pixels : pept.Pixels
             The pixel space, encapsulated in a `pept.Pixels` instance (or
             subclass thereof). Only `pept.Pixels` are accepted as raw pixels on
             their own do not contain data about the spatial coordinates of the

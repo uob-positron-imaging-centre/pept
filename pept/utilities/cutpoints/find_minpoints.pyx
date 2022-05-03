@@ -96,30 +96,30 @@ cpdef find_minpoints(
 
     Parameters
     ----------
-    sample_lines: (M, N) numpy.ndarray
+    sample_lines : (M, N) numpy.ndarray
         A 2D array of lines, where each line is defined by two points such that
         every row is formatted as `[t, x1, y1, z1, x2, y2, z2, etc.]`. It
         *must* have at least 2 lines and the combination size `num_lines`
         *must* be smaller or equal to the number of lines. Put differently:
         2 <= num_lines <= len(sample_lines).
 
-    num_lines: int
+    num_lines : int
         The number of lines in each combination of LoRs used to compute the
         MDP. This function considers every combination of `numlines` from the
         input `sample_lines`. It must be smaller or equal to the number of input
         lines `sample_lines`.
 
-    max_distance: float
+    max_distance : float
         The maximum allowed distance between an MDP and its constituent lines.
         If any distance from the MDP to one of its lines is larger than
         `max_distance`, the MDP is thrown away.
 
-    cutoffs: (6,) numpy.ndarray
+    cutoffs : (6,) numpy.ndarray
         An array of spatial cutoff coordinates with *exactly 6 elements* as
         [x_min, x_max, y_min, y_max, z_min, z_max]. If any MDP lies outside
         this region, it is thrown away.
 
-    append_indices: bool
+    append_indices : bool
         A boolean specifying whether to include the indices of the lines used
         to compute each MDP. If `False`, the output array will only contain the
         [time, x, y, z] of the MDPs. If `True`, the output array will have
@@ -128,7 +128,7 @@ cpdef find_minpoints(
 
     Returns
     -------
-    minpoints: (M, N) numpy.ndarray
+    minpoints : (M, N) numpy.ndarray
         A 2D array of `float`s containing the time and coordinates of the MDPs
         [time, x, y, z]. The time is computed as the average of the constituent
         lines. If `append_indices` is `True`, then `num_lines` indices of the

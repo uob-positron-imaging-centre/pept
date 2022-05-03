@@ -454,3 +454,31 @@ def test_fpi():
     voxels = Voxelize((50, 50, 50)).fit(lines, ex)
     positions = FPI().fit(voxels, ex)
     print(positions)
+
+
+def test_reorient():
+    rng = np.random.default_rng(0)
+
+    # Generate points spread out differently in each dimension
+    points_raw = [1, 100, 200, 300] * rng.random((1000, 4))
+
+    spreads = points_raw.std(axis = 0)[1:]
+    assert np.all(spreads.argsort() == [0, 1, 2])
+
+    # Reorient points so that most spread out dimension becomes X
+    points = pept.PointData(points_raw)
+
+    reo = Reorient("xyz").fit(points)
+    spreads = reo.points.std(axis = 0)[1:]
+    assert np.all(spreads.argsort() == [2, 1, 0])
+
+    reo = Reorient("yzx").fit(points)
+    spreads = reo.points.std(axis = 0)[1:]
+    assert np.all(spreads.argsort() == [0, 2, 1])
+
+    # Testing different settings
+    Reorient("zyx").fit(points_raw)
+    Reorient(
+        basis = reo.attrs["basis"],
+        origin = reo.attrs["origin"],
+    ).fit(points_raw)

@@ -226,6 +226,12 @@ class CutpointsToF(LineDataFilter):
 
     *New in pept-0.4.2*
 
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.tracking.HDBSCAN : Efficient, HDBSCAN-based clustering of (cut)points.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+
     Examples
     --------
     Make sure to use the ``TimeOfFlight`` filter to compute to ToF annihilation
@@ -244,12 +250,6 @@ class CutpointsToF(LineDataFilter):
     >>> line_data = pept.LineData(example_tof_data)
     >>> line_data_tof = TimeOfFlight().fit_sample(line_data)
     >>> cutpoints_tof = CutpointsToF(5.0).fit_sample(line_data_tof)
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.tracking.HDBSCAN : Efficient, HDBSCAN-based clustering of (cut)points.
-    pept.read_csv : Fast CSV file reading into numpy arrays.
     '''
 
     def __init__(

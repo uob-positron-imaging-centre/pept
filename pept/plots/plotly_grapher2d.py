@@ -883,6 +883,7 @@ class PlotlyGrapher2D:
         transpose = True,
         xgap = 0.,
         ygap = 0.,
+        **kwargs,
     ):
         '''Create and plot a trace with all the pixels in this class, with
         possible filtering.

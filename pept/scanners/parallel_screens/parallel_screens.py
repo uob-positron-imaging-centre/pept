@@ -98,7 +98,7 @@ def parallel_screens(
         initialisation of an instance of the class. Useful when reading
         large files (10gb files for PEPT data is not unheard of).
 
-    kwargs : other keyword arguments
+    **kwargs : other keyword arguments
         Other keyword arguments to be passed to `pept.read_csv`, e.g.
         "skiprows" or "max_rows". See the `pept.read_csv` documentation for
         other arguments.
@@ -117,6 +117,12 @@ def parallel_screens(
     ValueError
         If the data file does not have the (N, M >= 5) shape.
 
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
 
     Examples
     --------
@@ -146,14 +152,6 @@ def parallel_screens(
        [  6. 450. 350.   0. 250. 200. 500.]]
     lines.shape = (3, 7)
     columns = ['t', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2']
-
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
     '''
 
     if verbose:
@@ -206,6 +204,12 @@ class ADACGeometricEfficiency(PEPTObject):
 
     zlim : (2,) np.ndarray
         The limits of the active detector area in the *z*-dimension.
+
+    References
+    ----------
+    .. [1] Guida A. Positron emission particle tracking applied to solid-liquid
+       mixing in mechanically agitated vessels (Doctoral dissertation,
+       University of Birmingham).
 
     Examples
     --------
@@ -286,13 +290,6 @@ class ADACGeometricEfficiency(PEPTObject):
     >>> p = pv.Plotter()
     >>> p.add_mesh_clip_plane(grid)
     >>> p.show()
-
-    References
-    ----------
-    .. [1] Guida A. Positron emission particle tracking applied to solid-liquid
-       mixing in mechanically agitated vessels (Doctoral dissertation,
-       University of Birmingham).
-
     '''
 
     def __init__(

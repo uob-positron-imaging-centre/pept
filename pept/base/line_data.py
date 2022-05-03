@@ -113,6 +113,19 @@ class LineData(IterableSamples):
         A dictionary of other attributes saved on this class. Attribute names
         starting with an underscore are considered "hidden".
 
+    See Also
+    --------
+    pept.PointData : Encapsulate points for ease of iteration and plotting.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
+    pept.tracking.Cutpoints : Compute cutpoints from `pept.LineData`.
+
+    Notes
+    -----
+    The class saves `lines` as a **C-contiguous** numpy array for efficient
+    access in C / Cython functions. The inner data can be mutated, but do not
+    change the number of rows or columns after instantiating the class.
+
     Examples
     --------
     Initialise a `LineData` instance containing 10 lines with a `sample_size`
@@ -271,19 +284,6 @@ class LineData(IterableSamples):
            [49., 50., 51., 52., 53., 54., 55.],
            [56., 57., 58., 59., 60., 61., 62.],
            [63., 64., 65., 66., 67., 68., 69.]])
-
-    Notes
-    -----
-    The class saves `lines` as a **C-contiguous** numpy array for efficient
-    access in C / Cython functions. The inner data can be mutated, but do not
-    change the number of rows or columns after instantiating the class.
-
-    See Also
-    --------
-    pept.PointData : Encapsulate points for ease of iteration and plotting.
-    pept.read_csv : Fast CSV file reading into numpy arrays.
-    PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
-    pept.tracking.Cutpoints : Compute cutpoints from `pept.LineData`.
     '''
 
     def __init__(

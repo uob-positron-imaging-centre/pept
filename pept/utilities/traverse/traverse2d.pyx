@@ -147,6 +147,14 @@ cpdef void traverse2d(
         in the y-dimension. It must be *sorted* in ascending order with
         *equally-spaced* numbers and length Y + 1 (pixels.shape[1] + 1).
 
+    Notes
+    -----
+    This function is an adaptation of a widely-used algorithm [1]_, optimised
+    for PEPT LoRs traversal.
+
+    .. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
+       InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10).
+
     Examples
     --------
     The input parameters can be easily generated using numpy before calling the
@@ -172,15 +180,6 @@ cpdef void traverse2d(
     Calling `traverse2d` will modify `pixels` in-place.
 
     >>> traverse2d(pixels, random_lines, grid_x, grid_y)
-
-    Notes
-    -----
-    This function is an adaptation of a widely-used algorithm [1]_, optimised
-    for PEPT LoRs traversal.
-
-    .. [1] Amanatides J, Woo A. A fast voxel traversal algorithm for ray tracing.
-       InEurographics 1987 Aug 24 (Vol. 87, No. 3, pp. 3-10).
-
     '''
 
     n_lines = lines.shape[0]

@@ -240,6 +240,13 @@ class Cutpoints(pept.base.LineDataFilter):
         default is None, in which case they are automatically computed using
         `pept.tracking.peptml.get_cutoffs`.
 
+    See Also
+    --------
+    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
+    pept.tracking.HDBSCAN : Efficient, parallel HDBSCAN-based clustering of
+                            (cut)points.
+    pept.read_csv : Fast CSV file reading into numpy arrays.
+
     Examples
     --------
     Compute the cutpoints for a `LineData` instance between lines that are less
@@ -252,13 +259,6 @@ class Cutpoints(pept.base.LineDataFilter):
 
     >>> sample = line_data[0]
     >>> cutpts_sample = peptml.Cutpoints(0.1).fit_sample(sample)
-
-    See Also
-    --------
-    pept.LineData : Encapsulate LoRs for ease of iteration and plotting.
-    pept.tracking.HDBSCAN : Efficient, parallel HDBSCAN-based clustering of
-                            (cut)points.
-    pept.read_csv : Fast CSV file reading into numpy arrays.
     '''
 
     def __init__(

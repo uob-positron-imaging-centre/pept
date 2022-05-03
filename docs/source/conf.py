@@ -38,8 +38,8 @@ os.environ['MPLBACKEND'] = 'Agg'  # avoid tkinter import errors on rtfd.io
 
 # -- Project information -----------------------------------------------------
 
-project = 'pept'
-copyright = '2021, the `pept` developers'
+project = 'PEPT'
+copyright = '2022, the `PEPT` developers'
 
 # The full version, including alpha/beta/rc tags
 # Load the package's __version__.py module as a dictionary.
@@ -90,7 +90,25 @@ numpydoc_xref_param_type = True
 numpydoc_xref_ignore = {'optional', 'type_without_description', 'BadException'}
 
 # Run docstring validation as part of build process
-numpydoc_validation_checks = {"all", "GL01", "SA04", "RT03"}
+numpydoc_validation_checks = {
+    "all",
+    "SS06",
+    "PR01",
+    "GL01",
+    "SA01",
+    "EX01",
+    "YD01",
+    "ES01",
+    "GL08",
+    "SS01",
+    "RT01",
+    "GL02",
+    "GL03",
+    "RT02",
+    "RT03",
+    "PR09",
+    "SS05",     # Summary must start with infinitive verb
+}
 
 autodoc_default_options = {
     'show-inheritance': False,
@@ -262,8 +280,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'pept.tex', u'pept Documentation',
-     u'pept maintainers', 'manual'),
+    ('index', 'PEPT.tex', u'PEPT Documentation',
+     u'PEPT maintainers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
