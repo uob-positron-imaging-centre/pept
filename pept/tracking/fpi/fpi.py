@@ -36,10 +36,9 @@
 
 
 import  warnings
+import  textwrap
 
 import  numpy               as      np
-
-from    beartype            import  beartype
 
 import  pept
 from    .fpi_ext            import  fpi_ext
@@ -158,7 +157,6 @@ class FPI(pept.base.VoxelsFilter):
         self.lld_counts = float(lld_counts)
 
 
-    @beartype
     def fit_sample(self, voxels: pept.Voxels):
         '''Use the FPI algorithm to locate a tracer from a single voxellised
         space (i.e. from one sample of LoRs).
@@ -186,6 +184,12 @@ class FPI(pept.base.VoxelsFilter):
             If `voxels` is not an instance of `pept.Voxels` (or subclass
             thereof).
         '''
+
+        if not isinstance(voxels, pept.Voxels):
+            raise TypeError(textwrap.fill((
+                "The input `voxels` must be a Voxels instance. Received type "
+                f"`{type(voxels)}`."
+            )))
 
         positions = fpi_ext(
             np.asarray(voxels.voxels, dtype = float, order = "C"),

@@ -8,8 +8,6 @@
 
 import  textwrap
 
-from    beartype        import  beartype
-
 import  numpy           as      np
 from    scipy.optimize  import  minimize
 
@@ -152,8 +150,10 @@ class TimeOfFlight(LineDataFilter):
         self.points = bool(points)
 
 
-    @beartype
     def fit_sample(self, sample: LineData):
+        if not isinstance(sample, LineData):
+            sample = LineData(sample)
+
         if sample.lines.shape[1] < 8:
             raise ValueError(textwrap.fill((
                 "The input `sample` of LineData must have at least 8 columns, "
@@ -312,8 +312,10 @@ class CutpointsToF(LineDataFilter):
         self._append_indices = bool(append_indices)
 
 
-    @beartype
     def fit_sample(self, sample_lines: LineData):
+        if not isinstance(sample_lines, LineData):
+            sample_lines = LineData(sample_lines)
+
         # Ensure ToF data is present and extract it
         if "tof" not in sample_lines.attrs:
             raise AttributeError(textwrap.fill((

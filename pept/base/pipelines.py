@@ -8,7 +8,6 @@
 
 import  os
 import  re
-import  sys
 import  time
 import  numbers
 import  textwrap
@@ -16,25 +15,18 @@ import  warnings
 from    abc                 import  ABC, abstractmethod
 from    concurrent.futures  import  ProcessPoolExecutor
 
-if sys.version_info.minor >= 9:
-    # Python 3.9
-    from collections.abc    import  Iterable
-else:
-    from typing             import  Iterable
-
 import  numpy               as      np
 import  pandas              as      pd
 import  cma
 
-import  attr
-from    beartype            import  beartype
 from    tqdm                import  tqdm
 from    joblib              import  Parallel, delayed
 
-from    .iterable_samples   import  PEPTObject
+from    .iterable_samples   import  PEPTObject, IterableSamples
 from    .point_data         import  PointData
 from    .line_data          import  LineData
 from    .voxels             import  Voxels
+from    .utilities          import  check_iterable
 
 
 
@@ -85,10 +77,9 @@ class Filter(Transformer):
         pass
 
 
-    @beartype
     def fit(
         self,
-        samples: Iterable,
+        samples,
         executor = "joblib",
         max_workers = None,
         verbose = True,
@@ -98,6 +89,12 @@ class Filter(Transformer):
         need a reduction step (e.g. stack all processed samples), apply it
         in the subclass.
         '''
+
+        if not hasattr(samples, "__iter__"):
+            raise ValueError(textwrap.fill((
+                "The input `samples` must be an iterable (e.g. a list, tuple "
+                f"or LineData / PointData). Received `{type(samples)}`."
+            )))
 
         if executor == "sequential":
             if verbose:
@@ -152,16 +149,20 @@ class LineDataFilter(Filter):
     such as `ProcessPoolExecutor` or `MPIPoolExecutor`).
     '''
 
-    @beartype
     def fit(
         self,
-        line_data: Iterable[LineData],
+        line_data,
         executor = "joblib",
         max_workers = None,
         verbose = True,
     ):
+        check_iterable(LineData, line_data = line_data)
         return Filter.fit(
-            self, line_data, executor, max_workers, verbose = verbose
+            self,
+            line_data,
+            executor,
+            max_workers,
+            verbose = verbose,
         )
 
 
@@ -178,16 +179,21 @@ class PointDataFilter(Filter):
     such as `ProcessPoolExecutor` or `MPIPoolExecutor`).
     '''
 
-    @beartype
     def fit(
         self,
-        point_data: Iterable[PointData],
+        point_data,
         executor = "joblib",
         max_workers = None,
         verbose = True,
     ):
+
+        check_iterable(PointData, point_data = point_data)
         return Filter.fit(
-            self, point_data, executor, max_workers, verbose = verbose
+            self,
+            point_data,
+            executor,
+            max_workers,
+            verbose = verbose,
         )
 
 
@@ -204,16 +210,21 @@ class VoxelsFilter(Filter):
     such as `ProcessPoolExecutor` or `MPIPoolExecutor`).
     '''
 
-    @beartype
     def fit(
         self,
-        line_data: Iterable[Voxels],
+        voxels,
         executor = "joblib",
         max_workers = None,
         verbose = True,
     ):
+        check_iterable(Voxels, voxels = voxels)
+
         return Filter.fit(
-            self, line_data, executor, max_workers, verbose = verbose
+            self,
+            voxels,
+            executor,
+            max_workers,
+            verbose = verbose,
         )
 
 
@@ -410,10 +421,9 @@ class Pipeline(PEPTObject):
                 return [f.result() for f in futures]
 
 
-    @beartype
     def fit(
         self,
-        samples: Iterable,
+        samples,
         executor = "joblib",
         max_workers = None,
         verbose = True,
@@ -424,9 +434,9 @@ class Pipeline(PEPTObject):
 
         Parameters
         ----------
-        samples : IterableSamples
-            Any subclass of `IterableSamples` (e.g. `pept.LineData`) that
-            allows iterating through samples of data.
+        samples : Iterable
+            An iterable (e.g. list, tuple, LineData, list[PointData]), whose
+            elements will be passed through the pipeline.
 
         executor : "sequential", "joblib", or `concurrent.futures.Executor` \
                 subclass, default "joblib"
@@ -445,6 +455,12 @@ class Pipeline(PEPTObject):
             If True, show extra information during processing, e.g. loading
             bars.
         '''
+
+        if not hasattr(samples, "__iter__"):
+            raise ValueError(textwrap.fill((
+                "The input `samples` must be an iterable (e.g. list, tuple, "
+                f"LineData, list[PointData]). Received `{type(samples)}`."
+            )))
 
         # If verbose, time operation
         if verbose:
@@ -629,17 +645,16 @@ class Pipeline(PEPTObject):
 
 
 
-@attr.s(auto_attribs = True, slots = True, auto_detect = True)
 class OptParam:
     '''Class storing a single pipeline optimisation free parameter, including
     its parent transformer (`trans`), name (`param`), range (`bounds`) and
     initial value (`default`).
     '''
-    index: int
-    trans: PEPTObject
-    param: str
-    bounds: np.ndarray
-    default: float
+    # index: int
+    # trans: PEPTObject
+    # param: str
+    # bounds: np.ndarray
+    # default: float
 
     def __init__(self, pipe_parameters, param, bounds):
 
@@ -685,17 +700,23 @@ class OptParam:
 
 
 
-@attr.s(auto_attribs = True, slots = True, auto_detect = True)
 class OptPipeline:
     '''Class storing a single pipeline optimisation free parameter, including
     its parent transformer (`trans`), name (`param`), range (`bounds`) and
     initial value (`default`).
     '''
-    pipeline: Pipeline
-    parameters: OptParam
-    lines: LineData
-    executor: ProcessPoolExecutor
 
+    def __init__(
+        self,
+        pipeline: Pipeline,
+        parameters: OptParam,
+        lines: LineData,
+        executor: ProcessPoolExecutor,
+    ):
+        self.pipeline = pipeline
+        self.parameters = parameters
+        self.lines = lines
+        self.executor = executor
 
 
 

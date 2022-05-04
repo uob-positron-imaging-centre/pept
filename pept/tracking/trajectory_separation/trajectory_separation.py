@@ -36,16 +36,7 @@
 
 
 import  os
-import  sys
 import  warnings
-
-from    beartype                    import  beartype
-
-if sys.version_info.minor >= 9:
-    # Python 3.9
-    from collections.abc import  Iterable
-else:
-    from typing         import  Iterable
 
 import  numpy                       as      np
 from    scipy.spatial               import  cKDTree
@@ -225,8 +216,7 @@ class Segregate(pept.base.Reducer):
         self.min_trajectory_size = int(min_trajectory_size)
 
 
-    @beartype
-    def fit(self, points: Iterable[pept.PointData]):
+    def fit(self, points):
         # Stack the input points into a single PointData
         if not isinstance(points, pept.PointData):
             points = pept.PointData(points)

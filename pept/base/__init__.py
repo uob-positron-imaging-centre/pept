@@ -29,6 +29,8 @@ from    .pipelines          import  VoxelsFilter
 from    .pipelines          import  Reducer
 from    .pipelines          import  Pipeline
 
+from    .utilities          import  check_iterable
+
 
 # Execute code here to add dynamic methods
 from    .                   import  pixels

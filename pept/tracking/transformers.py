@@ -7,28 +7,14 @@
 
 
 import  re
-import  sys
 import  warnings
-from    typing          import  Union
 from    numbers         import  Number
-
-if sys.version_info.minor >= 9:
-    # Python 3.9
-    from collections.abc import  Iterable
-else:
-    from typing         import  Iterable
-
 import  textwrap
 
 import  numpy           as      np
 
-from    beartype        import  beartype
-
 from    pept.base       import  PointData, LineData
 from    pept.base       import  Filter, Reducer, IterableSamples
-
-
-PointsOrLines = Union[PointData, LineData]
 
 
 
@@ -58,10 +44,15 @@ class Stack(Reducer):
         self.overlap = overlap
 
 
-    @beartype
-    def fit(self, samples: Iterable):
+    def fit(self, samples):
         # If it's a LineData / PointData, the `samples` are already stacked.
         # Simply set the sample_size and overlap if required and return them
+        if not hasattr(samples, "__iter__"):
+            raise ValueError(textwrap.fill((
+                "The input `samples` must be an iterable (e.g. list, tuple, "
+                f"PointData, LineData). Received type=`{type(samples)}`."
+            )))
+
         if isinstance(samples, IterableSamples):
             if self.sample_size is not None:
                 samples.sample_size = self.sample_size
@@ -168,8 +159,13 @@ class SplitLabels(Filter):
         return cluster
 
 
-    @beartype
     def fit_sample(self, sample: IterableSamples):
+        if not isinstance(sample, IterableSamples):
+            raise TypeError(textwrap.fill((
+                "The input `sample` must be a subclass of `IterableSamples` "
+                f"(e.g. PointData, LineData). Received type=`{type(sample)}`."
+            )))
+
         # Extract the labels column
         col_idx = sample.columns.index("label")
         labels = sample.data[:, col_idx]
@@ -554,8 +550,13 @@ class Condition(Filter):
             return f"data[:, sample.columns.index('{term}')]"
 
 
-    @beartype
     def fit_sample(self, sample: IterableSamples):
+        if not isinstance(sample, IterableSamples):
+            raise TypeError(textwrap.fill((
+                "The input `sample` must be a subclass of `IterableSamples` "
+                f"(e.g. PointData, LineData). Received type=`{type(sample)}`."
+            )))
+
         data = sample.data
 
         for cond in self.conditions:
@@ -643,8 +644,13 @@ class Remove(Filter):
             )))
 
 
-    @beartype
     def fit_sample(self, sample: IterableSamples):
+        if not isinstance(sample, IterableSamples):
+            raise TypeError(textwrap.fill((
+                "The input `sample` must be a subclass of `IterableSamples` "
+                f"(e.g. PointData, LineData). Received type=`{type(sample)}`."
+            )))
+
         # Extract the relevant `sample` attributes
         columns = sample.columns
         ncols = len(columns)
@@ -704,8 +710,13 @@ class SplitAll(Reducer):
             self.column_index = None
 
 
-    @beartype
-    def fit(self, samples: Iterable):
+    def fit(self, samples):
+        if not hasattr(samples, "__iter__"):
+            raise TypeError(textwrap.fill((
+                "The input `samples` must be an iterable (e.g. list, tuple, "
+                f"PointData, LineData). Received type=`{type(samples)}`."
+            )))
+
         # Reduce / stack list of samples onto a single IterableSamples / array
         samples = Stack().fit(samples)
 
@@ -841,8 +852,13 @@ class Swap(Filter):
             return f"data[:, sample.columns.index('{term}')]"
 
 
-    @beartype
     def fit_sample(self, sample: IterableSamples):
+        if not isinstance(sample, IterableSamples):
+            raise TypeError(textwrap.fill((
+                "The input `sample` must be a subclass of `IterableSamples` "
+                f"(e.g. PointData, LineData). Received type=`{type(sample)}`."
+            )))
+
         if not self.inplace:
             sample = sample.copy()
 

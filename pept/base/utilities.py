@@ -23,6 +23,40 @@ def check_homogeneous_types(iterable):
             )))
 
 
+def check_iterable(target_type, **kwargs):
+    '''Check that an iterable has elements of type `target_type`.
+
+    Performance caveat: only checks the first element. If the iterable is empty
+    it passes.
+
+    Raises
+    ------
+    TypeError
+        If the first keyword argument value is not an iterable or its first
+        element is not an object of type `target_type`.
+
+    Examples
+    --------
+    >>> check_iterable(PointData, samples = [PointData(...), PointData(...)])
+    '''
+    # Extract the first keyword argument name and value
+    for obj, val in kwargs.items():
+        break
+
+    if not hasattr(val, "__iter__"):
+        raise TypeError(textwrap.fill((
+            f"The input `{obj}` must be an iterable (list, tuple, PointData, "
+            f"LineData, etc.). Received type=`{type(val)}`."
+        )))
+
+    if len(val) and not isinstance(val[0], target_type):
+        raise TypeError(textwrap.fill((
+            f"The input `{obj}` must be an iterable containing elements of "
+            f"type `{target_type}`. The first element in `{obj}` was of type "
+            f"`{type(val[0])}`."
+        )))
+
+
 def memoryview_safe(x):
     """Make array safe to run in a Cython memoryview-based kernel. These
     kernels typically break down with the error ``ValueError: buffer source

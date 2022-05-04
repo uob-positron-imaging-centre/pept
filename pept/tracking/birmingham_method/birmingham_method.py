@@ -28,8 +28,6 @@
 # Date   : 20.08.2019
 
 
-
-from    beartype                        import  beartype
 import  numpy                           as      np
 
 import  pept
@@ -111,7 +109,6 @@ class BirminghamMethod(pept.base.LineDataFilter):
         self.get_used = bool(get_used)
 
 
-    @beartype
     def fit_sample(self, sample):
         '''Use the Birmingham method to track a tracer location from a numpy
         array (i.e. one sample) of LoRs.

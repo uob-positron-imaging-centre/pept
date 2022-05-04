@@ -9,7 +9,6 @@
 import  time
 import  textwrap
 
-import  attr
 import  numpy           as      np
 import  konigcell       as      kc
 
@@ -881,7 +880,6 @@ class VectorField2D(Reducer):
 
 
 
-@attr.s(auto_attribs = True, slots = True, auto_detect = True)
 class VectorGrid2D:
     '''Object produced by ``VectorField2D`` storing 2 grids of voxels
     `xpixels`, `ypixels`, for example velocity vector fields / quiver plots.
@@ -910,8 +908,15 @@ class VectorGrid2D:
     >>> fig.plot(cmap = "magma")
 
     '''
-    xpixels: Pixels
-    ypixels: Pixels
+
+    def __init__(
+        self,
+        xpixels: Pixels,
+        ypixels: Pixels,
+    ):
+        self.xpixels = xpixels
+        self.ypixels = ypixels
+
 
     def vectors(self, factor = 1):
         # You need to install PyVista to use this function!
@@ -1093,7 +1098,6 @@ class VectorField3D(Reducer):
 
 
 
-@attr.s(auto_attribs = True, slots = True, auto_detect = True)
 class VectorGrid3D:
     '''Object produced by ``VectorField3D`` storing 3 grids of voxels
     `xvoxels`, `yvoxels`, `zvoxels`, for example velocity vector fields /
@@ -1117,9 +1121,17 @@ class VectorGrid3D:
     >>> fig.plot(cmap = "magma")
 
     '''
-    xvoxels: Voxels
-    yvoxels: Voxels
-    zvoxels: Voxels
+
+    def __init__(
+        self,
+        xvoxels: Voxels,
+        yvoxels: Voxels,
+        zvoxels: Voxels,
+    ):
+        self.xvoxels = xvoxels
+        self.yvoxels = yvoxels
+        self.zvoxels = zvoxels
+
 
     def vectors(self, factor = 1):
         # You need to install PyVista to use this function!
