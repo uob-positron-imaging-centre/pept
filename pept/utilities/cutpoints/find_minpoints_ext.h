@@ -8,7 +8,16 @@
 #ifndef FIND_MINPOINTS_EXT
 #define FIND_MINPOINTS_EXT
 
-#include <sys/types.h>
+
+#if defined(_MSC_VER)
+	// Support the bloody unconforming mess that MSVC is; allow using fopen and ssize_t
+	#define _CRT_SECURE_NO_DEPRECATE
+	#include <BaseTsd.h>
+	typedef SSIZE_T ssize_t;
+#else
+	#include <sys/types.h>
+#endif
+
 
 double* find_minpoints_ext(
     const double *sample_lines,

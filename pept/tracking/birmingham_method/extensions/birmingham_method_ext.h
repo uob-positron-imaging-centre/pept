@@ -5,10 +5,25 @@
  * Date              : 21.08.2019
  */
 
+
 #ifndef BIRMINGHAM_METHOD_EXT
 #define BIRMINGHAM_METHOD_EXT
 
-#include <sys/types.h>
+
+#if defined(_MSC_VER)
+	// Support the bloody unconforming mess that MSVC is; allow using fopen and ssize_t
+	#define _CRT_SECURE_NO_DEPRECATE
+	#include <BaseTsd.h>
+	typedef SSIZE_T ssize_t;
+#else
+	#include <sys/types.h>
+#endif
+
+
+#include <math.h>                   // for sqrt
+#include <float.h>                  // for DBL_MAX
+#include <stdlib.h>                 // for malloc
+
 
 void birmingham_method_ext(
     const double *, const ssize_t nrows, const ssize_t ncols,

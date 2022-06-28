@@ -7,10 +7,6 @@
 
 
 #include "birmingham_method_ext.h"
-#include <sys/types.h>              // for ssize_t
-#include <math.h>                   // for sqrt
-#include <float.h>                  // for DBL_MAX
-#include <stdlib.h>                 // for malloc
 
 
 void free_memory(
