@@ -32,8 +32,10 @@
 
 
 #ifdef _MSC_VER
-    #include <basetsd.h>
-    typedef SSIZE_T ssize_t;
+    #ifndef PY_VERSION_HEX || (defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x030a00f0)
+        #include <basetsd.h>
+        typedef SSIZE_T ssize_t;
+    #endif
 #endif
 
 
