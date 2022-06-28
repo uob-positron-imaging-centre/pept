@@ -1,9 +1,13 @@
 name: Build and upload pept to PyPI on a OS and Python version matrix
 
+# env:
+#   CIBW_BUILD: cp37-* cp38-* cp39-*
+#   CIBW_TEST_REQUIRES: pytest
+#   CIBW_TEST_COMMAND: "pytest {project}/tests"
+
+# Disable building PyPy wheels on all platforms
 env:
-  CIBW_BUILD: cp37-* cp38-* cp39-*
-  CIBW_TEST_REQUIRES: pytest
-  CIBW_TEST_COMMAND: "pytest {project}/tests"
+  CIBW_SKIP: pp*
 
 # Build on every branch push, tag push, and pull request change:
 # on: [push, pull_request]
