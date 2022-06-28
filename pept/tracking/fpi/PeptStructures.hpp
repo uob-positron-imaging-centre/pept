@@ -26,18 +26,9 @@
 #define PeptStructures_h
 
 
-#if defined(_MSC_VER)
-	// Support the bloody unconforming mess that MSVC is; allow using fopen and ssize_t
-	#define _CRT_SECURE_NO_DEPRECATE
-	#include <BaseTsd.h>
-	typedef SSIZE_T ssize_t;
-#else
-	#include <sys/types.h>
-#endif
-
-
 #include <vector>
 #include <cstdlib>
+#include <sys/types.h>
 
 
 using namespace std;
