@@ -51,6 +51,8 @@
 import numpy as np      # import numpy for Python functions
 cimport numpy as np     # import numpy for C functions (numpy's C API)
 
+from libc.stdint cimport int64_t
+
 
 np.import_array()
 
@@ -58,14 +60,14 @@ np.import_array()
 cdef extern from "calcPosFPI.hpp":
     double* calcPosFPIC(
         double *voxels,
-        Py_ssize_t length,
-        Py_ssize_t width,
-        Py_ssize_t depth,
+        int64_t length,
+        int64_t width,
+        int64_t depth,
         double w,
         double r,
         double lldCounts,
-        Py_ssize_t *out_rows,
-        Py_ssize_t *out_cols
+        int64_t *out_rows,
+        int64_t *out_cols
     ) nogil
 
 
@@ -132,8 +134,8 @@ cpdef np.ndarray[double, ndim=2] fpi_ext(
     '''
 
     cdef double *points
-    cdef Py_ssize_t nrows = 0
-    cdef Py_ssize_t ncols = 0
+    cdef int64_t nrows = 0
+    cdef int64_t ncols = 0
     cdef np.npy_intp[2] size
 
     with nogil:

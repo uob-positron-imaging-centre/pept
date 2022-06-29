@@ -40,12 +40,12 @@ using namespace std;
 //////////////////////////////////////
 
 // Interface to calling `calcPosFPI` with simple C data structures
-static inline double* calcPosFPIC(double *voxels, ssize_t length, ssize_t width, ssize_t depth, double w, double r,
-                   double lldCounts, ssize_t *out_rows, ssize_t *out_cols);
+static inline double* calcPosFPIC(double *voxels, int64_t length, int64_t width, int64_t depth, double w, double r,
+                   double lldCounts, int64_t *out_rows, int64_t *out_cols);
 
 
 // calculate particle positions with feature point tracking technique
-static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t width, ssize_t depth, ssize_t w, double r, double lldCounts2, vector<point3> &error);
+static inline vector<point3> calcPosFPI(double***A,  int64_t length, int64_t width, int64_t depth, int64_t w, double r, double lldCounts2, vector<point3> &error);
 // input: A: 3D array of LOR crossings (smoothed)
 //        length: size of first dimension of A
 //        width: size of 2nd dimension of A
@@ -62,8 +62,8 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
 // Supplemental Functions
 
 
-// Determine if a given set of indices is in a list of possize_ts
-static inline bool isIn(ssize_t i, ssize_t j, ssize_t k, vector<point3>list);
+// Determine if a given set of indices is in a list of point64_ts
+static inline bool isIn(int64_t i, int64_t j, int64_t k, vector<point3>list);
 // input: i, j, k: Indices being searched for within the list
 //        list: List of integer points in R3
 // output: Returns true/false based on whether or not the the point (i,j,k) is in
@@ -98,9 +98,9 @@ static inline void REF34(double A[3][4]);
 /////////////////////////////
 // Begin main function
 /////////////////////////////
-static inline double* calcPosFPIC(double *voxels, ssize_t length, ssize_t width, ssize_t depth,
+static inline double* calcPosFPIC(double *voxels, int64_t length, int64_t width, int64_t depth,
                                   double w, double r, double lldCounts,
-                                  ssize_t *out_rows, ssize_t *out_cols)
+                                  int64_t *out_rows, int64_t *out_cols)
 {
     if (length < 2 || width < 2 || depth < 2)
     {
@@ -115,8 +115,8 @@ static inline double* calcPosFPIC(double *voxels, ssize_t length, ssize_t width,
     vector<point3> points;
     vector<point3> error;
 
-    ssize_t stride = width * depth;
-    ssize_t i, j;
+    int64_t stride = width * depth;
+    int64_t i, j;
 
     // Create a 3-pointer equivalent form by storing pointers into the input flattened `voxels`
     v3 = (double***)malloc(sizeof(double**) * length);
@@ -137,7 +137,7 @@ static inline double* calcPosFPIC(double *voxels, ssize_t length, ssize_t width,
     *out_rows = points.size();
     *out_cols = 6;
 
-    for (i = 0; i < (ssize_t)points.size(); ++i)
+    for (i = 0; i < (int64_t)points.size(); ++i)
     {
         for (j = 0; j < 3; ++j)
         {
@@ -161,7 +161,7 @@ static inline double* calcPosFPIC(double *voxels, ssize_t length, ssize_t width,
 
 //
 // calculate particle positions with feature point tracking technique
-static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t width, ssize_t depth, ssize_t w, double r, double lldCounts2, vector<point3> &error)
+static inline vector<point3> calcPosFPI(double***A,  int64_t length, int64_t width, int64_t depth, int64_t w, double r, double lldCounts2, vector<point3> &error)
 // input: A: 3D array of LOR crossings (smoothed)
 //        length: size of first dimension of A
 //        width: size of 2nd dimension of A
@@ -183,9 +183,9 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
     
     // get maxVal of A
     double maxVal=-1;
-    for (ssize_t i=w; i<length-w; i++){
-        for (ssize_t j=w; j<width-w; j++){
-            for (ssize_t k=w; k<depth-w; k++) {
+    for (int64_t i=w; i<length-w; i++){
+        for (int64_t j=w; j<width-w; j++){
+            for (int64_t k=w; k<depth-w; k++) {
                 
                 if (A[i][j][k]>maxVal){
                     maxVal=A[i][j][k];
@@ -199,9 +199,9 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
     // now find all local maxima
     
     // initialize local maxima as "guesses"
-    vector<ssize_t> guessX;
-    vector<ssize_t> guessY;
-    vector<ssize_t> guessZ;
+    vector<int64_t> guessX;
+    vector<int64_t> guessY;
+    vector<int64_t> guessZ;
     vector<double> guess;
     // keep track of ties
     vector<point3> tie;
@@ -209,9 +209,9 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
     
     
     // neglect ends where smoothing (via convolution) aberrations may exist
-    for (ssize_t i=w; i<length-w; i++){
-        for (ssize_t j=w; j<width-w; j++){
-            for (ssize_t k=w; k<depth-w; k++) {
+    for (int64_t i=w; i<length-w; i++){
+        for (int64_t j=w; j<width-w; j++){
+            for (int64_t k=w; k<depth-w; k++) {
                 
                 bool isNotMax=false;
                 
@@ -224,9 +224,9 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
                 vector<point3> potentialTies;
                 
                 // now search local 2w+1 width cube for greater intensity and ties
-                for (ssize_t ii=i-w; ii<=i+w; ii++){
-                    for (ssize_t jj=j-w; jj<=j+w; jj++){
-                        for (ssize_t kk=k-w; kk<=k+w; kk++){
+                for (int64_t ii=i-w; ii<=i+w; ii++){
+                    for (int64_t jj=j-w; jj<=j+w; jj++){
+                        for (int64_t kk=k-w; kk<=k+w; kk++){
                             
                             if((ii==i)&&(jj==j)&&(kk==k)){continue;}
                             isNotMax = (A[ii][jj][kk]>A[i][j][k]);
@@ -253,7 +253,7 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
                 // identify and store local maxima
                 if ((!isNotMax)&&(A[i][j][k]>=(maxVal*r))){
                     // note if it's a tie
-                    for (ssize_t ii=0; ii<(ssize_t)potentialTies.size(); ii++)
+                    for (int64_t ii=0; ii<(int64_t)potentialTies.size(); ii++)
                     {
                         tie.push_back(potentialTies[ii]);
                     }
@@ -272,7 +272,7 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
     
     // take centroids
     
-    for (ssize_t i=0; i<(ssize_t)guess.size(); i++){
+    for (int64_t i=0; i<(int64_t)guess.size(); i++){
         double meanX=0, meanY=0, meanZ=0;// diffX=0, diffY=0, diffZ=0;
         double sigX=0, sigY=0, sigZ=0; // standard deviations
         // double sumA=0;
@@ -280,9 +280,9 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
         
         // do calc with gauss fit
         // fitting to 1-D gaussian of form A(x)=Ix*exp(-(x-meanX)^2/(2*sigX^2))
-        ssize_t x1=guessX[i]-1, x2=guessX[i], x3=guessX[i]+1;
-        ssize_t y1=guessY[i]-1, y2=guessY[i], y3=guessY[i]+1;
-        ssize_t z1=guessZ[i]-1, z2=guessZ[i], z3=guessZ[i]+1;
+        int64_t x1=guessX[i]-1, x2=guessX[i], x3=guessX[i]+1;
+        int64_t y1=guessY[i]-1, y2=guessY[i], y3=guessY[i]+1;
+        int64_t z1=guessZ[i]-1, z2=guessZ[i], z3=guessZ[i]+1;
         double IMeanSig[3]; // vector of guesses (and eventually answers) for intensity, mean, stdev
         double fitInt[3]; // will be intensities of fitting pixels
         double fitPos[3]; // will be positions of fitting pixels
@@ -419,13 +419,13 @@ static inline vector<point3> calcPosFPI(double***A,  ssize_t length, ssize_t wid
 
 
 // Determine if a given set of indices is in a list of points
-static inline bool isIn(ssize_t i, ssize_t j, ssize_t k, vector<point3>list)
+static inline bool isIn(int64_t i, int64_t j, int64_t k, vector<point3>list)
 // input: i, j, k: Indices being searched for within the list
 //        list: List of integer points in R3
 // output: Returns true/false based on whether or not the the point (i,j,k) is in
 //         the list.
 {
-    for (ssize_t ii=0; ii<(ssize_t)list.size(); ii++)
+    for (int64_t ii=0; ii<(int64_t)list.size(); ii++)
     {
         if(i==list[ii].u[0] && j==list[ii].u[1] && k==list[ii].u[2])
         {
@@ -448,7 +448,7 @@ static inline void contGaussFit(double guess[3], double A[3], double x[3])
     double I=guess[0], x0=guess[1], sig=guess[2];
    
     
-    ssize_t nTrials=100; // how many max steps before convergence... arbitrarily chosen
+    int64_t nTrials=100; // how many max steps before convergence... arbitrarily chosen
     double delxTol=0.0001; // tolerance of guess convergence... arbitrarily chosen
     double fTol=0.0001; // tolerance of function convergence... arbitrarily chosen
     
@@ -456,14 +456,14 @@ static inline void contGaussFit(double guess[3], double A[3], double x[3])
     double J[3][3]; // jacobian of F
     
     // now loop through until convergence
-    for(ssize_t k=0; k<nTrials; k++)
+    for(int64_t k=0; k<nTrials; k++)
     {
         // initialize delX
         double delx[3];
-        for(ssize_t i=0; i<3; i++){delx[i]=0;}
+        for(int64_t i=0; i<3; i++){delx[i]=0;}
         
         // first need to find F and J, evaluated at guess
-        for(ssize_t i=0; i<3; i++)
+        for(int64_t i=0; i<3; i++)
         {
             //get F
             F[i]=erf((x[i]+0.5-x0)/(sqrt(2.0)*sig))-erf((x[i]-0.5-x0)/(sqrt(2.0)*sig));
@@ -499,9 +499,9 @@ static inline void contGaussFit(double guess[3], double A[3], double x[3])
         // use REF formulation
         // make augmented matrix
         double B[3][4];
-        for(ssize_t i=0; i<3; i++){
+        for(int64_t i=0; i<3; i++){
             B[i][3]=-F[i];
-            for (ssize_t j=0; j<3; j++){
+            for (int64_t j=0; j<3; j++){
                 B[i][j]=J[i][j];
             }
         }
@@ -512,9 +512,9 @@ static inline void contGaussFit(double guess[3], double A[3], double x[3])
         
         // now solve
         // now solve for delx
-        for (ssize_t i=2; i>=0; i--){
+        for (int64_t i=2; i>=0; i--){
             delx[i]=B[i][3];
-            for (ssize_t j=2; j>i; j--){
+            for (int64_t j=2; j>i; j--){
                 delx[i]-=delx[j]*B[i][j];
             }
             delx[i]/=B[i][i];
@@ -524,7 +524,7 @@ static inline void contGaussFit(double guess[3], double A[3], double x[3])
         // now make sure we're getting closer to a zero
         double G[3]; // value of function at new position
         double f=(F[0]*F[0]+F[1]*F[1]+F[2]*F[2])/2.0;
-        for(ssize_t i=0; i<3; i++)
+        for(int64_t i=0; i<3; i++)
         {
             //get G
             G[i]=erf((x[i]+0.5-x0-delx[1])/(sqrt(2.0)*(sig+delx[2])))-erf((x[i]-0.5-x0-delx[1])/(sqrt(2.0)*(sig+delx[2])));
@@ -536,12 +536,12 @@ static inline void contGaussFit(double guess[3], double A[3], double x[3])
         while(g>f) //do this until new point is lower than previous point
         {
             //scale delx according to a polynomial fit to find the minimum
-            for(ssize_t i=0; i<3; i++){
+            for(int64_t i=0; i<3; i++){
                 delx[i]*=f/(f+g);
             }
             
             //re-evaluate g at this point
-            for(ssize_t i=0; i<3; i++)
+            for(int64_t i=0; i<3; i++)
             {
                 //get G
                 G[i]=erf((x[i]+0.5-x0-delx[1])/(sqrt(2.0)*(sig+delx[2])))-erf((x[i]-0.5-x0-delx[1])/(sqrt(2.0)*(sig+delx[2])));
@@ -586,13 +586,13 @@ static inline void REF34(double A[3][4])
 {
     // gaussian elimination algorithm
     double maxLead=0;
-    ssize_t maxLeadPos=0;
-    for (ssize_t i=0; i<3; i++)
+    int64_t maxLeadPos=0;
+    for (int64_t i=0; i<3; i++)
     {
         // first get pivot
         maxLead=A[i][i];
         maxLeadPos=i;
-        for (ssize_t j=i+1; j<3; j++)
+        for (int64_t j=i+1; j<3; j++)
         {
             if(A[j][i]>maxLead)
             {
@@ -603,7 +603,7 @@ static inline void REF34(double A[3][4])
         }
         if (maxLeadPos!=i)
         {
-            for (ssize_t j=i; j<4; j++)
+            for (int64_t j=i; j<4; j++)
             {
                 swap(A[i][j],A[maxLeadPos][j]);
             }
@@ -611,15 +611,15 @@ static inline void REF34(double A[3][4])
         
         
         // divide by first element in row
-        for (ssize_t j=3; j>=i; j--)
+        for (int64_t j=3; j>=i; j--)
         {
             A[i][j]/=A[i][i];
         }
         
         
         // subtract ith equation from others
-        for (ssize_t k=i+1; k<3; k++){
-            for (ssize_t j=3; j>=i; j--)
+        for (int64_t k=i+1; k<3; k++){
+            for (int64_t j=3; j>=i; j--)
             {
                 A[k][j]-=A[i][j]*A[k][i];
             }

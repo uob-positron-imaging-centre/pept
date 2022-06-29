@@ -28,13 +28,7 @@
 
 #include <vector>
 #include <cstdlib>
-#include <sys/types.h>
-
-
-#ifdef _MSC_VER
-    #include <basetsd.h>
-    typedef SSIZE_T ssize_t;
-#endif
+#include <cstdint>
 
 
 using namespace std;
@@ -50,7 +44,7 @@ struct point3{
         u[1]=a.u[1];
         u[2]=a.u[2];
     }
-    point3(ssize_t x, ssize_t y, ssize_t z) // constructor with integers
+    point3(int64_t x, int64_t y, int64_t z) // constructor with integers
     {
         u[0]=x; u[1]=y; u[2]=z;
     }
@@ -79,7 +73,7 @@ struct cluster{
     
     cluster(const cluster& a) // copy constructor
     {
-        for (ssize_t i=0; i<(ssize_t)a.point.size(); i++){
+        for (int64_t i=0; i<(int64_t)a.point.size(); i++){
             point.push_back(a.point[i]);
         }
     }
@@ -89,7 +83,7 @@ struct cluster{
     }
     cluster(vector<point3> a) // constructor with vector of point3's
     {
-        for (ssize_t i=0; i<(ssize_t)a.size(); i++)
+        for (int64_t i=0; i<(int64_t)a.size(); i++)
         {
             point.push_back(a[i]);
         }
@@ -97,7 +91,7 @@ struct cluster{
     cluster& operator=(cluster& rhs) // copy assignment operator
     {
         if (this != &rhs)
-            for (ssize_t i=0; i<(ssize_t)rhs.point.size(); i++)
+            for (int64_t i=0; i<(int64_t)rhs.point.size(); i++)
                 point.push_back(rhs.point[i]);
 
         return *this;
@@ -112,7 +106,7 @@ struct point3time{
     double u[3]; // x,y,z position
     double t;    // time
     double err[3]; // x,y,z uncertainty
-    ssize_t nLOR;
+    int64_t nLOR;
     point3time(const point3time& a) // copy constructor
     {
         u[0]=a.u[0];
@@ -124,11 +118,11 @@ struct point3time{
         err[2]=a.err[2];
         nLOR=a.nLOR;
     }
-    point3time(ssize_t x, ssize_t y, ssize_t z, ssize_t time, ssize_t ex, ssize_t ey, ssize_t ez, ssize_t nLines) // integer constructor
+    point3time(int64_t x, int64_t y, int64_t z, int64_t time, int64_t ex, int64_t ey, int64_t ez, int64_t nLines) // integer constructor
     {
         u[0]=x; u[1]=y; u[2]=z; t=time; err[0]=ex; err[1]=ey; err[2]=ez; nLOR=nLines;
     }
-    point3time(double x, double y, double z, double time, double ex, double ey, double ez, ssize_t nLines) // double constructor
+    point3time(double x, double y, double z, double time, double ex, double ey, double ez, int64_t nLines) // double constructor
     {
         u[0]=x; u[1]=y; u[2]=z; t=time; err[0]=ex; err[1]=ey; err[2]=ez; nLOR=nLines;
     }
@@ -140,7 +134,7 @@ struct point3time{
         t=time;
         nLOR=nLines;
     }
-    point3time(point3 x, point3 dx, double time, ssize_t nLines) // constructor with point3's and double time
+    point3time(point3 x, point3 dx, double time, int64_t nLines) // constructor with point3's and double time
     {
         u[0]=x.u[0]; err[0]=dx.u[0];
         u[1]=x.u[1]; err[1]=dx.u[1];
@@ -172,11 +166,11 @@ struct point3time{
 // similar to "cluster", but using point3time's
 struct clusterTime{
     vector<point3time> point; // contains vector of point3time
-    ssize_t nLikely; // number to be used in post processing for filtering false positives
+    int64_t nLikely; // number to be used in post processing for filtering false positives
     
     clusterTime(const clusterTime& a) // copy constructor
     {
-        for (ssize_t i=0; i<(ssize_t)a.point.size(); i++){
+        for (int64_t i=0; i<(int64_t)a.point.size(); i++){
             point.push_back(a.point[i]);
         }
         nLikely=a.nLikely;
@@ -188,7 +182,7 @@ struct clusterTime{
     }
     clusterTime(vector<point3time> a) // constructor with vector of point3time
     {
-        for (ssize_t i=0; i<(ssize_t)a.size(); i++)
+        for (int64_t i=0; i<(int64_t)a.size(); i++)
         {
             point.push_back(a[i]);
         }
@@ -198,7 +192,7 @@ struct clusterTime{
     {
         if (this != &a)
         {
-            for (ssize_t i=0; i<(ssize_t)a.point.size(); i++){
+            for (int64_t i=0; i<(int64_t)a.point.size(); i++){
                 point.push_back(a.point[i]);
             }
             nLikely=a.nLikely;
