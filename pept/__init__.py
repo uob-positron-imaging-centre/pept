@@ -183,6 +183,8 @@ A more in-depth tutorial is available on
 
 # Import base data structures
 from    .base           import  TimeWindow
+from    .base           import  AdaptiveWindow
+
 from    .base           import  LineData
 from    .base           import  PointData
 from    konigcell       import  Pixels
@@ -285,6 +287,7 @@ __all__ = [
     'load',
 
     'TimeWindow',
+    'AdaptiveWindow',
     'LineData',
     'PointData',
     'Pixels',

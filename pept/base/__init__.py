@@ -18,6 +18,7 @@ from    konigcell           import  Voxels
 
 from    .iterable_samples   import  IterableSamples
 from    .iterable_samples   import  TimeWindow
+from    .iterable_samples   import  AdaptiveWindow
 from    .iterable_samples   import  AsyncIterableSamples
 from    .iterable_samples   import  PEPTObject
 

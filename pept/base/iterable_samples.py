@@ -12,7 +12,7 @@
 #        2020 Jan 1;91(1):013329.
 #        https://doi.org/10.1063/1.5129251
 #
-#    Copyright (C) 2019-2021 the pept developers
+#    Copyright (C) 2019-2022 the pept developers
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ from    concurrent.futures  import  ThreadPoolExecutor
 import  numpy               as      np
 
 from    tqdm                import  tqdm
+
+from    .sampling_extensions import samples_indices_adaptive_window_ext
 
 
 
@@ -246,6 +248,113 @@ def samples_indices_time_window(
 
 
 
+class AdaptiveWindow:
+    '''Define a `sample_size` as a time window with a maximum limit of
+    elements. All samples with more than `max_elems` elements will be
+    shortened.
+
+    You can use this as a direct replacement of the `sample_size` and
+    `overlap`.
+
+    ::
+
+        points = pept.PointData(sample_size = pept.AdaptiveWindow(5.5, 200))
+        points.overlap = AdaptiveWindow(2.)
+
+    The adaptive time window approach combines the advantages of fixed sample
+    sizes and time windowing:
+
+    - Time windows are robust to tracers moving in and out of the field of
+      view, as they simply ignore the time slices where almost no LoRs are
+      recorded.
+    - Fixed sample sizes effectively adapt their spatio-temporal resolution,
+      allowing for higher accuracy when tracers are passing through more
+      active scanner regions.
+
+    All samples with more than `ideal_elems` are shortened, such that time
+    windows are shrinked when the tracer activity permits. There exists an
+    ideal time window such that most samples will have roughly `ideal_elems`,
+    with a few higher activity ones that are shortened; ``OptimizeWindow``
+    finds this ideal time window for ``pept.AdaptiveWindow``.
+
+    *New in pept-0.5.1*
+    '''
+
+    def __init__(self, window: float, max_elems: int = np.iinfo(int).max):
+        self.window = float(window)
+        self.max_elems = int(max_elems)
+
+
+    def __repr__(self):
+        if self.max_elems == np.iinfo(int).max:
+            mstr = ""
+        else:
+            mstr = f", max_elems={self.max_elems}"
+        return f"AdaptiveWindow(window={self.window}{mstr})"
+
+
+
+
+def samples_indices_adaptive_window(
+    data,
+    sample_size: AdaptiveWindow,
+    overlap: AdaptiveWindow,
+):
+    '''Compute the sample indices given an adaptive time window across the
+    timestamps in `data` (i.e. column 0).
+    '''
+
+    if sample_size.window == 0:
+        return np.zeros((0, 2))
+
+    elif sample_size.window < 0:
+        raise ValueError((
+            f"\n[ERROR]: `sample_size.window = {sample_size}` must be "
+            "positive (>= 0).\n"
+        ))
+
+    elif overlap.window >= sample_size.window:
+        raise ValueError((
+            f"\n[ERROR]: `overlap = {overlap}` must be smaller than "
+            f"`sample_size = {sample_size}`.\n"
+        ))
+
+    if sample_size.max_elems < 1:
+        raise ValueError((
+            "\n[ERROR]: `sample_size.max_elems` must be larger than 1. "
+            f"Received {sample_size.max_elems}.\n"
+        ))
+
+    return samples_indices_adaptive_window_ext(
+        data,
+        sample_size.window,
+        overlap.window,
+        sample_size.max_elems,
+    )
+
+
+
+
+class Selector:
+    '''Allow selecting the first ``n`` data rows in a LineData or PointData.
+
+    *New in pept-0.5.1*
+    '''
+
+    def __init__(self, iterable_samples):
+        self.iterable_samples = iterable_samples
+
+
+    def __getitem__(self, key):
+        return self.iterable_samples.copy(
+            data = self.iterable_samples.data[key],
+            sample_size = self.iterable_samples.sample_size,
+            overlap = self.iterable_samples.overlap,
+        )
+
+
+
+
 class IterableSamples(PEPTObject, Collection):
     '''An class for iterating through an array (or array-like) in samples with
     potential overlap.
@@ -334,6 +443,9 @@ class IterableSamples(PEPTObject, Collection):
         self._set(sample_size = sample_size, overlap = overlap)
         self._index = 0
 
+        # Allow selecting rows of data, rather than samples
+        self.select = Selector(self)
+
 
     def _set(self, sample_size = None, overlap = None):
         # If the overlap is defined, ensure it has the same type as sample_size
@@ -421,6 +533,15 @@ class IterableSamples(PEPTObject, Collection):
 
             self._sample_size = sample_size
             self._samples_indices = samples_indices_time_window(
+                self.data, self._sample_size, self._overlap
+            )
+        elif isinstance(sample_size, AdaptiveWindow):
+            # If the overlap is of a different type, reset it
+            if not isinstance(self.overlap, AdaptiveWindow):
+                self._overlap = AdaptiveWindow(0.)
+
+            self._sample_size = sample_size
+            self._samples_indices = samples_indices_adaptive_window(
                 self.data, self._sample_size, self._overlap
             )
         elif hasattr(sample_size, "__iter__"):

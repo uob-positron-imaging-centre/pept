@@ -105,6 +105,11 @@ cy_extension_kw_strict['include_dirs'] = [np.get_include()]
 
 cy_extensions = [
     Extension(
+        'pept.base.sampling_extensions',
+        ['pept/base/sampling_extensions.pyx'],
+        **cy_extension_kw
+    ),
+    Extension(
         'pept.scanners.parallel_screens.extensions.binary_converter',
         ['pept/scanners/parallel_screens/extensions/binary_converter.pyx'],
         **cy_extension_kw_strict
