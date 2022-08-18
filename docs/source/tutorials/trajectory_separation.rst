@@ -36,10 +36,11 @@ Consider all trajectories with fewer than 50 points to be noise:
     trajectories = segr.fit(trajectories)
 
 
-This step adds a new column "label". We can group each individual trajectory into a list with ``SplitAll``:
+This step adds a new column "label". We can group each individual trajectory into a list with ``GroupBy``:
 
 ::
 
-    traj_list = SplitAll("label").fit(trajectories)
+    traj_list = GroupBy("label").fit(trajectories)
+    traj_list[0]    # First trajectory
 
 

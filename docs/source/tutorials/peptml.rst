@@ -129,31 +129,66 @@ trajectory separation, plotting and saving trajectories as CSV.
 
 
 
-Histogram of Tracking Errors
-----------------------------
 
-The ``Centroids(error = True)`` filter appends a column "error" representing the relative error
-in the tracked position. You can select a named column via indexing, e.g. ``trajectories["error"]``;
-you can then plot a histogram of the relative errors with:
+Example of a Complex Processing Pipeline
+----------------------------------------
+
+This is an example of "production code" used for tracking tracers in pipe flow
+imaging, where particles enter and leave the field of view regularly. This
+pipeline automatically:
+
+- Sets an optimum adaptive time window.
+- Runs a first pass of clustering, keeping track of the number of LoRs around
+  the tracers (``cluster_size``) and relative location error (``error``).
+- Removes locations with too few LoRs or large errors.
+- Sets a new optimum adaptive time window for a second pass of clustering.
+- Removes spurious points while the tracer is out of the field of view.
+- Separates out different tracer trajectories, removes the ones with too few
+  points and groups them by trajectory.
+- Computes the tracer velocity at each location on each trajectory.
+- Removes locations at the edges of the detectors.
+
+Each individual step could be an entire program on its own; with the PEPT
+``Pipeline`` architecture, they can be chained in 17 lines of Python code,
+automatically using all processors available on parallelisable sections.
 
 ::
 
-    import plotly.express as px
-    px.histogram(trajectories["error"]).show()
-
-
-It is often useful to remove points with an error higher than a certain value, e.g. 20 mm:
-
-::
-
-    trajectories = Condition("error < 20").fit(trajectories)
-
-    # Or simply append the `Condition` to the `pept.Pipeline`
+    # Create PEPT-ML processing pipeline
     pipeline = pept.Pipeline([
-        ...
-        Condition("error < 20"),
-        ...
+        OptimizeWindow(200, overlap = 0.5) + Debug(1),
+
+        # First pass of clustering
+        Cutpoints(max_distance = 0.2),
+        HDBSCAN(true_fraction = 0.15),
+        SplitLabels() + Centroids(cluster_size = True, error = True),
+
+        # Remove erroneous points
+        Condition("cluster_size > 30, error < 20"),
+
+        # Second pass of clustering
+        OptimizeWindow(30, overlap = 0.95) + Debug(1),
+        HDBSCAN(true_fraction = 0.6),
+        SplitLabels() + Centroids(),
+
+        # Remove sparse points in time
+        OutOfViewFilter(200.),
+
+        # Trajectory separation
+        Segregate(window = 20, cut_distance = 20, min_trajectory_size = 20),
+        Condition("label >= 0"),
+        GroupBy("label"),
+
+        # Velocity computation
+        Velocity(11),
+        Velocity(11, absolute = True),
+
+        # Cutoff points outside this region
+        Condition("y > 100, y < 500"),
+
+        Stack(),
     ])
+
 
 
 

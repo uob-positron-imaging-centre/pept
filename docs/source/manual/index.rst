@@ -42,6 +42,7 @@ Auxilliaries
    :toctree: generated/
 
    pept.TimeWindow
+   pept.AdaptiveWindow
 
 
 

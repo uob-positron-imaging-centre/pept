@@ -12,9 +12,12 @@ from    numbers         import  Number
 import  textwrap
 
 import  numpy           as      np
+import  pandas          as      pd
+from    scipy.optimize  import  minimize_scalar
 
 from    pept.base       import  PointData, LineData
 from    pept.base       import  Filter, Reducer, IterableSamples
+from    pept.base       import  PEPTObject, AdaptiveWindow
 
 
 
@@ -766,8 +769,6 @@ class SplitAll(Reducer):
         ]
 
 
-
-
 # Use standard names, Leonard...
 GroupBy = SplitAll
 
@@ -867,3 +868,247 @@ class Swap(Filter):
             exec(s, locals(), globals())
 
         return sample
+
+
+
+
+class OptimizeWindow(Reducer):
+    '''Automatically determine optimum adaptive time window to have an ideal
+    number of elements per sample.
+
+    Reducer signature:
+
+    ::
+
+               LineData -> OptimizeWindow.fit -> LineData
+         list[LineData] -> OptimizeWindow.fit -> LineData
+              PointData -> OptimizeWindow.fit -> PointData
+        list[PointData] -> OptimizeWindow.fit -> PointData
+          numpy.ndarray -> OptimizeWindow.fit -> PointData
+
+    The adaptive time window approach combines the advantages of fixed sample
+    sizes and time windowing:
+
+    - Time windows are robust to tracers moving in and out of the field of
+      view, as they simply ignore the time slices where almost no LoRs are
+      recorded.
+    - Fixed sample sizes effectively adapt their spatio-temporal resolution,
+      allowing for higher accuracy when tracers are passing through more
+      active scanner regions.
+
+    All samples with more than `ideal_elems` are shortened, such that time
+    windows are shrinked when the tracer activity permits. There exists an
+    ideal time window such that most samples will have roughly `ideal_elems`,
+    with a few higher activity ones that are shortened; ``OptimizeWindow``
+    finds this ideal time window for ``pept.AdaptiveWindow``.
+
+    *New in pept-0.5.1*
+
+    Examples
+    --------
+    Find an adaptive time window that is ideal for about 200 LoRs per sample:
+
+    >>> import pept
+    >>> import pept.tracking as pt
+    >>> lors = pept.LineData(...)
+    >>> lors = pt.OptimizeWindow(ideal_elems = 200).fit(lors)
+
+    `OptimizeWindow` can be used at the start of a pipeline; an optional
+    `overlap` parameter can be used to define an overlap as a ratio to the
+    ideal time window found. For example, if the ideal time window found is
+    100 ms, an overlap of 0.5 will result in an overlapping time interval of
+    50 ms:
+
+    >>> pipeline = pept.Pipeline([
+    >>>     pt.OptimizeWindow(200, overlap = 0.5),
+    >>>     pt.BirminghamMethod(0.5),
+    >>>     pt.Stack(),
+    >>> ])
+    '''
+
+    def __init__(self, ideal_elems, overlap = 0., low = 0.3, high = 3):
+        self.ideal_elems = int(ideal_elems)
+
+        overlap = float(overlap)
+        if overlap >= 1 or overlap < 0:
+            raise ValueError((
+                "\n[ERROR]: If `overlap` is defined, it must be the ratio "
+                "relative to the ideal time window that will be found, "
+                f"and hence between [0, 1). Received {overlap}."
+            ))
+        self.overlap = overlap
+
+        self.low = float(low)
+        self.high = float(high)
+
+
+    def fit(self, data):
+
+        # Stack all data into LineData or PointData (default)
+        data = Stack().fit(data)
+        if not isinstance(data, PEPTObject):
+            data = PointData(data)
+
+        self.data = data
+
+        # Compute bounds
+        times = data.data[:, 0]
+        dt = times[1:] - times[:-1]
+        estimate = self.ideal_elems * np.nanmedian(dt)
+
+        # In extreme cases, median(dt) is 0
+        if estimate == 0.:
+            for q in [0.8, 0.9, 0.95, 0.99, 0.999]:
+                estimate = self.ideal_elems * np.nanquantile(dt, q)
+                if estimate != 0.:
+                    break
+            else:
+                raise ValueError("Ideal time window could not be estimated.")
+
+        # Find time window that yields median LoR counts per sample as close to
+        # the `ideal_elems`
+        res = minimize_scalar(
+            self.evaluate,
+            bracket = [0.5 * estimate, estimate],
+        )
+
+        # Set sample size and overlap (if requested) to ideal values found
+        data.sample_size = AdaptiveWindow(res.x, self.ideal_elems)
+        data.overlap = AdaptiveWindow(res.x * self.overlap)
+
+        return data
+
+
+    def evaluate(self, window):
+        # Window cannot be negative; return maximum error
+        if window < 0:
+            return np.inf
+
+        # Set adaptive window to compute samples indices
+        self.data.sample_size = AdaptiveWindow(window)
+
+        # Compute number of counts per sample
+        si = self.data.samples_indices
+        counts = np.array(si[:, 1] - si[:, 0], dtype = float)
+
+        # Ignore samples where the tracer is outside the system (very low
+        # counts) or is extremely active / static
+        counts[counts < self.low * self.ideal_elems] = np.nan
+        counts[counts > self.high * self.ideal_elems] = np.nan
+
+        return (np.nanmedian(counts) - self.ideal_elems) ** 2
+
+
+
+
+class Debug(Reducer):
+    '''Print types and statistics about the objects being processed in a
+    ``pept.Pipeline``.
+
+    Reducer signature:
+
+    ::
+
+              PointData -> Debug.fit -> PointData
+               LineData -> Debug.fit -> LineData
+        list[PointData] -> Debug.fit -> list[PointData]
+         list[LineData] -> Debug.fit -> list[LineData]
+             np.ndarray -> Debug.fit -> np.ndarray
+                    Any -> Debug.fit -> Any
+
+    This is a reducer, so it will collect all samples processed up to the
+    point of use, print them, and return them unchanged.
+
+    *New in pept-0.5.1*
+
+    Examples
+    --------
+    A ``Debug`` is normally added in a ``Pipeline``:
+
+    >>> import pept
+    >>> import pept.tracking as pt
+    >>>
+    >>> pept.Pipeline([
+    >>>     # First pass of clustering
+    >>>     pt.Cutpoints(max_distance = 0.2),
+    >>>     pt.HDBSCAN(true_fraction = 0.15),
+    >>>     pt.SplitLabels() + pt.Centroids(cluster_size = True, error = True),
+    >>>
+    >>>     pt.Debug(),
+    >>>     pt.Stack(),
+    >>> ])
+    '''
+
+    def __init__(self, verbose = 5, max_samples = 10):
+        self.verbose = int(verbose)
+        self.max_samples = int(max_samples)
+
+
+    def _print_stats_pla(self, samples):
+        # Printing statistics for PointData, LineData, np.ndarray
+        if isinstance(samples, np.ndarray):
+            data = samples
+            columns = None
+        else:
+            data = samples.data
+            columns = samples.columns
+
+        if self.verbose >= 1:
+            print(samples)
+
+        # Create summary statistics using pandas; add new summary columns
+        if self.verbose >= 2:
+            df = pd.DataFrame(data, columns = columns)
+
+            desc = df.describe(include = "all")
+            desc.loc['dtype'] = df.dtypes
+            desc.loc['NaN'] = df.isnull().sum()
+
+            print(desc)
+
+
+    def fit(self, samples):
+        # Lines for printing
+        over = "=" * 80
+        under = "-" * 80
+        print("\n" + over + "\nDebug Start\n" + under)
+
+        # Special-cased types
+        pla = (PointData, LineData, np.ndarray)
+
+        if isinstance(samples, list):
+            if len(samples) == 0:
+                print("No samples given, received empty list!")
+            else:
+                # Print unique types in list
+                unique_types = set(type(s) for s in samples)
+                print(f"Processing {len(samples)} samples of:")
+                for ut in unique_types:
+                    print(" ", ut)
+
+                # If list contains PointData, LineData or simple NumPy arrays,
+                # stack them and print statistics via pandas
+                if len(unique_types) == 1 and isinstance(samples[0], pla):
+                    print("Stacking data to print statistics...\n")
+
+                    # Reduce / stack list of samples onto a single object
+                    stacked = Stack().fit(samples)
+                    self._print_stats_pla(stacked)
+
+                # Unknown types in list
+                else:
+                    print(f"Printing the first {self.max_samples} samples")
+                    for i, s in samples:
+                        print(f"\nSample {i}:\n{under}")
+                        print(s)
+
+        elif isinstance(samples, pla):
+            print(f"Processing a single {type(samples)}:")
+            self._print_stats_pla(samples)
+
+        else:
+            print(f"Processing {type(samples)}:")
+            print(samples)
+
+        print("\n" + under + "\nDebug End\n" + over)
+        return samples

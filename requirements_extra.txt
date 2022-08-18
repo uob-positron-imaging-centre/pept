@@ -4,3 +4,4 @@ ipython>=5.5.0
 pydata-sphinx-theme>=0.6.3
 numba>=0.50.0
 pytest>=3.6.4
+myst-parser>=0.18

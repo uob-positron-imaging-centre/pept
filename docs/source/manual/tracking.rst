@@ -6,6 +6,17 @@ Tracking Algorithms (``pept.tracking``)
 
 
 
+Tracking Optimisation
+---------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   pept.tracking.Debug
+   pept.tracking.OptimizeWindow
+
+
+
 General-Purpose Transformers
 ----------------------------
 
@@ -33,6 +44,7 @@ Space Transformers
    pept.tracking.Voxelize
    pept.tracking.Interpolate
    pept.tracking.Reorient
+   pept.tracking.OutOfViewFilter
 
 
 

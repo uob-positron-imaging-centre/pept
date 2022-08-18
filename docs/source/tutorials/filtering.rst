@@ -76,8 +76,8 @@ Or using inline functions (i.e. ``lambda``):
 
 
 
-SplitAll
---------
+GroupBy
+-------
 
 Stack all samples (i.e. ``LineData`` or ``PointData``) and split them into a list according to a named / numeric column index:
 
@@ -85,5 +85,5 @@ Stack all samples (i.e. ``LineData`` or ``PointData``) and split them into a lis
 
     from pept.tracking import *
 
-    group_list = SplitAll("label").fit(trajectories)
+    group_list = GroupBy("label").fit(trajectories)
 

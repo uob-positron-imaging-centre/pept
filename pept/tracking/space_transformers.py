@@ -10,6 +10,7 @@ import  textwrap
 
 import  numpy               as      np
 from    scipy.interpolate   import  interp1d
+from    scipy.spatial       import  KDTree
 
 import  pept
 from    pept                import  LineData, PointData, Voxels
@@ -408,3 +409,60 @@ class Reorient(Reducer):
             basis = basis,
             origin = points_mean,
         )
+
+
+
+
+class OutOfViewFilter(pept.base.Reducer):
+    '''Remove tracer locations that are sparse *in time* - ie the ``k``-th
+    nearest detection is later than ``max_time``.
+
+    Reducer signature:
+
+    ::
+
+              PointData -> OutOfViewFilter.fit -> PointData
+        list[PointData] -> OutOfViewFilter.fit -> PointData
+          numpy.ndarray -> OutOfViewFilter.fit -> PointData
+
+    This reducer (i.e. stacks all data samples, then processes it) is useful
+    when the tracer goes out of the PEPT scanners and there are a few sparse
+    noisy detections to remove.
+
+    *New in pept-0.5.1*
+
+    Examples
+    --------
+    Select only tracer locations whose next detection is within 200 ms.
+
+    >>> import pept
+    >>> import pept.tracking as pt
+    >>> trajectories = pept.PointData(...)
+    >>> # Only keep points whose next detection is within 200 ms
+    >>> inview = pt.OutOfViewFilter(max_time = 200.).fit(trajectories)
+
+    '''
+
+    def __init__(self, max_time = 200., k = 5):
+        self.max_time = float(max_time)
+        self.k = int(k)
+
+
+    def fit(self, samples):
+        # Reduce / stack list of samples onto a single PointData / array
+        samples = pept.tracking.Stack().fit(samples)
+
+        if not isinstance(samples, pept.base.PEPTObject):
+            samples = pept.PointData(samples)
+
+        # Sort points by time
+        points = samples.data[samples.data[:, 0].argsort()]
+
+        # Select only points whose k-th nearest detection is sooner than
+        # `max_time`
+        times = points[:, 0][:, None]
+        tree = KDTree(times)
+        dt, _ = tree.query(times, [self.k + 1])
+
+        nonsparse = points[dt[:, 0] < self.max_time]
+        return samples.copy(data = nonsparse)

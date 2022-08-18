@@ -57,6 +57,7 @@ from    .peptml                 import  HDBSCAN, HDBSCANClusterer
 from    .fpi                    import  FPI
 
 from    .transformers           import  Stack
+from    .transformers           import  Debug
 
 from    .transformers           import  SplitLabels
 from    .transformers           import  SplitAll, GroupBy
@@ -68,9 +69,12 @@ from    .transformers           import  Condition
 from    .transformers           import  Remove
 from    .transformers           import  Swap
 
+from    .transformers           import  OptimizeWindow
+
 from    .space_transformers     import  Voxelize
 from    .space_transformers     import  Interpolate
 from    .space_transformers     import  Reorient
+from    .space_transformers     import  OutOfViewFilter
 
 from    .post                   import  Velocity
 

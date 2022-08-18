@@ -63,6 +63,39 @@ The ``PlotlyGrapher`` object allows straightforward subplots creation:
 
 
 
+Adding Colourbars
+-----------------
+
+By default, the last column of a dataset is used to colour-code the resulting points:
+
+::
+
+    from pept.plots import PlotlyGrapher
+    PlotlyGrapher().add_points(point_data).show()   # Colour-codes by the last column
+
+
+You can change the column used to colour-code points using a numeric index (e.g. first column
+``colorbar_col = 0``, second to last column ``colorbar_col = -2``) or named column (e.g.
+``colorbar_col = "error"``):
+
+::
+
+    PlotlyGrapher().add_points(point_data, colorbar_col = -2).show()
+    PlotlyGrapher().add_points(point_data, colorbar_col = "label").show()   # Coloured by trajectory
+    PlotlyGrapher().add_points(point_data, colorbar_col = "v").show()       # Coloured by velocity
+
+
+As a ``PlotlyGrapher`` will often manage multiple subplots, one shouldn't include explicit
+colourbars on the sides *for each dataset plotted*. Therefore, colourbars are hidden by default;
+add a colourbar by setting its title:
+
+::
+
+    PlotlyGrapher().add_points(points, colorbar_title = "Velocity").show()
+
+
+
+
 Histogram of Tracking Errors
 ----------------------------
 
@@ -73,7 +106,8 @@ you can then plot a histogram of the relative errors with:
 ::
 
     import plotly.express as px
-    px.histogram(trajectories["error"]).show()
+    px.histogram(trajectories["error"]).show()          # Large values are noise
+    px.histogram(trajectories["cluster_size"]).show()   # Small values are noise
 
 
 It is often useful to remove points with an error higher than a certain value, e.g. 20 mm:
@@ -85,7 +119,7 @@ It is often useful to remove points with an error higher than a certain value, e
     # Or simply append the `Condition` to the `pept.Pipeline`
     pipeline = pept.Pipeline([
         ...
-        Condition("error < 20"),
+        Condition("cluster_size > 30, error < 20"),
         ...
     ])
 
@@ -113,8 +147,19 @@ There are two main ways of exporting as images:
     # Save the inner plotly.Figure attribute of a `grapher`
     # Format can be changed to other image formats
     # Width and height can be adjusted to give the desired image size
-    pio.write_image(grapher.fig, filepath, format="png", width=2560, height=1440)
+    grapher.fig.write_image("figure.png", width=2560, height=1440)
+
+
+
+
+Modifying the Underlying Figure
+-------------------------------
+
+You can access the Plotly figure wrapped and managed by a PlotlyGrapher using the ``.fig``
+attribute:
 
 ::
 
-    grapher.fig.write_image("figure.png")
+    grapher.fig.update_layout(xaxis_title = "Pipe Length (mm)")
+
+
