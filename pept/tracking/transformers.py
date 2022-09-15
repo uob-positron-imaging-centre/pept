@@ -573,6 +573,132 @@ class Condition(Filter):
 
 
 
+class SamplesCondition(Reducer):
+    '''Select only *samples* satisfying multiple conditions, given as a string,
+    a function or list thereof; e.g. ``Condition("sample_size > 30")`` selects
+    all samples with a sample size larger than 30.
+
+    Filter signature:
+
+    ::
+
+        PointData -> SamplesCondition.fit_sample -> PointData
+         LineData -> SamplesCondition.fit_sample -> LineData
+
+    This is different to a `Condition`, which selects individual points; for
+    `SamplesCondition`, each sample will be passed through the conditions.
+
+    Conditions can be defined as Python code using the following variables:
+
+    - `sample` - this is the full PointData or LineData, e.g. only keep samples
+      with more than 30 points with "len(sample.points) > 30".
+    - `data` - this is the raw NumPy array of data wrapped by a PointData or
+      LineData, e.g. only keep samples which have all X coordinates beyond 100
+      with `SamplesCondition("np.all(data[:, 1] > 100)")`.
+    - `sample_size` - this is a shorthand for the number of data points, e.g.
+      only keep samples with more than 30 points with "sample_size > 30".
+
+    Conditions can also be Python functions:
+
+    >>> def high_velocity_filter(sample):
+    >>>     return np.all(sample["v"] > 5)
+
+    >>> from pept.tracking import SamplesCondition
+    >>> filtered = SamplesCondition(high_velocity_filter).fit(point_data)
+
+    '''
+
+    def __init__(self, *conditions):
+        # Calls the conditions setter which does parsing
+        self.conditions = conditions
+
+
+    @property
+    def conditions(self):
+        return self._conditions
+
+
+    @conditions.setter
+    def conditions(self, conditions):
+        if isinstance(conditions, str):
+            self._conditions = SamplesCondition._parse_condition(conditions)
+        elif callable(conditions):
+            self._conditions = [conditions]
+        else:
+            cs = []
+            for cond in conditions:
+                cs.extend(SamplesCondition._parse_condition(cond))
+            self._conditions = cs
+
+
+    @staticmethod
+    def _parse_condition(cond):
+        if callable(cond):
+            return [cond]
+
+        conditions = str(cond).replace(" ", "").split(",")
+
+        # Compile regex object to find quoted strings
+        finder = re.compile(r"'\w+'")
+
+        for i in range(len(conditions)):
+            # Replace single-quoted column numbers / names
+            if "'" in conditions[i]:
+                conditions[i] = finder.sub(
+                    SamplesCondition._replace_quoted,
+                    conditions[i],
+                )
+                continue
+
+        return conditions
+
+
+    @staticmethod
+    def _replace_quoted(term):
+        # Remove single quotes
+        if isinstance(term, re.Match):
+            term = term.group()
+        term = term.split("'")[1]
+
+        try:
+            index = int(term)
+            return f"data[:, {index}]"
+        except ValueError:
+            return f"data[:, sample.columns.index('{term}')]"
+
+
+    def fit(self, samples):
+        # Filtered samples
+        collected = []
+
+        for i, sample in enumerate(samples):
+            # Defining variables to be accessed inside conditions
+            if isinstance(sample, IterableSamples):
+                data = sample.data
+            else:
+                data = sample
+
+            sample_size = len(data)
+
+            # Check all conditions are true
+            keep = True
+            for cond in self.conditions:
+                if callable(cond):
+                    keep = keep and cond(sample)
+                else:
+                    keep = keep and eval(cond, globals(), locals())
+
+            if keep:
+                collected.append(sample)
+            elif len(collected) == 0 and i == len(samples) - 1:
+                # If no sample was retained, save an empty sample
+                collected.append(sample[0:0])
+
+        return collected
+
+
+
+
 class Remove(Filter):
     '''Remove columns (either column names or indices) from `pept.LineData` or
     `pept.PointData`.

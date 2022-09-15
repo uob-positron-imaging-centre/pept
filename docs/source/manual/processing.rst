@@ -29,3 +29,18 @@ Vector Grids
    pept.processing.VectorGrid2D
    pept.processing.VectorField3D
    pept.processing.VectorGrid3D
+
+
+
+
+Mixing Quantification
+---------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   pept.processing.LaceyColors
+   pept.processing.LaceyColorsLinear
+   pept.processing.RelativeDeviations
+   pept.processing.RelativeDeviationsLinear
+

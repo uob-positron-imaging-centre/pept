@@ -66,6 +66,7 @@ from    .transformers           import  Centroids
 from    .transformers           import  LinesCentroids
 
 from    .transformers           import  Condition
+from    .transformers           import  SamplesCondition
 from    .transformers           import  Remove
 from    .transformers           import  Swap
 
@@ -74,6 +75,7 @@ from    .transformers           import  OptimizeWindow
 from    .space_transformers     import  Voxelize
 from    .space_transformers     import  Interpolate
 from    .space_transformers     import  Reorient
+from    .space_transformers     import  Center
 from    .space_transformers     import  OutOfViewFilter
 
 from    .post                   import  Velocity

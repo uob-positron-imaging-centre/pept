@@ -22,6 +22,9 @@ from    .grids  import  DynamicProbability3D, ResidenceDistribution3D
 from    .grids  import  VectorField2D, VectorField3D
 from    .grids  import  VectorGrid2D, VectorGrid3D
 
+from    .mixing import  LaceyColors, LaceyColorsLinear
+from    .mixing import  RelativeDeviations, RelativeDeviationsLinear
+
 
 __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"

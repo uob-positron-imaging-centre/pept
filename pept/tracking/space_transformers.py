@@ -405,9 +405,42 @@ class Reorient(Reducer):
 
         return samples.copy(
             data = rotpoints,
+            sample_size = samples.sample_size,
+            overlap = samples.overlap,
             eigenvalues = eigenvalues,
             basis = basis,
             origin = points_mean,
+        )
+
+
+
+
+class Center(pept.base.Reducer):
+    '''Center a dataset around (0, 0, 0).
+
+    Reducer signature:
+
+    ::
+
+              PointData -> Center.fit -> PointData
+        list[PointData] -> Center.fit -> PointData
+             np.ndarray -> Center.fit -> PointData
+
+    '''
+
+    def fit(self, sample):
+        sample = pept.tracking.Stack().fit(sample)
+        if not isinstance(sample, pept.PointData):
+            sample = pept.PointData(sample)
+
+        mean = np.nanmedian(sample.points[:, 1:4], axis = 0)
+        centered = sample.points.copy()
+        centered[:, 1:4] -= mean
+
+        return sample.copy(
+            data = centered,
+            sample_size = sample.sample_size,
+            overlap = sample.overlap,
         )
 
 
