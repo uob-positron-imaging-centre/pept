@@ -17,7 +17,7 @@ interactive grapher:
     from pept.plots import PlotlyGrapher
     import numpy as np
 
-    lines_raw = np.arange(70).reshape((10, 7)
+    lines_raw = np.arange(70).reshape((10, 7))
     lines = pept.LineData(lines_raw)
 
     PlotlyGrapher().add_lines(lines).show()
@@ -30,7 +30,7 @@ interactive grapher:
     from pept.plots import PlotlyGrapher
     import numpy as np
 
-    points_raw = np.arange(40).reshape((10, 4)
+    points_raw = np.arange(40).reshape((10, 4))
     points = pept.PointData(points_raw)
 
     PlotlyGrapher().add_points(points).show()
