@@ -36,10 +36,13 @@
 
 
 import  textwrap
+from    glob                    import      glob
 
 import  numpy                   as          np
+from    natsort                 import      natsorted
 
 import  plotly.graph_objects    as          go
+import  plotly.express          as          px
 from    plotly.subplots         import      make_subplots
 
 import  pept
@@ -65,6 +68,146 @@ def format_fig(fig, size=20, font="Computer Modern", template="plotly_white"):
     fig.update_xaxes(title_font_family = font, title_font_size = size)
     fig.update_yaxes(title_font_family = font, title_font_size = size)
     fig.update_layout(template = template)
+
+
+
+
+def make_video(frames, output = "video.avi", fps = 10):
+    '''Stitch multiple images from `frames` into a video saved to `output`.
+
+    Parameters
+    ----------
+    frames : str or list[str]
+        Either a prefix for the frame names (e.g. "directory/frame*.png") or
+        a list of paths to individual frames.
+
+    output : str, default "video.avi"
+        Name of output video.
+
+    fps : int, default 10
+        Number of frames per second.
+
+    Examples
+    --------
+    Stitch all files matching a glob prefix:
+    >>> from pept.plots import make_video
+    >>> make_video("lacey/frame*.png", "lacey/video.avi")
+
+    Stitch individual files:
+    >>> make_video(["frame0.png", "frame1.png", "frame2.png"])
+
+    '''
+
+    try:
+        import cv2
+    except ImportError:
+        raise ImportError((
+            "OpenCV must be installed for this function to work. Please run "
+            "e.g. `pip install opencv-python`."
+        ))
+
+    if isinstance(frames, str):
+        images = natsorted(glob(frames))
+    else:
+        images = frames
+
+    frame = cv2.imread(images[0])
+    height, width, layers = frame.shape
+
+    video = cv2.VideoWriter(output, 0, fps, (width, height))
+    for image in images:
+        video.write(cv2.imread(image))
+
+    cv2.destroyAllWindows()
+    video.release()
+
+
+
+
+def histogram(
+    data,
+    nbins = None,
+    histnorm = "percent",
+    marginal = "box",
+    xlim = None,
+    ylim = None,
+    xaxis_title = None,
+    yaxis_title = None,
+    **kwargs,
+):
+    '''Create histogram of data with PEPT-relevant defaults for
+    `plotly.express.histogram`.
+
+    You can check the official documentation for all available options:
+    https://plotly.github.io/plotly.py-docs/generated/plotly.express.histogram.html.
+
+    Parameters
+    ----------
+    data : (N,) numpy.ndarray-like
+        A 1D vector of values to histogram.
+
+    nbins : int, optional
+        Positive integer. Sets the number of bins.
+
+    histnorm : str, default "percent"
+        One of `'percent'`, `'probability'`, `'density'`, or `'probability
+        density'` If `None`, the output of `histfunc` is used as is. If
+        `'probability'`, the output of `histfunc` for a given bin is divided by
+        the sum of the output of `histfunc` for all bins. If `'percent'`, the
+        output of `histfunc` for a given bin is divided by the sum of the
+        output of `histfunc` for all bins and multiplied by 100. If
+        `'density'`, the output of `histfunc` for a given bin is divided by the
+        size of the bin. If `'probability density'`, the output of `histfunc`
+        for a given bin is normalized such that it corresponds to the
+        probability that a random event whose distribution is described by the
+        output of `histfunc` will fall into that bin.
+
+    marginal : str, default "box"
+        One of `'rug'`, `'box'`, `'violin'`, or `'histogram'`. If set, a
+        subplot is drawn alongside the main plot, visualizing the distribution.
+
+    xlim : list of two numbers, optional
+        If provided, overrides auto-scaling on the x-axis in cartesian
+        coordinates.
+
+    ylim : list of two numbers, optional
+        If provided, overrides auto-scaling on the y-axis in cartesian
+        coordinates.
+
+    xaxis_title : str, optional
+        X-axis label.
+
+    yaxis_title : str, optional
+        Y-axis label.
+    '''
+
+    # Consistent naming for axis ranges
+    if xlim is not None:
+        kwargs["range_x"] = xlim
+
+    if ylim is not None:
+        kwargs["range_y"] = ylim
+
+    # Axis titles
+    if "labels" not in kwargs:
+        kwargs["labels"] = {}
+
+    if xaxis_title is not None:
+        kwargs["labels"]["x"] = xaxis_title
+
+    if yaxis_title is not None:
+        kwargs["labels"]["y"] = yaxis_title
+
+    fig = px.histogram(
+        x = data,
+        nbins = nbins,
+        histnorm = histnorm,
+        marginal = marginal,
+        **kwargs,
+    )
+
+    format_fig(fig)
+    return fig
 
 
 
@@ -950,6 +1093,23 @@ class PlotlyGrapher2D:
         return self
 
 
+    def add_image(self, image, **kwargs):
+        '''Create and plot a `go.Image` trace.
+
+        Parameters
+        ----------
+        image : (width, height, 3 or 4) np.ndarray
+            An image with 3 (RGB) or 4 (RGBA) channels.
+
+        **kwargs : keyword arguments
+            Other arguments to be passed to the plotly.graph_objs.Image
+            constructor.
+        '''
+
+        self._fig.add_trace(go.Image(z = image, **kwargs))
+        return self
+
+
     def add_trace(self, trace, row = 1, col = 1):
         '''Add a precomputed Plotly trace to a given subplot.
 
@@ -1022,6 +1182,10 @@ class PlotlyGrapher2D:
 
             return [xmin, xmax, ymin, ymax]
 
+        # Check all figures have numerical-like data (e.g. images don't)
+        if not all(hasattr(fig_data, "x") for fig_data in self._fig.data):
+            return
+
         # `lims` columns: [xmin, xmax, ymin, ymax].
         lims = [get_min_max(fig_data) for fig_data in self._fig.data]
         lims = np.array(lims, order = "F")
@@ -1064,6 +1228,10 @@ class PlotlyGrapher2D:
             ymax = np.nanmax(y)
 
             return [xmin, xmax, ymin, ymax]
+
+        # Check all figures have numerical-like data (e.g. images don't)
+        if not all(hasattr(fig_data, "x") for fig_data in self._fig.data):
+            return
 
         # `lims` columns: [xmin, xmax, ymin, ymax].
         lims = [get_min_max(fig_data) for fig_data in self._fig.data]

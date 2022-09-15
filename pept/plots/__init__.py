@@ -25,6 +25,8 @@ with optional subplots which can also be exported to portable HTML files. The
 from    .plotly_grapher     import  PlotlyGrapher
 from    .plotly_grapher2d   import  PlotlyGrapher2D
 from    .plotly_grapher2d   import  format_fig
+from    .plotly_grapher2d   import  histogram
+from    .plotly_grapher2d   import  make_video
 
 
 __license__ = "GNU v3.0"
