@@ -331,9 +331,15 @@ class PointData(IterableSamples):
             sample_size = [len(p.points) for p in points]
             points = np.vstack([p.points for p in points])
 
-        # NumPy array-like
-        else:
+        # NumPy array
+        elif isinstance(points, np.ndarray):
             points = np.asarray(points, order = 'C', dtype = float)
+
+        # List of NumPy array-like
+        else:
+            if sample_size is None:
+                sample_size = [len(p) for p in points]
+            points = np.vstack(points)
 
         # Check that points has at least 4 columns.
         if points.ndim != 2 or points.shape[1] < 4:

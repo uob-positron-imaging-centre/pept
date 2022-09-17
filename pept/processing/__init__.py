@@ -24,6 +24,7 @@ from    .grids  import  VectorGrid2D, VectorGrid3D
 
 from    .mixing import  LaceyColors, LaceyColorsLinear
 from    .mixing import  RelativeDeviations, RelativeDeviationsLinear
+from    .mixing import  AutoCorrelation
 
 
 __license__ = "GNU v3.0"

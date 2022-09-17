@@ -8,16 +8,17 @@
 
 import  os
 import  textwrap
+from    numbers             import  Number
 
 
 import  numpy               as      np
 import  scipy
 
 from    tqdm                import  tqdm
+from    joblib              import  Parallel, delayed
 
 from    pept                import  PointData
 from    pept.base           import  Reducer
-from    pept.tracking       import  Stack
 from    pept                import  plots
 
 from    plotly.subplots     import  make_subplots
@@ -57,6 +58,39 @@ def _check_point3d(**kwargs):
             f"The input point `{name}` should be a vector-like with exactly 3 "
             f"elements. Received `{point}`."
         )))
+
+
+
+
+def _parallel(f, samples, executor, max_workers, desc = "", verbose = True):
+    if executor == "sequential":
+        if verbose:
+            samples = tqdm(samples, desc = desc)
+
+        return [f(s) for s in samples]
+
+    elif executor == "joblib":
+        if verbose:
+            samples = tqdm(samples, desc = desc)
+
+        # Joblib's `max_workers` behaviour is different than for Executors.
+        # The latter simply sets the maximum number of threads available,
+        # while the former uses a max_worker=1. Make behaviour consistent.
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
+        return Parallel(n_jobs = max_workers)(delayed(f)(s) for s in samples)
+
+    else:
+        # Otherwise assume `executor` is a `concurrent.futures.Executor`
+        # subclass (e.g. ProcessPoolExecutor, MPIPoolExecutor).
+        with executor(max_workers = max_workers) as exe:
+            futures = [exe.submit(f, s) for s in samples]
+
+            if verbose:
+                futures = tqdm(futures, desc = desc)
+
+            return [fut.result() for fut in futures]
 
 
 
@@ -162,14 +196,22 @@ class LaceyColors(Reducer):
         self.resolution = tuple(resolution)
 
 
-    def fit(self, trajectories):
+    def fit(
+        self,
+        trajectories,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
 
-        trajectories = Stack().fit(trajectories)
         if not isinstance(trajectories, PointData):
-            raise TypeError(textwrap.fill((
-                "The input `trajectories` must be pept.PointData-like. "
-                f"Received `{type(trajectories)}`."
-            )))
+            try:
+                trajectories = PointData(trajectories)
+            except (ValueError, TypeError):
+                raise TypeError(textwrap.fill((
+                    "The input `trajectories` must be pept.PointData-like. "
+                    f"Received `{type(trajectories)}`."
+                )))
 
         if self.ax1 is None:
             self.ax1 = self.p2 - self.p1
@@ -359,7 +401,13 @@ class LaceyColorsLinear(Reducer):
         self.prefix = prefix
 
 
-    def fit(self, trajectories, verbose = True):
+    def fit(
+        self,
+        trajectories,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
 
         if not os.path.isdir(self.directory):
             os.mkdir(self.directory)
@@ -372,29 +420,35 @@ class LaceyColorsLinear(Reducer):
 
         axis = self.p2 - self.p1
 
-        if verbose:
-            divisions = tqdm(divisions, desc = "LaceyColorsLinear :")
-
-        for i, div in enumerate(divisions):
+        def compute_save_lacey(idiv):
             image = LaceyColors(
                 p1 = self.p1,
-                p2 = div,
+                p2 = divisions[idiv],
                 ax1 = axis,
                 ax2 = axis,
                 max_distance = self.max_distance,
                 resolution = self.resolution,
             ).fit(trajectories)
 
-            travelled = np.linalg.norm(div - self.p1)
+            travelled = np.linalg.norm(divisions[idiv] - self.p1)
             grapher = plots.PlotlyGrapher2D(subplot_titles = [
                 f"Travelled {travelled} mm"
             ])
             grapher.add_trace(go.Image(z = image))
             grapher.fig.write_image(
-                f"{self.directory}/{self.prefix}{i:0>4}.png",
+                f"{self.directory}/{self.prefix}{idiv:0>4}.png",
                 height = self.height,
                 width = self.width,
             )
+
+        _parallel(
+            compute_save_lacey,
+            range(self.num_divisions),
+            executor = executor,
+            max_workers = max_workers,
+            desc = "LaceyColorsLinear :",
+            verbose = verbose,
+        )
 
 
 
@@ -539,14 +593,22 @@ class RelativeDeviations(Reducer):
         self.deviations = None
 
 
-    def fit(self, trajectories):
+    def fit(
+        self,
+        trajectories,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
 
-        trajectories = Stack().fit(trajectories)
         if not isinstance(trajectories, PointData):
-            raise TypeError(textwrap.fill((
-                "The input `trajectories` must be pept.PointData-like. "
-                f"Received `{type(trajectories)}`."
-            )))
+            try:
+                trajectories = PointData(trajectories)
+            except (ValueError, TypeError):
+                raise TypeError(textwrap.fill((
+                    "The input `trajectories` must be pept.PointData-like. "
+                    f"Received `{type(trajectories)}`."
+                )))
 
         if self.ax1 is None:
             self.ax1 = self.p2 - self.p1
@@ -760,7 +822,13 @@ class RelativeDeviationsLinear(Reducer):
         self.kurtosis = None
 
 
-    def fit(self, trajectories, verbose = True):
+    def fit(
+        self,
+        trajectories,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
 
         if not os.path.isdir(self.directory):
             os.mkdir(self.directory)
@@ -773,43 +841,37 @@ class RelativeDeviationsLinear(Reducer):
 
         axis = self.p2 - self.p1
 
-        if verbose:
-            divisions = tqdm(
-                divisions,
-                desc = "RelativeDeviationsLinear 1 / 3 :",
-            )
-
         # Save vectors of deviations so that we can set the XAxis range
-        self.deviations = []
-
-        for i, div in enumerate(divisions):
-            devs = RelativeDeviations(
+        def compute_deviations(division):
+            return RelativeDeviations(
                 p1 = self.p1,
-                p2 = div,
+                p2 = division,
                 ax1 = axis,
                 ax2 = axis,
                 max_distance = self.max_distance,
                 histogram = False,
             ).fit(trajectories)
 
-            self.deviations.append(devs)
+        self.deviations = _parallel(
+            compute_deviations,
+            divisions,
+            executor = executor,
+            max_workers = max_workers,
+            desc = "RelativeDeviationsLinear 1 / 3 :",
+            verbose = verbose,
+        )
 
         # Save histograms to disk
-        if verbose:
-            divisions = tqdm(
-                divisions.iterable,
-                desc = "RelativeDeviationsLinear 2 / 3 :",
-            )
-
         xlim = [0, np.max([d.max() for d in self.deviations])]
-        for i, div in enumerate(divisions):
+
+        def save_histograms(idiv):
             fig = plots.histogram(
-                self.deviations[i],
+                self.deviations[idiv],
                 xlim = xlim,
                 **self.kwargs,
             )
 
-            travelled = np.linalg.norm(div - self.p1)
+            travelled = np.linalg.norm(divisions[idiv] - self.p1)
             fig.update_layout(
                 title = f"Travelled {travelled:4.4f} mm",
                 xaxis_title = "Deviation (mm)",
@@ -817,28 +879,44 @@ class RelativeDeviationsLinear(Reducer):
             )
 
             fig.write_image(
-                f"{self.directory}/{self.prefix}{i:0>4}.png",
+                f"{self.directory}/{self.prefix}{idiv:0>4}.png",
                 height = self.height,
                 width = self.width,
             )
 
+        _parallel(
+            save_histograms,
+            range(self.num_divisions),
+            executor = executor,
+            max_workers = max_workers,
+            desc = "RelativeDeviationsLinear 2 / 3 :",
+            verbose = verbose,
+        )
+
         # Compute summarised statistics about distributions
-        if verbose:
-            divisions = tqdm(
-                divisions.iterable,
-                desc = "RelativeDeviationsLinear 3 / 3 :",
-            )
+        def compute_stats(idiv):
+            dev = self.deviations[idiv]
+            return [
+                np.mean(dev),
+                np.std(dev),
+                scipy.stats.skew(dev),
+                scipy.stats.kurtosis(dev),
+            ]
 
-        self.mean = np.zeros(len(self.deviations))
-        self.std = np.zeros(len(self.deviations))
-        self.skew = np.zeros(len(self.deviations))
-        self.kurtosis = np.zeros(len(self.deviations))
+        stats = _parallel(
+            compute_stats,
+            range(self.num_divisions),
+            executor = executor,
+            max_workers = max_workers,
+            desc = "RelativeDeviationsLinear 3 / 3 :",
+            verbose = verbose,
+        )
+        stats = np.array(stats, order = "F")
 
-        for i, dev in enumerate(self.deviations):
-            self.mean[i] = np.mean(dev)
-            self.std[i] = np.std(dev)
-            self.skew[i] = scipy.stats.skew(dev)
-            self.kurtosis[i] = scipy.stats.kurtosis(dev)
+        self.mean = stats[:, 0]
+        self.std = stats[:, 1]
+        self.skew = stats[:, 2]
+        self.kurtosis = stats[:, 3]
 
         # Plot summarised statistics
         distance = np.linspace(
@@ -912,3 +990,281 @@ class RelativeDeviationsLinear(Reducer):
         fig.update_layout(yaxis_title = "Deviation (mm)")
 
         return fig
+
+
+
+
+class AutoCorrelation(Reducer):
+    r'''Compute autocorrelation of multiple measures (eg YZ velocities) as a
+    function of a lagging variable (eg time).
+
+    Reducer signature:
+
+    ::
+
+               PointData -> AutoCorrelation.fit -> plotly.graph_objs.Figure
+         list[PointData] -> AutoCorrelation.fit -> plotly.graph_objs.Figure
+        list[np.ndarray] -> AutoCorrelation.fit -> plotly.graph_objs.Figure
+
+    **Each sample in the input `PointData` is treated as a separate streamline
+    / tracer pass. You can group passes using `Segregate + GroupBy("label")`**.
+
+    Autocorrelation and autocovariance each refer to about 3 different things
+    in each field. The formula used here, inspired by the VACF in molecular
+    dynamics and generalised for arbitrary measures, is:
+
+    .. math::
+
+       C(L_i) = \frac{ \sum_{N} V(L_0) \cdot V(L_i) }{N}
+
+    i.e. the autocorrelation C at a lag of Li is the average of the dot
+    products of quantities V for all N tracers. For example, the velocity
+    autocorrelation function with respect to time would be the average of
+    `vx(0) vx(t) + vy(0) vy(t) + vz(0) vz(t)` at a given time `t`.
+
+    The input `lag` defines the column used as a lagging variable; it can be
+    given as a named column string (e.g. `"t"`) or index (e.g. `0`).
+
+    The input `signals` define the quantities for which the autocorrelation is
+    computed, given as a list of column names (e.g. `["vy", "vz"]`) or indices
+    (e.g. `[5, 6]`).
+
+    The input `span`, if defined, is the minimum and maximum values for the
+    `lag` (e.g. start and end times) for which the autocorrelation will be
+    computed. By default it is automatically computed as the range of values.
+
+    The input `num_divisions` is the number of lag points between `span[0]` and
+    `span[1]` for which the autocorrelation will be computed.
+
+    The `max_distance` parameter defines the maximum distance allowed between
+    a lag value and the closest trajectory value for it to be considered.
+
+    If `normalize` is True, then the formula used becomes:
+
+    .. math::
+
+       C(L_i) = \frac{ \sum_{N} V(L_0) \cdot V(L_i) / V(L_0) \cdot V(L_0)}{N}
+
+
+    If `preprocess` is True, then the times of each tracer pass is taken
+    relative to its start; only relevant if using time as the lagging variable.
+
+    Examples
+    --------
+    Consider a pipe-flow experiment, with tracers moving from side to side in
+    multiple passes / streamlines. First locate the tracers, then split their
+    trajectories into each individual pass:
+
+    >>> import pept
+    >>> from pept.tracking import *
+    >>>
+    >>> split_pipe = pept.Pipeline([
+    >>>     Segregate(window = 10, max_distance = 20),  # Appends label column
+    >>>     GroupBy("label"),                           # Splits into samples
+    >>>     Reorient(),                                 # Align with X axis
+    >>>     Center(),                                   # Center points at 0
+    >>>     Velocity(7),                                # Compute vx, vy, vz
+    >>>     Stack(),
+    >>> ])
+    >>> streamlines = split_pipe.fit(trajectories)
+
+    Now each sample in `streamlines` corresponds to a single tracer pass, e.g.
+    `streamlines[0]` is the first pass, `streamlines[1]` is the second. The
+    passes were reoriented and centred such that the pipe is aligned with the
+    X axis.
+
+    Now the `AutoCorrelation` algorithm can be used to compute the VACF:
+
+    >>> from pept.processing import AutoCorrelation
+    >>> fig = AutoCorrelation("t", ["vx", "vy", "vz"]).fit(streamlines)
+    >>> fig.show()
+
+    The radial velocity autocorrelation can be computed as a function of the
+    pipe length (X axis as it was reoriented):
+
+    >>> entrance = -100
+    >>> exit = 100
+    >>> ac = AutoCorrelation("x", ["vy", "vz"], span = [entrance, exit])
+    >>> ac.fit(streamlines).show()
+
+    The raw lags and autocorrelations plotted can be accessed directly:
+
+    >>> ac.lags
+    >>> ac.correlation
+
+    The radial location can be autocorrelated with time, then normalised to
+    show periodic movements (e.g. due to a mixer):
+
+    >>> ac = AutoCorrelation("t", ["y", "z"], normalize = True)
+    >>> ac.fit(streamlines).show()
+    '''
+
+    def __init__(
+        self,
+        lag = "t",
+        signals = ["vx", "vy", "vz"],
+        span = None,
+        num_divisions = 500,
+        max_distance = 10,
+        normalize = False,
+        preprocess = True,
+    ):
+
+        self.lag = lag
+        if isinstance(signals, str) or isinstance(signals, Number):
+            signals = [signals]
+        self.signals = signals
+
+        if span is not None:
+            span = tuple(span)
+            if len(span) != 2:
+                raise ValueError(textwrap.fill((
+                    "The input `span`, if defined, must contain two "
+                    f"values [lag_start, lag_end]. Received `{span}`."
+                )))
+
+        self.span = span
+        self.num_divisions = int(num_divisions)
+        self.max_distance = float(max_distance)
+
+        self.normalize = bool(normalize)
+        self.preprocess = bool(preprocess)
+
+        # Will be set in `fit`
+        self.lags = None
+        self.correlation = None
+
+
+    def fit(
+        self,
+        trajectories,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
+
+        if not isinstance(trajectories, PointData):
+            try:
+                trajectories = PointData(trajectories)
+            except (ValueError, TypeError):
+                raise TypeError(textwrap.fill((
+                    "The input `trajectories` must be pept.PointData-like. "
+                    f"Received `{type(trajectories)}`."
+                )))
+
+        # Extract relevant columns' indices
+        if isinstance(self.lag, str):
+            ilag = trajectories.columns.index(self.lag)
+        else:
+            ilag = int(self.lag)
+
+        isignals = []
+        for sig in self.signals:
+            if isinstance(sig, str):
+                isignals.append(trajectories.columns.index(sig))
+            else:
+                isignals.append(int(sig))
+
+        # If preprocessing is enabled, make times relative to the start of each
+        # trajectory pass
+        if self.preprocess and ilag == 0:
+            trajectories = trajectories.copy()
+            for traj in trajectories:
+                traj.points[:, 0] -= traj.points[0, 0]
+
+        # Set span if undefined
+        if self.span is None:
+            self.span = (
+                np.min(trajectories.points[:, ilag]),
+                np.max(trajectories.points[:, ilag]),
+            )
+
+        # For each tracer pass, find closest value to the lag in `divisions`
+        divisions = np.linspace(self.span[0], self.span[1], self.num_divisions)
+        correlation = np.zeros(self.num_divisions)
+
+        # Save correlations as class attributes
+        self.lags = divisions
+        self.correlation = correlation
+
+        def closest_signal(traj, lag):
+            lag_values = traj.points[:, ilag]
+
+            # Find closest lag value
+            lag_distances = np.abs(lag_values - lag)
+            ilag_closest = np.argmin(lag_distances)
+
+            # If not lag was close enough, return NaNs
+            if lag_distances[ilag_closest] > self.max_distance:
+                return np.full(len(isignals), np.nan)
+            else:
+                return traj.points[ilag_closest, isignals]
+
+        # Compute signals at lag=0
+        signals0 = [
+            closest_signal(traj, divisions[0])
+            for traj in trajectories
+        ]
+
+        def compute_correlation(lag):
+            # Find signal values close to this lag value
+            signal_values = [
+                closest_signal(traj, lag)
+                for traj in trajectories
+            ]
+
+            # Compute correlation as dot product with signals at lag=0
+            if self.normalize:
+                corr = [
+                    np.dot(signals0[i], signal_values[i]) /
+                    np.dot(signals0[i], signals0[i])
+                    for i in range(len(signal_values))
+                ]
+            else:
+                corr = [
+                    np.dot(signals0[i], signal_values[i])
+                    for i in range(len(signal_values))
+                ]
+
+            # Return ensemble average, ignoring NaNs (i.e. when no signal was
+            # found close enough to the given lag value)
+            return np.nanmean(corr)
+
+        # Compute correlation at each lag in `divisions`
+        correlation[:] = _parallel(
+            compute_correlation,
+            divisions,
+            executor = executor,
+            max_workers = max_workers,
+            desc = "AutoCorrelation :",
+            verbose = verbose,
+        )
+
+        # Plot correlation as a function of lag
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x = self.lags,
+            y = self.correlation,
+            mode = "lines",
+            showlegend = False,
+        ))
+
+        norm = "Normalised " if self.normalize else ""
+        fig.update_layout(
+            xaxis_title = f"Lag (column `{self.lag}`)",
+            yaxis_title = f"{norm}AutoCorrelation (columns {self.signals})",
+        )
+
+        # If the span is inversed, reverse the X-axis
+        if self.span[1] < self.span[0]:
+            fig.update_layout(xaxis_autorange = "reversed")
+
+        plots.format_fig(fig)
+
+        return fig
+
+
+
+
+
+

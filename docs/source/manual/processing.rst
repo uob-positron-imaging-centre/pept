@@ -43,4 +43,6 @@ Mixing Quantification
    pept.processing.LaceyColorsLinear
    pept.processing.RelativeDeviations
    pept.processing.RelativeDeviationsLinear
+   pept.processing.AutoCorrelation
+
 

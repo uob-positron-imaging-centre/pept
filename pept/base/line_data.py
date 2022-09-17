@@ -347,9 +347,15 @@ class LineData(IterableSamples):
             sample_size = [len(li.lines) for li in lines]
             lines = np.vstack([li.lines for li in lines])
 
-        # NumPy array-like
-        else:
+        # NumPy array
+        elif isinstance(lines, np.ndarray):
             lines = np.asarray(lines, order = 'C', dtype = float)
+
+        # List of NumPy array-like
+        else:
+            if sample_size is None:
+                sample_size = [len(li) for li in lines]
+            lines = np.vstack(lines)
 
         # Check that lines has at least 7 columns.
         if lines.ndim != 2 or lines.shape[1] < 7:

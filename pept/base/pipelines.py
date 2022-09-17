@@ -45,21 +45,44 @@ class Transformer(ABC, PEPTObject):
 
 
     def __repr__(self):
+        name = type(self).__name__
+        post = max(40, 81 - len(name))
+
         # Select all attributes from dir(obj) that are not callable (i.e. not
         # methods) and don't start with "_" (i.e. they're private)
         docs = []
         for att in dir(self):
             memb = getattr(self, att)
             if not callable(memb) and not att.startswith("_"):
-                # If it's a nested collection, print it on a new, indented line
-                if (isinstance(memb, np.ndarray) and memb.ndim > 1) or \
-                        isinstance(memb, PEPTObject):
-                    memb_str = textwrap.indent(str(memb), '  ')
-                    docs.append(f"{att} = \n{memb_str}")
-                else:
-                    docs.append(f"{att} = {memb}")
+                memb_str = str(memb)
+                if len(memb_str) > post:
+                    memb_str = memb_str[:post - 2] + "..."
+                memb_str.replace("\n", "\\n")
 
-        return f"{type(self).__name__}(" + ", ".join(docs) + ")"
+                docs.append(f"{att} = {memb_str}")
+
+        # Build representation like:
+        # TransformerName(attribute1 = [1 2 3], attribute2 = "hello world",
+        #                 attribute3 = [2 4 5 7 8])
+        if not len(docs):
+            docstr = f"{name}()"
+        else:
+            docstr = f"{name}({docs[0]}, "
+
+            prefix = " " * (len(name) + 1)
+            curline = len(docstr)
+
+            for i in range(1, len(docs)):
+                if curline + len(docs[i]) > 80:
+                    docstr = docstr + "\n" + prefix + docs[i] + ", "
+                    curline = len(prefix) + len(docs[i]) + 2
+                else:
+                    docstr = docstr + docs[i] + ", "
+                    curline = curline + len(docs[i]) + 2
+
+            docstr = docstr[:-2] + ")"
+
+        return docstr
 
 
 

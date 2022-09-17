@@ -129,7 +129,10 @@ class PEPTObject:
             if not attr.startswith("_"):
                 memb = getattr(self, attr)
                 if not callable(memb):
-                    docs.append(f"{attr} = {memb}")
+                    memb_str = str(memb)
+                    if len(memb_str) > 80:
+                        memb_str = memb_str[:78] + "..."
+                    docs.append(f"{attr} = {memb_str}")
 
         name = self.__class__.__name__
         underline = "-" * len(name)
