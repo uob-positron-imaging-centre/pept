@@ -40,6 +40,7 @@ from    glob                    import      glob
 
 import  numpy                   as          np
 from    natsort                 import      natsorted
+from    tqdm                    import      tqdm
 
 import  plotly.graph_objects    as          go
 import  plotly.express          as          px
@@ -72,7 +73,7 @@ def format_fig(fig, size=20, font="Computer Modern", template="plotly_white"):
 
 
 
-def make_video(frames, output = "video.avi", fps = 10):
+def make_video(frames, output = "video.avi", fps = 10, verbose = True):
     '''Stitch multiple images from `frames` into a video saved to `output`.
 
     Parameters
@@ -115,6 +116,10 @@ def make_video(frames, output = "video.avi", fps = 10):
     height, width, layers = frame.shape
 
     video = cv2.VideoWriter(output, 0, fps, (width, height))
+
+    if verbose:
+        images = tqdm(images, desc = "Stitching Frames :")
+
     for image in images:
         video.write(cv2.imread(image))
 
@@ -508,6 +513,7 @@ class PlotlyGrapher2D:
         colorbar_col = -1,
         colorscale = "Magma",
         colorbar_title = None,
+        **kwargs,
     ):
         '''Static method for creating a list of 3 Plotly traces of timeseries.
         See `PlotlyGrapher2D.add_timeseries` for the full documentation.
@@ -555,7 +561,8 @@ class PlotlyGrapher2D:
                                 x = selected[:, 0],
                                 y = selected[:, i + 1],
                                 mode = "markers",
-                                marker = marker
+                                marker = marker,
+                                **kwargs,
                             )
                         )
                 return traces
@@ -572,7 +579,8 @@ class PlotlyGrapher2D:
                     x = pts[:, 0],
                     y = pts[:, i + 1],
                     mode = "markers",
-                    marker = marker
+                    marker = marker,
+                    **kwargs,
                 )
             )
         return traces
@@ -588,7 +596,8 @@ class PlotlyGrapher2D:
         colorbar = True,
         colorbar_col = -1,
         colorscale = "Magma",
-        colorbar_title = None
+        colorbar_title = None,
+        **kwargs,
     ):
         '''Add a timeseries plot for each dimension in `points` vs. time.
 
@@ -695,6 +704,7 @@ class PlotlyGrapher2D:
             colorbar_col = colorbar_col,
             colorscale = colorscale,
             colorbar_title = colorbar_title,
+            **kwargs,
         )
 
         for t, rc in zip(traces, rows_cols):
@@ -727,6 +737,7 @@ class PlotlyGrapher2D:
         colorbar_col = -1,
         colorscale = "Magma",
         colorbar_title = None,
+        **kwargs,
     ):
         '''Static method for creating a Plotly trace of points. See
         `PlotlyGrapher2D.add_points` for the full documentation.
@@ -774,7 +785,8 @@ class PlotlyGrapher2D:
                             x = selected[:, 1],
                             y = selected[:, 2],
                             mode = "markers",
-                            marker = marker
+                            marker = marker,
+                            **kwargs,
                         )
                     )
                 return traces
@@ -788,7 +800,8 @@ class PlotlyGrapher2D:
             x = points[:, 1],
             y = points[:, 2],
             mode = "markers",
-            marker = marker
+            marker = marker,
+            **kwargs,
         )
 
 
@@ -803,7 +816,8 @@ class PlotlyGrapher2D:
         colorbar = True,
         colorbar_col = -1,
         colorscale = "Magma",
-        colorbar_title = None
+        colorbar_title = None,
+        **kwargs,
     ):
         '''Create and plot a trace for all the points in a numpy array, with
         possible color-coding.
@@ -890,6 +904,7 @@ class PlotlyGrapher2D:
             colorbar_col = colorbar_col,
             colorscale = colorscale,
             colorbar_title = colorbar_title,
+            **kwargs,
         )
 
         # May be list of traces
@@ -907,6 +922,7 @@ class PlotlyGrapher2D:
         width = 2.0,
         color = None,
         opacity = 0.6,
+        **kwargs,
     ):
         '''Static method for creating a Plotly trace of lines. See
         `PlotlyGrapher2D.add_lines` for the full documentation.
@@ -939,7 +955,8 @@ class PlotlyGrapher2D:
             y = coords_y,
             mode = 'lines',
             opacity = opacity,
-            line = marker
+            line = marker,
+            **kwargs,
         )
 
 
@@ -951,6 +968,7 @@ class PlotlyGrapher2D:
         width = 2.0,
         color = None,
         opacity = 0.6,
+        **kwargs,
     ):
         '''Create and plot a trace for all the lines in a numpy array, with
         possible color-coding.
@@ -1011,6 +1029,7 @@ class PlotlyGrapher2D:
             width = width,
             color = color,
             opacity = opacity,
+            **kwargs,
         )
 
         self._fig.add_trace(trace, row = row, col = col)
@@ -1087,6 +1106,7 @@ class PlotlyGrapher2D:
         trace = pixels.heatmap_trace(
             colorscale = colorscale,
             transpose = transpose,
+            **kwargs,
         )
 
         self._fig.add_trace(trace, row = row, col = col)
@@ -1183,7 +1203,8 @@ class PlotlyGrapher2D:
             return [xmin, xmax, ymin, ymax]
 
         # Check all figures have numerical-like data (e.g. images don't)
-        if not all(hasattr(fig_data, "x") for fig_data in self._fig.data):
+        if not all(hasattr(fig_data, "x") for fig_data in self._fig.data) or \
+                not len(self._fig.data):
             return
 
         # `lims` columns: [xmin, xmax, ymin, ymax].
@@ -1230,7 +1251,8 @@ class PlotlyGrapher2D:
             return [xmin, xmax, ymin, ymax]
 
         # Check all figures have numerical-like data (e.g. images don't)
-        if not all(hasattr(fig_data, "x") for fig_data in self._fig.data):
+        if not all(hasattr(fig_data, "x") for fig_data in self._fig.data) or \
+                not len(self._fig.data):
             return
 
         # `lims` columns: [xmin, xmax, ymin, ymax].

@@ -44,5 +44,6 @@ Mixing Quantification
    pept.processing.RelativeDeviations
    pept.processing.RelativeDeviationsLinear
    pept.processing.AutoCorrelation
+   pept.processing.SpatialProjections
 
 

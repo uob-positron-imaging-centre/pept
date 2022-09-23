@@ -13,6 +13,7 @@ from    numbers             import  Number
 
 import  numpy               as      np
 import  scipy
+from    scipy.interpolate   import  interp1d
 
 from    tqdm                import  tqdm
 from    joblib              import  Parallel, delayed
@@ -128,6 +129,8 @@ class LaceyColors(Reducer):
     a point and a plane to be considered part of it. The `resolution` defines
     the number of pixels in the height and width of the resulting image.
 
+    *New in pept-0.5.1*
+
     Examples
     --------
     Consider a pipe-flow experiment, with tracers moving from side to side in
@@ -173,6 +176,8 @@ class LaceyColors(Reducer):
         p2,
         ax1 = None,
         ax2 = None,
+        basis1 = None,
+        basis2 = None,
         max_distance = 10,
         resolution = (8, 8),
     ):
@@ -191,6 +196,26 @@ class LaceyColors(Reducer):
             ax2 = np.asarray(ax2, dtype = float)
             self.ax2 = ax2 / np.linalg.norm(ax2)
             _check_point3d(ax2 = self.ax2)
+
+        if basis1 is not None:
+            basis1 = np.asarray(basis1, dtype = float)
+            if basis1.ndim != 2 or len(basis1) != 3 or basis1.shape[1] != 2:
+                raise ValueError(textwrap.fill((
+                    "The input `basis1`, if defined, should be two column "
+                    "vectors - i.e. a (3, 2) matrix. Received "
+                    f"`basis1.shape={basis1.shape}`."
+                )))
+        self.basis1 = basis1
+
+        if basis2 is not None:
+            basis2 = np.asarray(basis2, dtype = float)
+            if basis2.ndim != 2 or len(basis2) != 3 or basis2.shape[1] != 2:
+                raise ValueError(textwrap.fill((
+                    "The input `basis2`, if defined, should be two column "
+                    "vectors - i.e. a (3, 2) matrix. Received "
+                    f"`basis2.shape={basis2.shape}`."
+                )))
+        self.basis2 = basis2
 
         self.max_distance = float(max_distance)
         self.resolution = tuple(resolution)
@@ -255,26 +280,28 @@ class LaceyColors(Reducer):
         # Split starting points into two species - Red and Blue - along the PCA
         points_start_centred = points_start - p1
 
-        cov = np.cov(points_start_centred.T)
-        evals, evecs = np.linalg.eig(cov)
+        if self.basis1 is None:
+            cov = np.cov(points_start_centred.T)
+            evals, evecs = np.linalg.eig(cov)
 
-        evals_argsorted = evals.argsort()[::-1]
-        evals = evals[evals_argsorted]
-        evecs = evecs[:, evals_argsorted]
+            evals_argsorted = evals.argsort()[::-1]
+            evals = evals[evals_argsorted]
+            self.basis1 = evecs[:, evals_argsorted][:, :2]
 
-        points_start2d = points_start_centred @ evecs[:, :2]
+        points_start2d = points_start_centred @ self.basis1
 
-        # Project ending points onto 2D plane by to the Principal Components
+        # Project ending points onto 2D plane by the Principal Components
         points_end_centred = points_end - p2
 
-        cov = np.cov(points_end_centred.T)
-        evals, evecs = np.linalg.eig(cov)
+        if self.basis2 is None:
+            cov = np.cov(points_end_centred.T)
+            evals, evecs = np.linalg.eig(cov)
 
-        evals_argsorted = evals.argsort()[::-1]
-        evals = evals[evals_argsorted]
-        evecs = evecs[:, evals_argsorted]
+            evals_argsorted = evals.argsort()[::-1]
+            evals = evals[evals_argsorted]
+            self.basis2 = evecs[:, evals_argsorted][:, :2]
 
-        points_end2d = points_end_centred @ evecs[:, :2]
+        points_end2d = points_end_centred @ self.basis2
 
         # Create RGB image with the R and B channels == the number of passes
         ired = points_start2d[:, 0] < 0
@@ -331,6 +358,8 @@ class LaceyColorsLinear(Reducer):
 
     The generated images (saved in `directory` with `height` x `width` pixels)
     can be stitched into a video using `pept.plots.make_video`.
+
+    *New in pept-0.5.1*
 
     Examples
     --------
@@ -389,6 +418,11 @@ class LaceyColorsLinear(Reducer):
     ):
         self.directory = directory
         self.num_divisions = int(num_divisions)
+        if self.num_divisions <= 1:
+            raise ValueError(textwrap.fill((
+                "The input `num_divisions` should be an integer >= 2. "
+                f"Received `{self.num_divisions}`."
+            )))
 
         self.p1 = np.asarray(p1, dtype = float)
         self.p2 = np.asarray(p2, dtype = float)
@@ -420,12 +454,28 @@ class LaceyColorsLinear(Reducer):
 
         axis = self.p2 - self.p1
 
+        # Compute basis vectors for splitting flow
+        lacey = LaceyColors(
+            p1 = divisions[0],
+            p2 = divisions[1],
+            ax1 = axis,
+            ax2 = axis,
+            max_distance = self.max_distance,
+            resolution = self.resolution,
+        )
+        lacey.fit(trajectories)
+
+        basis1 = lacey.basis1
+        basis2 = lacey.basis2
+
         def compute_save_lacey(idiv):
             image = LaceyColors(
                 p1 = self.p1,
                 p2 = divisions[idiv],
                 ax1 = axis,
                 ax2 = axis,
+                basis1 = basis1,
+                basis2 = basis2,
                 max_distance = self.max_distance,
                 resolution = self.resolution,
             ).fit(trajectories)
@@ -443,7 +493,7 @@ class LaceyColorsLinear(Reducer):
 
         _parallel(
             compute_save_lacey,
-            range(self.num_divisions),
+            range(1, self.num_divisions),
             executor = executor,
             max_workers = max_workers,
             desc = "LaceyColorsLinear :",
@@ -501,6 +551,8 @@ class RelativeDeviations(Reducer):
     The extra keyword arguments ``**kwargs`` are passed to the histogram
     creation routine `pept.plots.histogram`. You can e.g. set the YAxis limits
     by adding `ylim = [0, 20]`.
+
+    *New in pept-0.5.1*
 
     Attributes
     ----------
@@ -699,6 +751,8 @@ class RelativeDeviationsLinear(Reducer):
     The extra keyword arguments ``**kwargs`` are passed to the histogram
     creation routine `pept.plots.histogram`. You can e.g. set the YAxis limits
     by adding `ylim = [0, 20]`.
+
+    *New in pept-0.5.1*
 
     Attributes
     ----------
@@ -1002,9 +1056,9 @@ class AutoCorrelation(Reducer):
 
     ::
 
-               PointData -> AutoCorrelation.fit -> plotly.graph_objs.Figure
-         list[PointData] -> AutoCorrelation.fit -> plotly.graph_objs.Figure
-        list[np.ndarray] -> AutoCorrelation.fit -> plotly.graph_objs.Figure
+               PointData -> AutoCorrelation.fit -> PlotlyGrapher2D
+         list[PointData] -> AutoCorrelation.fit -> PlotlyGrapher2D
+        list[np.ndarray] -> AutoCorrelation.fit -> PlotlyGrapher2D
 
     **Each sample in the input `PointData` is treated as a separate streamline
     / tracer pass. You can group passes using `Segregate + GroupBy("label")`**.
@@ -1048,6 +1102,16 @@ class AutoCorrelation(Reducer):
 
     If `preprocess` is True, then the times of each tracer pass is taken
     relative to its start; only relevant if using time as the lagging variable.
+
+    The extra keyword arguments ``**kwargs`` are passed to
+    `PlotlyGrapher2D.add_points`. You can e.g. set the YAxis limits by adding
+    `ylim = [0, 20]`.
+
+    The extra keyword arguments ``**kwargs`` are passed to
+    `plotly.graph_objs.Scatter`. You can e.g. set a different colorscheme with
+    "marker_colorscheme = 'Viridis'".
+
+    *New in pept-0.5.1*
 
     Examples
     --------
@@ -1108,6 +1172,7 @@ class AutoCorrelation(Reducer):
         max_distance = 10,
         normalize = False,
         preprocess = True,
+        **kwargs,
     ):
 
         self.lag = lag
@@ -1129,6 +1194,8 @@ class AutoCorrelation(Reducer):
 
         self.normalize = bool(normalize)
         self.preprocess = bool(preprocess)
+
+        self.kwargs = kwargs
 
         # Will be set in `fit`
         self.lags = None
@@ -1228,10 +1295,15 @@ class AutoCorrelation(Reducer):
 
             # Return ensemble average, ignoring NaNs (i.e. when no signal was
             # found close enough to the given lag value)
-            return np.nanmean(corr)
+            finites = np.isfinite(corr)
+
+            if not len(corr) or np.all(~finites):
+                return np.nan, 0
+
+            return np.nanmean(corr), finites.sum()
 
         # Compute correlation at each lag in `divisions`
-        correlation[:] = _parallel(
+        stats = _parallel(
             compute_correlation,
             divisions,
             executor = executor,
@@ -1240,31 +1312,341 @@ class AutoCorrelation(Reducer):
             verbose = verbose,
         )
 
+        correlation[:] = [s[0] for s in stats]
+        finites = np.array([s[1] for s in stats])
+
+        # Make points denser for colorbars
+        dense_lags = np.linspace(
+            self.span[0],
+            self.span[1],
+            50 * self.num_divisions,
+        )
+        dense_correlation = interp1d(self.lags, self.correlation)(dense_lags)
+        dense_finites = interp1d(self.lags, finites)(dense_lags)
+
         # Plot correlation as a function of lag
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x = self.lags,
-            y = self.correlation,
-            mode = "lines",
-            showlegend = False,
+        if len(self.correlation):
+            ylim = [np.nanmin(self.correlation), np.nanmax(self.correlation)]
+        else:
+            ylim = None
+
+        if "marker_size" not in self.kwargs.keys():
+            self.kwargs["marker_size"] = 5
+
+        if "marker_colorscale" not in self.kwargs.keys():
+            self.kwargs["marker_colorscale"] = "Magma_r"
+
+        if "line_color" not in self.kwargs.keys():
+            self.kwargs["line_color"] = "black"
+
+        grapher = plots.PlotlyGrapher2D(ylim = ylim)
+        grapher.add_trace(go.Scatter(
+            x = dense_lags,
+            y = dense_correlation,
+            mode = "markers+lines",
+            marker = dict(
+                colorbar_title = "N",
+                color = dense_finites,
+            ),
+            **self.kwargs,
         ))
 
         norm = "Normalised " if self.normalize else ""
-        fig.update_layout(
+        grapher.fig.update_layout(
             xaxis_title = f"Lag (column `{self.lag}`)",
             yaxis_title = f"{norm}AutoCorrelation (columns {self.signals})",
         )
 
+        # Set scaleratios to be automatically determined
+        for i in range(grapher._rows):
+            for j in range(grapher._cols):
+                index = i * grapher._cols + j + 1
+                yaxis = f"yaxis{index}" if index != 1 else "yaxis"
+                grapher._fig["layout"][yaxis].update(
+                    scaleanchor = None,
+                    scaleratio = None,
+                )
+
         # If the span is inversed, reverse the X-axis
         if self.span[1] < self.span[0]:
-            fig.update_layout(xaxis_autorange = "reversed")
+            grapher.fig.update_layout(xaxis_autorange = "reversed")
 
-        plots.format_fig(fig)
-
-        return fig
+        return grapher
 
 
 
 
+class SpatialProjections(Reducer):
+    '''Project multiple tracer passes onto a moving 2D plane along a given
+    `direction` between `start` and `end` coordinates, saving each frame in
+    `directory`.
+
+    Reducer signature:
+
+    ::
+
+               PointData -> SpatialProjections.fit -> None
+         list[PointData] -> SpatialProjections.fit -> None
+        list[np.ndarray] -> SpatialProjections.fit -> None
+
+    **Each sample in the input `PointData` is treated as a separate streamline
+    / tracer pass. You can group passes using `Segregate + GroupBy("label")`**.
+
+    The generated images (saved in `directory` with `height` x `width` pixels)
+    can be stitched into a video using `pept.plots.make_video`.
+
+    The extra keyword arguments ``**kwargs`` are passed to the histogram
+    creation routine `pept.plots.histogram`. You can e.g. set the YAxis limits
+    by adding `ylim = [0, 20]`.
+
+    *New in pept-0.5.1*
+
+    Attributes
+    ----------
+    projections : list[(N, 5), np.ndarray]
+        A list of frames for each division between `start` and `end`, with each
+        frame saving 5 columns [t, x, y, z, colorbar_col].
+
+    Examples
+    --------
+    Consider a pipe-flow experiment, with tracers moving from side to side in
+    multiple passes / streamlines. First locate the tracers, then split their
+    trajectories into each individual pass:
+
+    >>> import pept
+    >>> from pept.tracking import *
+    >>>
+    >>> split_pipe = pept.Pipeline([
+    >>>     Segregate(window = 10, max_distance = 20),  # Appends label column
+    >>>     GroupBy("label"),                           # Splits into samples
+    >>>     Reorient(),                                 # Align with X axis
+    >>>     Center(),                                   # Center points at 0
+    >>>     Stack(),
+    >>> ])
+    >>> streamlines = split_pipe.fit(trajectories)
+
+    Now each sample in `streamlines` corresponds to a single tracer pass, e.g.
+    `streamlines[0]` is the first pass, `streamlines[1]` is the second. The
+    passes were reoriented and centred such that the pipe is aligned with the
+    X axis.
+
+    Now the `RelativeDeviationsLinear` reducer can be used to create images of
+    the mixing between the pipe entrance and exit:
+
+    >>> from pept.processing import SpatialProjections
+    >>> entrance_x = -100                   # Pipe data was aligned with X
+    >>> exit_x = 100
+    >>> SpatialProjections(
+    >>>     directory = "projections",      # Creates directory to save images
+    >>>     start = entrance_x,
+    >>>     end = exit_x,
+    >>> ).fit(streamlines)
+
+    Now the directory "projections" was created inside your current working
+    folder, and eachc projected frame was saved there as "frame0000.png",
+    "frame0001.png", etc. You can stitch all images together into a video using
+    `pept.plots.make_video`:
+
+    >>> import pept
+    >>> pept.plots.make_video(
+    >>>     "projections/frame*.png",
+    >>>     output = "projections/video.avi"
+    >>> )
+
+    The raw projections can also be extracted directly:
+
+    >>> sp = SpatialProjections(
+    >>>     directory = "projections",   # Creates directory to save images
+    >>>     p1 = entrance_x,
+    >>>     p2 = exit_x,
+    >>> )
+    >>> sp.fit(streamlines)
+    >>> sp.projections
+    '''
+
+    def __init__(
+        self,
+        directory,
+        start,
+        end,
+        dimension = "x",
+        num_divisions = 500,
+        max_distance = 10,
+        colorbar_col = -1,
+        height = 1000,
+        width = 1000,
+        prefix = "frame",
+        **kwargs,
+    ):
+
+        self.directory = directory
+        self.start = float(start)
+        self.end = float(end)
+
+        # Transform x -> 1, y -> 2, z -> 3 using ASCII integer `ord`er
+        if isinstance(dimension, str):
+            if dimension != "x" and dimension != "y" and dimension != "z":
+                raise ValueError(textwrap.fill((
+                    "The input `dimension` must be either 'x', 'y' or 'z'. "
+                    f"Received `{dimension}`."
+                )))
+
+            self.dimension = ord(dimension) - ord('x') + 1
+        else:
+            self.dimension = int(dimension)
+            if self.dimension < 1 or self.dimension > 3:
+                raise ValueError(textwrap.fill((
+                    "The input `dimension`, if given as an index, must be "
+                    f"between 1 and 3 (inclusive). Received `{dimension}`."
+                )))
+
+        self.num_divisions = int(num_divisions)
+        self.max_distance = float(max_distance)
+        self.colorbar_col = colorbar_col
+
+        self.height = int(height)
+        self.width = int(width)
+        self.prefix = prefix
+        self.kwargs = kwargs
+
+        # Will be set in `fit`
+        self.projections = None
 
 
+    def fit(
+        self,
+        trajectories,
+        executor = "joblib",
+        max_workers = None,
+        verbose = True,
+    ):
+
+        if not isinstance(trajectories, PointData):
+            try:
+                trajectories = PointData(trajectories)
+            except (ValueError, TypeError):
+                raise TypeError(textwrap.fill((
+                    "The input `trajectories` must be pept.PointData-like. "
+                    f"Received `{type(trajectories)}`."
+                )))
+
+        # Find colorbar column's index
+        if isinstance(self.colorbar_col, str):
+            icolorbar_col = trajectories.columns.index(self.colorbar_col)
+        else:
+            icolorbar_col = int(self.colorbar_col)
+
+        # Create directory for saving projection plots
+        if not os.path.isdir(self.directory):
+            os.mkdir(self.directory)
+
+        # Points at which to project the trajectories
+        self.divisions = np.linspace(self.start, self.end, self.num_divisions)
+
+        # For each point along the start-end axis, save the closest point's
+        # coordinates and colorbar column
+        def project_division(idiv):
+            division = self.divisions[idiv]
+            points = []
+
+            for traj in trajectories:
+                coords = traj.points[:, self.dimension]
+                distances = np.abs(coords - division)
+
+                imin_dist = np.argmin(distances)
+                min_dist = distances[imin_dist]
+
+                if min_dist < self.max_distance:
+                    points.append(traj.points[
+                        imin_dist,
+                        [0, 1, 2, 3, icolorbar_col],
+                    ])
+
+            if not len(points):
+                return np.empty((0, 5))
+            return np.array(points)
+
+        self.projections = _parallel(
+            project_division,
+            range(self.num_divisions),
+            executor = executor,
+            max_workers = max_workers,
+            desc = "SpatialProjections 1 / 2 :",
+            verbose = verbose,
+        )
+
+        # Other remaining dimensions
+        other = list({1, 2, 3} - {self.dimension})
+        ix = other[0]
+        iy = other[1]
+
+        # Find plot limits
+        if "xlim" not in self.kwargs.keys():
+            points = np.concatenate([p[:, ix] for p in self.projections])
+            xlim = [points.min(), points.max()]
+            extra = 0.05 * (xlim[1] - xlim[0])
+            self.kwargs["xlim"] = [xlim[0] - extra, xlim[1] + extra]
+
+        if "ylim" not in self.kwargs.keys():
+            points = np.concatenate([p[:, iy] for p in self.projections])
+            ylim = [points.min(), points.max()]
+            extra = 0.05 * (ylim[1] - ylim[0])
+            self.kwargs["ylim"] = [ylim[0] - extra, ylim[1] + extra]
+
+        if "size" not in self.kwargs.keys():
+            self.kwargs["size"] = 15
+
+        colors = np.concatenate([p[:, -1] for p in self.projections])
+        if "marker_cmin" not in self.kwargs.keys():
+            self.kwargs["marker_cmin"] = colors.min()
+
+        if "marker_cmax" not in self.kwargs.keys():
+            self.kwargs["marker_cmax"] = colors.max()
+
+        if "colorscale" not in self.kwargs.keys():
+            self.kwargs["marker_colorscale"] = "Magma"
+
+        if "colorbar_title" not in self.kwargs.keys():
+            self.kwargs["marker_colorbar_title"] = \
+                trajectories.columns[icolorbar_col]
+
+        def plot_save_projections(idiv):
+            # dim = '_XYZ'[self.dimension]
+            # dist = self.divisions[idiv] - self.divisions[0]
+
+            grapher = plots.PlotlyGrapher2D(
+                # subplot_titles = [f"Length along {dim} = {dist:4.4f} mm"],
+                xlim = self.kwargs["xlim"],
+                ylim = self.kwargs["ylim"],
+            )
+
+            kwargs = self.kwargs.copy()
+            del kwargs["xlim"]
+            del kwargs["ylim"]
+
+            grapher.add_points(
+                self.projections[idiv][:, [0, ix, iy]],
+                color = self.projections[idiv][:, -1],
+                **kwargs,
+            )
+
+            # Set axis labels
+            grapher.fig.update_layout(
+                xaxis_title = f"{'_XYZ'[other[0]]} (mm)",
+                yaxis_title = f"{'_XYZ'[other[1]]} (mm)",
+            )
+
+            grapher.fig.write_image(
+                f"{self.directory}/{self.prefix}{idiv:0>4}.png",
+                height = self.height,
+                width = self.width,
+            )
+
+        self.projections = _parallel(
+            plot_save_projections,
+            range(self.num_divisions),
+            executor = executor,
+            max_workers = max_workers,
+            desc = "SpatialProjections 2 / 2 :",
+            verbose = verbose,
+        )
