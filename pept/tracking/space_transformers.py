@@ -416,7 +416,7 @@ class Reorient(Reducer):
 
 
 class Center(pept.base.Reducer):
-    '''Center a dataset around (0, 0, 0).
+    '''Center a dataset around `origin` (default [0, 0, 0]).
 
     Reducer signature:
 
@@ -426,16 +426,32 @@ class Center(pept.base.Reducer):
         list[PointData] -> Center.fit -> PointData
              np.ndarray -> Center.fit -> PointData
 
+    *New in pept-0.5.1*
+
     '''
+
+    def __init__(self, origin = None):
+        if origin is not None:
+            self.origin = np.asarray(origin)
+            if self.origin.ndim != 1 or len(self.origin) != 3:
+                raise ValueError(textwrap.fill((
+                    "The input `origin` must be a 1D vector-like with exactly "
+                    f"3 elements [x, y, z]. Received {self.origin}."
+                )))
+        else:
+            self.origin = origin
+
 
     def fit(self, sample):
         sample = pept.tracking.Stack().fit(sample)
         if not isinstance(sample, pept.PointData):
             sample = pept.PointData(sample)
 
-        mean = np.nanmedian(sample.points[:, 1:4], axis = 0)
+        if self.origin is None:
+            self.origin = np.nanmedian(sample.points[:, 1:4], axis = 0)
+
         centered = sample.points.copy()
-        centered[:, 1:4] -= mean
+        centered[:, 1:4] -= self.origin
 
         return sample.copy(
             data = centered,

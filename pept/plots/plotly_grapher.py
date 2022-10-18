@@ -433,6 +433,7 @@ class PlotlyGrapher(pept.base.PEPTObject):
         colorbar_col = -1,
         colorscale = "Magma",
         colorbar_title = None,
+        **kwargs,
     ):
         '''Static method for creating a Plotly trace of points. See
         `PlotlyGrapher.add_points` for the full documentation.
@@ -479,7 +480,8 @@ class PlotlyGrapher(pept.base.PEPTObject):
                             y = selected[:, 2],
                             z = selected[:, 3],
                             mode = "markers",
-                            marker = marker
+                            marker = marker,
+                            **kwargs,
                         )
                     )
                 return traces
@@ -498,7 +500,8 @@ class PlotlyGrapher(pept.base.PEPTObject):
             y = coords_y,
             z = coords_z,
             mode = "markers",
-            marker = marker
+            marker = marker,
+            **kwargs,
         )
 
 
@@ -514,6 +517,7 @@ class PlotlyGrapher(pept.base.PEPTObject):
         colorbar_col = -1,
         colorscale = "Magma",
         colorbar_title = None,
+        **kwargs,
     ):
         '''Create and plot a trace for all the points in a numpy array or
         `pept.PointData`, with possible color-coding.
@@ -618,6 +622,7 @@ class PlotlyGrapher(pept.base.PEPTObject):
             colorbar_col = colorbar_col,
             colorscale = colorscale,
             colorbar_title = colorbar_title,
+            **kwargs,
         )
 
         # May be list of traces

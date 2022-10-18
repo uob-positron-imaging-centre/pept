@@ -1126,6 +1126,15 @@ class PlotlyGrapher2D:
             constructor.
         '''
 
+        if isinstance(image, pept.Voxels):
+            kwargs["dx"] = image.voxel_size[0]
+            kwargs["x0"] = image.xlim[0]
+
+            kwargs["dy"] = image.voxel_size[1]
+            kwargs["y0"] = image.ylim[0]
+
+            image = image.voxels
+
         self._fig.add_trace(go.Image(z = image, **kwargs))
         return self
 

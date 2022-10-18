@@ -18,7 +18,7 @@ from    scipy.interpolate   import  interp1d
 from    tqdm                import  tqdm
 from    joblib              import  Parallel, delayed
 
-from    pept                import  PointData
+from    pept                import  PointData, Voxels
 from    pept.base           import  Reducer
 from    pept                import  plots
 
@@ -108,9 +108,9 @@ class LaceyColors(Reducer):
 
     ::
 
-               PointData -> LaceyColors.fit -> (height, width, 3) np.ndarray
-         list[PointData] -> LaceyColors.fit -> (height, width, 3) np.ndarray
-        list[np.ndarray] -> LaceyColors.fit -> (height, width, 3) np.ndarray
+               PointData -> LaceyColors.fit -> (height, width, 3) pept.Voxels
+         list[PointData] -> LaceyColors.fit -> (height, width, 3) pept.Voxels
+        list[np.ndarray] -> LaceyColors.fit -> (height, width, 3) pept.Voxels
 
     **Each sample in the input `PointData` is treated as a separate streamline
     / tracer pass. You can group passes using `Segregate + GroupBy("label")`**.
@@ -161,7 +161,7 @@ class LaceyColors(Reducer):
     >>> entrance = [-100, 0, 0]     # Pipe data was aligned with X and centred
     >>> exit = [100, 0, 0]
     >>> lacey_image = LaceyColors(entrance, exit).fit(streamlines)
-    >>> print(lacey_image.shape)    # RGB channels of image
+    >>> print(lacey_image.voxels)    # RGB channels of image
     (8, 8, 3)
 
     Now the image can be visualised e.g. with Plotly:
@@ -178,6 +178,8 @@ class LaceyColors(Reducer):
         ax2 = None,
         basis1 = None,
         basis2 = None,
+        xlim = None,
+        ylim = None,
         max_distance = 10,
         resolution = (8, 8),
     ):
@@ -186,16 +188,18 @@ class LaceyColors(Reducer):
 
         if ax1 is not None:
             ax1 = np.asarray(ax1, dtype = float)
-            self.ax1 = ax1 / np.linalg.norm(ax1)
-            _check_point3d(ax1 = self.ax1)
+            ax1 = ax1 / np.linalg.norm(ax1)
+            _check_point3d(ax1 = ax1)
+        self.ax1 = ax1
 
         self.p2 = np.asarray(p2, dtype = float)
         _check_point3d(p2 = self.p2)
 
         if ax2 is not None:
             ax2 = np.asarray(ax2, dtype = float)
-            self.ax2 = ax2 / np.linalg.norm(ax2)
-            _check_point3d(ax2 = self.ax2)
+            ax2 = ax2 / np.linalg.norm(ax2)
+            _check_point3d(ax2 = ax2)
+        self.ax2 = ax2
 
         if basis1 is not None:
             basis1 = np.asarray(basis1, dtype = float)
@@ -216,6 +220,24 @@ class LaceyColors(Reducer):
                     f"`basis2.shape={basis2.shape}`."
                 )))
         self.basis2 = basis2
+
+        if xlim is not None:
+            xlim = np.asarray(xlim, dtype = float)
+            if xlim.ndim != 1 or len(xlim) != 2:
+                raise ValueError(textwrap.fill((
+                    "The input `xlim`, if given, should be a vector-like with "
+                    f"two values [xmin, xmax]. Received `{xlim}`."
+                )))
+        self.xlim = xlim
+
+        if ylim is not None:
+            ylim = np.asarray(ylim, dtype = float)
+            if ylim.ndim != 1 or len(ylim) != 2:
+                raise ValueError(textwrap.fill((
+                    "The input `ylim`, if given, should be a vector-like with "
+                    f"two values [ymin, ymax]. Received `{ylim}`."
+                )))
+        self.ylim = ylim
 
         self.max_distance = float(max_distance)
         self.resolution = tuple(resolution)
@@ -307,9 +329,17 @@ class LaceyColors(Reducer):
         ired = points_start2d[:, 0] < 0
         iblu = points_start2d[:, 0] >= 0
 
+        # Compute image physical limits
         limits = np.c_[points_end2d.min(axis = 0), points_end2d.max(axis = 0)]
-        xlim = enlarge(limits[0, :])
-        ylim = enlarge(limits[1, :])
+
+        if self.xlim is None:
+            self.xlim = enlarge(limits[0, :])
+
+        if self.ylim is None:
+            self.ylim = enlarge(limits[1, :])
+
+        xlim = self.xlim
+        ylim = self.ylim
 
         xsize = (xlim[1] - xlim[0]) / resolution[0]
         ysize = (ylim[1] - ylim[0]) / resolution[1]
@@ -320,11 +350,31 @@ class LaceyColors(Reducer):
         # Find indices within pixels
         red_ix = ((points_end2d[ired, 0] - xlim[0]) / xsize).astype(int)
         red_iy = ((points_end2d[ired, 1] - ylim[0]) / ysize).astype(int)
+
+        # Ensure all red pixel indices are within bounds
+        mask = (
+            (red_ix >= 0) & (red_ix < resolution[0]) &
+            (red_iy >= 0) & (red_iy < resolution[1])
+        )
+
+        red_ix = red_ix[mask]
+        red_iy = red_iy[mask]
+
         for i in range(len(red_ix)):
             red_mix[red_ix[i], red_iy[i]] += 1
 
         blu_ix = ((points_end2d[iblu, 0] - xlim[0]) / xsize).astype(int)
         blu_iy = ((points_end2d[iblu, 1] - ylim[0]) / ysize).astype(int)
+
+        # Ensure all blue pixel indices are within bounds
+        mask = (
+            (blu_ix >= 0) & (blu_ix < resolution[0]) &
+            (blu_iy >= 0) & (blu_iy < resolution[1])
+        )
+
+        blu_ix = blu_ix[mask]
+        blu_iy = blu_iy[mask]
+
         for i in range(len(blu_ix)):
             blu_mix[blu_ix[i], blu_iy[i]] += 1
 
@@ -336,7 +386,12 @@ class LaceyColors(Reducer):
         mix_img[:, :, 0] = red_mix.astype(int)
         mix_img[:, :, 2] = blu_mix.astype(int)
 
-        return mix_img
+        return Voxels(
+            mix_img,
+            xlim = xlim,
+            ylim = ylim,
+            zlim = [0, 2],
+        )
 
 
 
@@ -409,6 +464,8 @@ class LaceyColorsLinear(Reducer):
         self,
         directory,
         p1, p2,
+        xlim = None,
+        ylim = None,
         num_divisions = 50,
         max_distance = 10,
         resolution = (8, 8),
@@ -426,6 +483,9 @@ class LaceyColorsLinear(Reducer):
 
         self.p1 = np.asarray(p1, dtype = float)
         self.p2 = np.asarray(p2, dtype = float)
+
+        self.xlim = xlim
+        self.ylim = ylim
 
         self.max_distance = float(max_distance)
         self.resolution = tuple(resolution)
@@ -468,6 +528,12 @@ class LaceyColorsLinear(Reducer):
         basis1 = lacey.basis1
         basis2 = lacey.basis2
 
+        if self.xlim is None:
+            self.xlim = lacey.xlim
+
+        if self.ylim is None:
+            self.ylim = lacey.ylim
+
         def compute_save_lacey(idiv):
             image = LaceyColors(
                 p1 = self.p1,
@@ -476,6 +542,8 @@ class LaceyColorsLinear(Reducer):
                 ax2 = axis,
                 basis1 = basis1,
                 basis2 = basis2,
+                xlim = self.xlim,
+                ylim = self.ylim,
                 max_distance = self.max_distance,
                 resolution = self.resolution,
             ).fit(trajectories)
@@ -484,7 +552,7 @@ class LaceyColorsLinear(Reducer):
             grapher = plots.PlotlyGrapher2D(subplot_titles = [
                 f"Travelled {travelled} mm"
             ])
-            grapher.add_trace(go.Image(z = image))
+            grapher.add_image(image)
             grapher.fig.write_image(
                 f"{self.directory}/{self.prefix}{idiv:0>4}.png",
                 height = self.height,
@@ -696,6 +764,9 @@ class RelativeDeviations(Reducer):
             if min_dist_start < max_distance and min_dist_end < max_distance:
                 points_start.append(traj.points[np.argmin(dists_start)])
                 points_end.append(traj.points[np.argmin(dists_end)])
+            else:
+                points_start.append(np.full(traj.points.shape[1], np.nan))
+                points_end.append(np.full(traj.points.shape[1], np.nan))
 
         # TODO: check empty trajectories
         self.points1 = trajectories.copy(data = points_start)
@@ -916,7 +987,7 @@ class RelativeDeviationsLinear(Reducer):
         )
 
         # Save histograms to disk
-        xlim = [0, np.max([d.max() for d in self.deviations])]
+        xlim = [0, np.nanmax([np.nanmax(d) for d in self.deviations])]
 
         def save_histograms(idiv):
             fig = plots.histogram(
@@ -950,6 +1021,7 @@ class RelativeDeviationsLinear(Reducer):
         # Compute summarised statistics about distributions
         def compute_stats(idiv):
             dev = self.deviations[idiv]
+            dev = dev[np.isfinite(dev)]
             return [
                 np.mean(dev),
                 np.std(dev),
