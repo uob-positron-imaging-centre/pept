@@ -52,6 +52,7 @@ and you get parallel execution and pipeline chaining for free!
 
 
 from    .birmingham_method      import  BirminghamMethod
+from    .birmingham_method_gpu  import  BirminghamMethodGPU
 from    .peptml                 import  Cutpoints, Minpoints
 from    .peptml                 import  HDBSCAN, HDBSCANClusterer
 from    .fpi                    import  FPI
