@@ -55,12 +55,6 @@ from    .fpi        import  FPI
 from    .fpi_ext    import  fpi_ext
 
 
-__all__ = [
-    "FPI",
-    "fpi_ext",
-]
-
-
 __license__ = "GNU v3.0"
 __maintainer__ = "Andrei Leonard Nicusan"
 __email__ = "a.l.nicusan@bham.ac.uk"
