@@ -30,6 +30,7 @@ General-Purpose Transformers
    pept.tracking.Centroids
    pept.tracking.LinesCentroids
    pept.tracking.Condition
+   pept.tracking.SamplesCondition
    pept.tracking.Remove
    pept.tracking.Swap
 

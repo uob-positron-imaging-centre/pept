@@ -75,6 +75,40 @@ Or using inline functions (i.e. ``lambda``):
     trajectories = Condition(lambda x: x[:, 1]**2 + x[:, 3]**2 < 10**2).fit(trajectories)
 
 
+SamplesCondition
+----------------
+
+While ``Condition`` is applied on individual points, we could filter entire samples - for example, select only trajectories with more than 30 points:
+
+::
+
+    import pept.tracking as pt
+
+    long_trajectories_filter = pept.Pipeline([
+        # Segregate points - appends "label" column
+        pt.Segregate(window = 20, cut_distance = 10),
+
+        # Group points into samples; e.g. sample 1 contains all points with label 1
+        pt.GroupBy("label"),
+
+        # Now each sample is an entire trajectory which we can filter
+        pt.SamplesCondition("sample_size > 30"),
+
+        # And stack all remaining samples back into a single PointData
+        pt.Stack(),
+    ])
+
+    long_trajectories = long_trajectories_filter.fit(trajectories)
+
+
+The condition can be based on the sample itself, e.g. keep only samples that lie completely beyond x=0:
+
+::
+
+    # Keep only samples for which all points' X coordinates are bigger than 0
+    Condition("np.all(sample['x'] > 0)")
+
+
 
 GroupBy
 -------
