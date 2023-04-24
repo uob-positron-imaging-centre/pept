@@ -121,3 +121,17 @@ Stack all samples (i.e. ``LineData`` or ``PointData``) and split them into a lis
 
     group_list = GroupBy("label").fit(trajectories)
 
+
+
+RemoveStatic
+------------
+
+Remove tracer locations when it spends more than `time_window` without moving more than `max_distance`:
+
+::
+
+    from pept.tracking import *
+
+    # Remove positions that spent more than 2 seconds without moving more than 20 mm
+    nonstatic = RemoveStatic(time_window = 2000, max_distance = 20).fit(trajectories)
+

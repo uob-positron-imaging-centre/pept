@@ -49,14 +49,15 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from libc.float cimport DBL_MIN
+from libc.float cimport DBL_MIN, DBL_MAX
 from libc.math cimport sqrt
 cimport numpy as np
 
 
 cpdef distance_matrix_reachable(
     const double[:, :] pts,           # Array of points, cols = [t, x, y, z, ...]
-    const int points_window
+    const int points_window,
+    const double max_time_interval,
 ):
     '''Compute the distance matrix from a time-sorted array of points `pts`
     based on a sliding `points_window`.
@@ -66,7 +67,8 @@ cpdef distance_matrix_reachable(
         Function signature:
             distance_matrix_reachable(
                 double[:, :] pts,   # Array of points, cols = [t, x, y, z, ...]
-                int points_window
+                int points_window,
+                double max_time_interval,
             )
 
     The distance between the points (pts[i], pts[j]) is stored in the distance
@@ -90,6 +92,7 @@ cpdef distance_matrix_reachable(
         have a timestamp and the 3 spatial coordinates, such that the data
         columns are [time, x_coord, y_coord, z_coord]. Note that `point_data`
         can have more data columns and they will simply be ignored.
+
     points_window : int
         Two points are "reachable" (i.e. they can be connected) if and only if
         they are within `points_window` in the time-sorted input `pts`. As the
@@ -102,6 +105,11 @@ cpdef distance_matrix_reachable(
         Naturally, a larger `time_window` correponds to more pairs needing to
         be checked (and the function will take a longer to complete).
 
+    max_time_interval : double
+        The maximum time allowed between two consecutive points for them to be
+        reachable / connected. If the interval between two points is larger
+        than this, their distance is set to DBL_MAX.
+
     Returns
     -------
     distance_matrix : CSR <NxN sparse matrix of type '<class 'numpy.float64'>
@@ -112,7 +120,7 @@ cpdef distance_matrix_reachable(
     -----
     In order for the `points_window` to act as a sliding window, in effect only
     connecting points which are around the same timeframe, the points should be
-    sorted based on thetime column (the first row) in `pts`. This should be
+    sorted based on the time column (the first row) in `pts`. This should be
     done *prior* to calling this function.
     '''
 
@@ -148,13 +156,16 @@ cpdef distance_matrix_reachable(
     with nogil:
         for i in range(n - 1):
             for j in range(i + 1, min(i + p, n - 1) + 1):
-                # Euclidean distance between points i, j in `pts`
-                # dist = np.linalg.norm(pts[i, 1:4] - pts[j, 1:4])
-                dist = sqrt(
-                    (pts[j, 1] - pts[i, 1]) ** 2 +
-                    (pts[j, 2] - pts[i, 2]) ** 2 +
-                    (pts[j, 3] - pts[i, 3]) ** 2
-                )
+                if pts[j, 0] - pts[i, 0] > max_time_interval:
+                    dist = DBL_MAX
+                else:
+                    # Euclidean distance between points i, j in `pts`
+                    # dist = np.linalg.norm(pts[i, 1:4] - pts[j, 1:4])
+                    dist = sqrt(
+                        (pts[j, 1] - pts[i, 1]) ** 2 +
+                        (pts[j, 2] - pts[i, 2]) ** 2 +
+                        (pts[j, 3] - pts[i, 3]) ** 2
+                    )
 
                 # Fix bug (or feature?) of scipy's minimum_spanning_tree where
                 # duplicate points (i.e. dist == 0.0) are ommitted from the

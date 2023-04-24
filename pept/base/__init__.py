@@ -13,9 +13,6 @@
 from    .line_data          import  LineData
 from    .point_data         import  PointData
 
-from    konigcell           import  Pixels
-from    konigcell           import  Voxels
-
 from    .iterable_samples   import  IterableSamples
 from    .iterable_samples   import  TimeWindow
 from    .iterable_samples   import  AdaptiveWindow
@@ -34,8 +31,9 @@ from    .utilities          import  check_iterable
 
 
 # Execute code here to add dynamic methods
-from    .                   import  pixels
-from    .                   import  voxels
+from    .pixels             import  Pixels
+from    .voxels             import  Voxels
+
 
 
 

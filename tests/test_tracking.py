@@ -440,7 +440,61 @@ def test_segregate():
     se = Segregate(20, cut_distance = np.inf).fit(points)
     assert np.allclose(se.points[:, -1], 0.)
 
+    # Generate trajectory formed of two sections, apart in space and time
+    rng = np.random.default_rng(0)
+    section1 = np.c_[
+        np.arange(100),
+        np.sin(np.linspace(-10, 10, 100)),
+        np.sin(np.linspace(-10, 10, 100)),
+        np.sin(np.linspace(-10, 10, 100)),
+    ]
+
+    section2 = np.c_[
+        np.arange(1000, 1100),
+        5 + np.sin(np.linspace(-10, 10, 100)),
+        5 + np.sin(np.linspace(-10, 10, 100)),
+        5 + np.sin(np.linspace(-10, 10, 100)),
+    ]
+
+    trajectories = pept.PointData(np.vstack((section1, section2)))
+    se = Segregate(20, cut_distance = 1).fit(trajectories)
+    assert len(np.unique(se.points[:, -1])) == 2
+
+    # Generate trajectory formed of two sections, apart only in time
+    rng = np.random.default_rng(0)
+    section1 = np.c_[
+        np.arange(100),
+        np.sin(np.linspace(-10, 10, 100)),
+        np.sin(np.linspace(-10, 10, 100)),
+        np.sin(np.linspace(-10, 10, 100)),
+    ]
+
+    section2 = np.c_[
+        np.arange(1000, 1100),
+        np.sin(np.linspace(10, 20, 100)),
+        np.sin(np.linspace(10, 20, 100)),
+        np.sin(np.linspace(10, 20, 100)),
+    ]
+
+    trajectories = pept.PointData(np.vstack((section1, section2)))
+
+    # Segregate without time -> single trajectory
+    se = Segregate(
+        20,
+        cut_distance = 1,
+    ).fit(trajectories)
+    assert len(np.unique(se.points[:, -1])) == 1
+
+    # Segregate with time -> correct, two trajectories
+    se = Segregate(
+        20,
+        cut_distance = 1,
+        max_time_interval = 10,
+    ).fit(trajectories)
+    assert len(np.unique(se.points[:, -1])) == 2
+
     # Testing different settings
+    Segregate(5, 10, 15, 20).fit(points)
     Segregate(5, 10, 15).fit(points)
     Segregate(1, 1).fit(points)
 
@@ -482,3 +536,29 @@ def test_reorient():
         basis = reo.attrs["basis"],
         origin = reo.attrs["origin"],
     ).fit(points_raw)
+
+
+def test_remove_static():
+    # Generate trajectory that is moving, then almost static, then moving
+    rng = np.random.default_rng(0)
+    trajectories = np.vstack((
+        np.c_[np.arange(0, 1000), rng.uniform(-50, 50, (1000, 3))],
+        np.c_[np.arange(1000, 2000), rng.uniform(-5, 5, (1000, 3))],
+        np.c_[np.arange(2000, 3000), rng.uniform(-50, 50, (1000, 3))],
+        np.c_[np.arange(3000, 4000), rng.uniform(-5, 5, (1000, 3))],
+    ))
+    trajectories = pept.PointData(trajectories)
+
+    # Good use
+    kept_trajectories = RemoveStatic(
+        time_window = 200,
+        max_distance = 20,
+    ).fit(trajectories)
+    assert len(kept_trajectories.points) > 0
+
+    # Time window larger than entire dataset
+    kept_trajectories = RemoveStatic(
+        time_window = 20_000,
+        max_distance = 20,
+    ).fit(trajectories)
+    assert len(kept_trajectories.points) > 0

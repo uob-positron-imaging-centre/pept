@@ -16,6 +16,11 @@ import  pept
 from    pept                import  LineData, PointData, Voxels
 from    pept.base           import  LineDataFilter, PointDataFilter, Reducer
 
+from    pept.base.sampling_extensions import (
+    samples_indices_adaptive_window_ext,
+)
+
+
 
 
 
@@ -515,3 +520,140 @@ class OutOfViewFilter(pept.base.Reducer):
 
         nonsparse = points[dt[:, 0] < self.max_time]
         return samples.copy(data = nonsparse)
+
+
+
+
+class RemoveStatic(pept.base.Reducer):
+    '''Remove parts of a `PointData` where the tracer remains static.
+
+    Reducer signature:
+
+    ::
+
+              PointData -> OutOfViewFilter.fit -> PointData
+        list[PointData] -> OutOfViewFilter.fit -> PointData
+          numpy.ndarray -> OutOfViewFilter.fit -> PointData
+
+    If there is a `time_window` in which the tracer does not move more than
+    `max_distance`, it is removed.
+
+    The distances moved are computed relative to the average position within
+    each time window; to make the reducer more robust to noise, the given
+    distance `quantile` is compared to `max_distance`.
+
+    *New in pept-0.5.2*
+
+    Examples
+    --------
+    Given some trajectories from e.g. a long experiment where the particle
+    may have got stuck at some points, we can remove the static windows with:
+
+    .. code-block:: python
+
+        import pept
+        import pept.tracking as pt
+
+        trajectories = ...
+
+        # Remove positions that spent more than 2 seconds without moving more
+        # than 20 mm
+        trajectories_nonstatic = RemoveStatic(
+            time_window = 2000,
+            max_distance = 20,
+        ).fit(trajectories)
+
+    This reducer, like the rest in `pept.tracking`, can be chained into a
+    pipeline, for example:
+
+    .. code-block:: python
+
+        import pept
+        import pept.tracking as pt
+
+        pipeline = pept.Pipeline([
+            # Remove positions with high errors
+            pt.Condition("error < 20"),
+
+            # Remove tracers that got stuck
+            pt.RemoveStatic(time_window = 2000, max_distance = 20),
+
+            # Trajectory separation
+            pt.Segregate(window = 20, cut_distance = 15),
+
+            # Group each trajectory into its own sample, then stack them
+            pt.GroupBy("label"),
+            pt.Stack(),
+        ])
+
+    '''
+
+    def __init__(self, time_window, max_distance, quantile = 0.9):
+        self.time_window = float(time_window)
+        self.max_distance = float(max_distance)
+        self.quantile = float(quantile)
+
+
+    def fit(self, samples):
+        if not isinstance(samples, PointData):
+            samples = PointData(samples)
+
+        # Compute index ranges of points within time window
+        if self.time_window > samples.points[-1, 0] - samples.points[0, 0]:
+            samples_indices = np.array([[0, len(samples.points)]])
+        else:
+            samples_indices = samples_indices_adaptive_window_ext(
+                samples.points,
+                self.time_window,
+                0,
+                np.iinfo(np.int32).max,
+            )
+
+        # For each time window, compute the radial distance of points
+        kept = []
+        for i, irow in enumerate(samples_indices):
+            coords = samples.points[irow[0]:irow[1], 1:4]
+            dists = np.linalg.norm(coords - coords.mean(axis=0), axis = 1)
+
+            if np.quantile(dists, self.quantile) > self.max_distance:
+                kept.append(i)
+
+        kept = set(kept)
+
+        # Extract points in windows whose neighbouring windows are to be kept
+        kept_points = []
+
+        if len(kept) == 1:
+            irow = samples_indices[kept.pop()]
+            kept_points.append(samples.points[irow[0]:irow[1]])
+        else:
+            for i, irow in enumerate(samples_indices):
+                # Next window is also included
+                if i == 0 and i in kept and i + 1 in kept:
+                    kept_points.append(samples.points[irow[0]:irow[1]])
+
+                # Previous window is also included
+                elif i == len(kept) - 1 and i in kept and i - 1 in kept:
+                    kept_points.append(samples.points[irow[0]:irow[1]])
+
+                # Both previous and next window are also included
+                elif (
+                    i != 0 and
+                    i != len(kept) - 1 and
+                    i in kept and
+                    i - 1 in kept and
+                    i + 1 in kept
+                ):
+                    kept_points.append(samples.points[irow[0]:irow[1]])
+
+        # Stack remaining points
+        if len(kept_points):
+            kept_points = np.vstack(kept_points)
+        else:
+            kept_points = np.empty((0, samples.points.shape[1]))
+
+        return samples.copy(
+            data = kept_points,
+            sample_size = None,
+            overlap = None,
+        )

@@ -44,3 +44,16 @@ This step adds a new column "label". We can group each individual trajectory int
     traj_list[0]    # First trajectory
 
 
+*[New in pept-0.5.2]* Only connect points within a time interval; in other words, disconnect into different trajectories points whose timestamps are further apart than ``max_time_interval``:
+
+::
+
+     segr = Segregate(
+        window = 20,
+        cut_distance = 10.,
+        min_trajectory_size = 50,
+        max_time_interval = 2000,       # Disconnect tracer with >2s gap
+    )
+
+    trajectories = segr.fit(trajectories)
+   

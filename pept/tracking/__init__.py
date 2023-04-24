@@ -77,6 +77,7 @@ from    .space_transformers     import  Interpolate
 from    .space_transformers     import  Reorient
 from    .space_transformers     import  Center
 from    .space_transformers     import  OutOfViewFilter
+from    .space_transformers     import  RemoveStatic
 
 from    .post                   import  Velocity
 

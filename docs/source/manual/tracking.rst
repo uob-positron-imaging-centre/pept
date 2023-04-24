@@ -46,6 +46,7 @@ Space Transformers
    pept.tracking.Interpolate
    pept.tracking.Reorient
    pept.tracking.OutOfViewFilter
+   pept.tracking.RemoveStatic
 
 
 

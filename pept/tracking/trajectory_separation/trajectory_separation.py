@@ -162,9 +162,13 @@ class Segregate(pept.base.Reducer):
         After the trajectories have been cut, declare all trajectories with
         fewer points than `min_trajectory_size` as noise.
 
+    max_time_interval : float, default np.finfo(float).max
+        Only connect points if the time difference between their timestamps is
+        smaller than `max_time_interval`. *Setting added in pept-0.5.2*.
+
     See Also
     --------
-    Reconnet : Connect segregated trajectories based on tracer signatures.
+    Reconnect : Connect segregated trajectories based on tracer signatures.
     PlotlyGrapher : Easy, publication-ready plotting of PEPT-oriented data.
 
     Examples
@@ -210,10 +214,12 @@ class Segregate(pept.base.Reducer):
         window,
         cut_distance,
         min_trajectory_size = 5,
+        max_time_interval = np.finfo(np.float64).max,
     ):
         self.window = int(window)
         self.cut_distance = float(cut_distance)
         self.min_trajectory_size = int(min_trajectory_size)
+        self.max_time_interval = float(max_time_interval)
 
 
     def fit(self, points):
@@ -235,7 +241,11 @@ class Segregate(pept.base.Reducer):
 
         # Calculate the sparse distance matrix between reachable points. This
         # is an optimised Cython function returning a sparse CSR matrix.
-        distance_matrix = distance_matrix_reachable(pts, self.window)
+        distance_matrix = distance_matrix_reachable(
+            pts,
+            self.window,
+            self.max_time_interval,
+        )
 
         # Construct the minimum spanning tree from the sparse distance matrix.
         # Note that `mst` is also a sparse CSR matrix.

@@ -808,7 +808,7 @@ class Remove(Filter):
 
 
 
-class SplitAll(Reducer):
+class GroupBy(Reducer):
     '''Stack all samples and split them into a list according to a named /
     numeric column index.
 
@@ -896,7 +896,7 @@ class SplitAll(Reducer):
 
 
 # Use standard names, Leonard...
-GroupBy = SplitAll
+SplitAll = GroupBy
 
 
 
