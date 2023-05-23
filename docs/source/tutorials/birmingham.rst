@@ -44,3 +44,38 @@ Recipe with Trajectory Separation
     locations = pipeline.fit(lors)
 
 
+Birmingham Method GPU recipe
+------------------------
+
+The Birmingham Method can also be run on the GPU. This is done using CUDA and requires a GPU with compute capability 3.0 or higher.
+
+For installation please see [pyCUDA](https://pypi.org/project/pycuda/) on PyPi.
+
+::
+
+    import pept
+    from pept.tracking import *
+
+    pipeline = pept.Pipeline([
+        BirminghamMethodGPU(fopt = 0.5),
+    ])
+
+    locations = pipeline.fit(lors)
+
+
+To manage memory usage, the Birmingham Method GPU will run in batches. The batch size is determined by the memory available in GPU.
+
+Using `memory_usage` you can set the percentage of memory used by the Birmingham Method GPU. The default is 1.0 (100%), which will use (nearly) all available memory.
+
+If you Nvidia GPU is older (compute capability < 2.0), you need to reduce the number of threads per block. This can be done by setting `threads_per_block` to a lower value. The default is 1024.
+
+::
+
+    import pept
+    from pept.tracking import *
+
+    pipeline = pept.Pipeline([
+        BirminghamMethodGPU(fopt = 0.5, memory_usage = 0.5, threads_per_block = 512),
+    ])
+
+    locations = pipeline.fit(lors)
