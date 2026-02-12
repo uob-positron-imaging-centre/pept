@@ -50,11 +50,13 @@ References
 
 
 from    .birmingham_method              import  BirminghamMethod
+from    .cg_birmingham_method           import  CGBirminghamMethod
 from    .extensions.birmingham_method   import  birmingham_method
 
 
 __all__ = [
     'BirminghamMethod',
+    'CGBirminghamMethod',
     'birmingham_method',
 ]
 
